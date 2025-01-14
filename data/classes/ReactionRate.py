@@ -4,7 +4,6 @@
 import casadi as casADi
 
 class ReactionRate:
-
     def __init__(self):
         self.T_ref = 550        # K
         self.k0_ref = 3.46e-4   # mol/(bar s g_cat)
@@ -17,13 +16,13 @@ class ReactionRate:
         }
 
     # methode to calculate rate coefficient k
-    def k (self, T):
+    def __calc_k (self, T):
         # T in K
         k = self.k0_ref * casADi.exp(self.E_A / self.R *( 1/self.T_ref - 1/T))
         return k
 
     # methode to calculate adsorption constant K_x for OH, H2 and mix
-    def K_x(self, species, T):
+    def __calc_K_x(self, species, T):
         # T in K
         # Species string input for AdsorptionConstants dictionary
         if species not in self.AdsorptionConstants:
@@ -36,7 +35,7 @@ class ReactionRate:
         return K_x
 
     # methode to calculate equilibrium constant K_eq
-    def K_eq(self, T):
+    def __K_eq(self, T):
         # T in K
         K_eq = 137 * T**(-3.998) * casADi.exp(158.7e3 / (self.R * T))
         return K_eq
@@ -45,11 +44,11 @@ class ReactionRate:
         # T in K
         # p_i in bar
         # rho_cat in g_cat / m^3_cat
-        k = self.k(T)
-        K_eq = self.K_eq(T)
+        k = self.__calc_k(T)
+        K_eq = self.__K_eq(T)
 
-        r = ( k * (p_CO2**0.5) * (p_H2**0.5) * (1 - (p_CH4 * (p_H2O**2)) / (K_eq * p_CO2 * (p_H2**4))) /
-              (1 + self.K_x('OH', T) * p_H2O / (p_H2**0.5) + self.K_x('H2', T) * (p_H2**0.5) + self.K_x('mix', T) * (p_CO2**0.5) ) )
+        r = (k * (p_CO2**0.5) * (p_H2**0.5) * (1 - (p_CH4 * (p_H2O**2)) / (K_eq * p_CO2 * (p_H2**4))) /
+             (1 + self.__calc_K_x('OH', T) * p_H2O / (p_H2 ** 0.5) + self.__calc_K_x('H2', T) * (p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5)))
 
         # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
         r = r * rho_cat * 1000

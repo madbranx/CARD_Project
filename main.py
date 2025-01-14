@@ -1,4 +1,4 @@
-from data.classes.ReactionRate import ReactionRate
+from classes.reaction.ReactionRate import ReactionRate
 
 # Anlegen der Kinetik
 

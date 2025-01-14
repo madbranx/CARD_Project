@@ -11,37 +11,50 @@ class MaterialProperty:
             return self.coefficients[0] * temperature + self.coefficients[1]
         elif self.dependency_type == 'polynomial':
             return sum(coef * (temperature ** i) for i, coef in enumerate(self.coefficients))
-        else:
-            raise ValueError("Invalid dependency type")
 
 class Material:
-    def __init__(self, name, density, heat_capacity, thermal_conductivity):
+    DENSITY = 1
+    HEAT_CAPACITY = 2
+    THERMAL_CONDUCTIVITY = 3
+    COLLISION_AREA = 4
+    DIFFUSION_VOLUME = 5
+
+    def __init__(self, name):
         self.name = name
-        self.density = MaterialProperty(density)
-        self.heat_capacity = MaterialProperty(heat_capacity)
-        self.thermal_conductivity = MaterialProperty(thermal_conductivity)
+        self.collision_area = None
+        self.diffusion_volume = None
+        self.density = None
+        self.heat_capacity = None
+        self.thermal_conductivity = None
 
     def add_property(self, property_name, value, dependency_type='constant', coefficients=None):
-        if property_name == 'density':
+        if property_name == Material.DENSITY:
             self.density = MaterialProperty(value, dependency_type, coefficients)
-        elif property_name == 'heat_capacity':
+
+        elif property_name == Material.HEAT_CAPACITY:
             self.heat_capacity = MaterialProperty(value, dependency_type, coefficients)
-        elif property_name == 'thermal_conductivity':
+
+        elif property_name == Material.THERMAL_CONDUCTIVITY:
             self.thermal_conductivity = MaterialProperty(value, dependency_type, coefficients)
-        else:
-            raise ValueError("Invalid property name")
 
-    def get_property(self, property_name, temperature):
-        if property_name == 'density':
-            return self.density.get_value(temperature)
-        elif property_name == 'heat_capacity':
-            return self.heat_capacity.get_value(temperature)
-        elif property_name == 'thermal_conductivity':
-            return self.thermal_conductivity.get_value(temperature)
-        else:
-            raise ValueError("Invalid property name")
+        elif property_name == Material.COLLISION_AREA:
+            self.collision_area = value
 
-# Example usage:
-material = Material(7800, 500, 45)
-material.add_property('density', 7800, 'linear', [0.1, 7800])
-material.add_property('heat_capacity', 500, 'polynomial', [0.01, 0.1, 500])
+        elif property_name == Material.DIFFUSION_VOLUME:
+            self.diffusion_volume = value
+
+
+    def get_density(self, temperature):
+        return self.density.get_value(temperature)
+
+    def get_heat_capacity(self, temperature):
+        return self.heat_capacity.get_value(temperature)
+
+    def get_thermal_conductivity(self, temperature):
+        return self.thermal_conductivity.get_value(temperature)
+
+    def get_collision_area(self):
+        return self.collision_area
+
+    def get_diffusion_volume(self):
+        return self.diffusion_volume

@@ -12,7 +12,7 @@ class MaterialProperty:
         elif self.dependency_type == 'polynomial':
             return sum(coef * (temperature ** i) for i, coef in enumerate(self.coefficients))
 
-class Material:
+class Component:
     DENSITY = 1
     HEAT_CAPACITY = 2
     THERMAL_CONDUCTIVITY = 3
@@ -28,19 +28,19 @@ class Material:
         self.thermal_conductivity = None
 
     def add_property(self, property_name, value, dependency_type='constant', coefficients=None):
-        if property_name == Material.DENSITY:
+        if property_name == Component.DENSITY:
             self.density = MaterialProperty(value, dependency_type, coefficients)
 
-        elif property_name == Material.HEAT_CAPACITY:
+        elif property_name == Component.HEAT_CAPACITY:
             self.heat_capacity = MaterialProperty(value, dependency_type, coefficients)
 
-        elif property_name == Material.THERMAL_CONDUCTIVITY:
+        elif property_name == Component.THERMAL_CONDUCTIVITY:
             self.thermal_conductivity = MaterialProperty(value, dependency_type, coefficients)
 
-        elif property_name == Material.COLLISION_AREA:
+        elif property_name == Component.COLLISION_AREA:
             self.collision_area = value
 
-        elif property_name == Material.DIFFUSION_VOLUME:
+        elif property_name == Component.DIFFUSION_VOLUME:
             self.diffusion_volume = value
 
 

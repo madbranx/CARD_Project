@@ -4,7 +4,8 @@
 import casadi as casADi
 
 class ReactionRate:
-    def __init__(self):
+    def __init__(self, log):
+        self.log = log
         self.T_ref = 550        # K
         self.k0_ref = 3.46e-4   # mol/(bar s g_cat)
         self.E_A = 77.5e3       # J/mol

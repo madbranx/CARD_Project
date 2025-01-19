@@ -20,7 +20,7 @@ class ReactionRate:
     def __calc_k (self, T):
         # T in K
         k = self.k0_ref * casADi.exp(self.E_A / self.R *( 1/self.T_ref - 1/T))
-        return k
+        return casADi.Function("k", [T], [k])
 
     # methode to calculate adsorption constant K_x for OH, H2 and mix
     def __calc_K_x(self, species, T):
@@ -33,13 +33,13 @@ class ReactionRate:
         dH_x = self.AdsorptionConstants[species]['dH']
 
         K_x = K_x_ref * casADi.exp(dH_x/self.R *( 1/self.T_ref - 1/T))
-        return K_x
+        return casADi.Function(f"K_x_{species}", [T], [K_x])
 
     # methode to calculate equilibrium constant K_eq
     def __K_eq(self, T):
         # T in K
         K_eq = 137 * T**(-3.998) * casADi.exp(158.7e3 / (self.R * T))
-        return K_eq
+        return casADi.Function("K_eq", [T], [K_eq])
 
     def rate_equation(self, T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat):
         # T in K
@@ -53,5 +53,5 @@ class ReactionRate:
 
         # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
         r = r * rho_cat * 1000
-        return r
+        return casADi.Function("rate_equation", [T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat], [r])
 

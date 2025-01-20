@@ -5,19 +5,14 @@ class Parameter:
         self.log = log
         self.name  = name
         self.value = None
-        self.SXsym = None
         if value is not None:
             self.setValue(value)
 
     def setValue(self, value):
         self.value = value
-        self.SXsym = casADi.SX.sym(self.name, value)
 
     def getName(self):
         return self.name
 
     def getValue(self):
         return self.value
-
-    def getSXsym(self):
-        return self.SXsym

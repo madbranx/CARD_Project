@@ -41,12 +41,6 @@ class ReactorSpecificQuantities:
                 return parameter.getValue()
         return None
 
-    def getParameterSXsym(self, name):
-        for parameter in self.parameters:
-            if parameter.getName() == name:
-                return parameter.getSXsym()
-        return None
-
     def getComponent(self, name):
         for component in self.components:
             if component.getName() == name:

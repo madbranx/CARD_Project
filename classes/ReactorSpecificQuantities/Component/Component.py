@@ -60,6 +60,12 @@ class Component:
             name = self.name + '_diffusion_volume'
             self.diffusion_volume = MaterialProperty(self.log, name, value, dependency_type)
 
+        else:
+            self.log.addError('Unknown property type {}'.format(property_type), 3)
+            return None
+
+        self.log.addEntry("adding property " + name + " as type " + str(dependency_type), 3)
+
 
     def get_density(self, temperature):
         return self.density.get_value(temperature)

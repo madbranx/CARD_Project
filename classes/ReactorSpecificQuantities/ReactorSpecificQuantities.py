@@ -11,16 +11,19 @@ class ReactorSpecificQuantities:
         self.reaction = None
 
     def addParameter(self, name, value):
+        self.log.addEntry("adding Parameter " + name + " = " + str(value), 2)
         parameter = Parameter(self.log, name, value)
         self.parameters.append(parameter)
         return parameter
 
     def addComponent(self, name):
+        self.log.addEntry("adding Component " + name, 2)
         component = Component(self.log, name)
         self.components.append(component)
         return component
 
     def addReaction(self):
+        self.log.addEntry("adding Reaction", 2)
         reaction = Reaction(self.log)
         self.reaction = reaction
         return reaction

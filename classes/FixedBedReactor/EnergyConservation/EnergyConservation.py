@@ -1,9 +1,10 @@
 class EnergyConservation:
-    def __init__(self, log, dimension, RSQ):
+    def __init__(self, log, dimension, RSQ, GCF):
         self.log = log
         self.log.addEntry("initializing energy conservation", 2)
         self.dimension = dimension
         self.RSQ = RSQ
+        self.GCF = GCF
 
     def createCasADi(self, ode, T, w_i, u, p):
         self.log.addEntry("creating CasADi energy conservation equations (ODE)", 3)

@@ -1,9 +1,10 @@
 class PressureDrop:
-    def __init__(self, log, dimension, RSQ):
+    def __init__(self, log, dimension, RSQ, GCF):
         self.log = log
         self.log.addEntry("initializing pressure drop", 2)
         self.dimension = dimension
         self.RSQ = RSQ
+        self.GCF = GCF
 
     def createCasADi(self, ae, T, w_i, u, p):
         self.log.addEntry("creating CasADi pressure drop equations (AE)", 3)

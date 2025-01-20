@@ -3,6 +3,7 @@ from .MassConservation.MassConservation import MassConservation
 from .PressureDrop.PressureDrop import PressureDrop
 from .SpeciesConservation.SpeciesConservation import SpeciesConservation
 from ..Discretization.Discretization import Discretization
+from ..GeneralConversionFunctions.GeneralConversionFunctions import GeneralConversionFunctions
 from ..ReactorSpecificQuantities.ReactorSpecificQuantities import ReactorSpecificQuantities
 from ..ReactorSpecificQuantities.Component.Component import Component, MaterialProperty
 
@@ -27,7 +28,7 @@ class FixedBedReactor:
         self.RSQ = None
         self.n_components = None
 
-        self.GCV = None
+        self.GCF = None
 
         # Conservations
         self.SpeciesConservation = None
@@ -58,18 +59,44 @@ class FixedBedReactor:
         self.RSQ.addParameter("T_initial", 200)
         self.RSQ.addParameter("u_initial", 1)
         self.RSQ.addParameter("w_i_initial", [0, 1, 0, 0])
+        self.RSQ.addParameter("p_initial", 1e5)
 
         # add Components to RSQ
         CH4 = self.RSQ.addComponent("CH4")
+        CH4.add_property(Component.DENSITY, 1)
+        CH4.add_property(Component.HEAT_CAPACITY, 1)
+        CH4.add_property(Component.THERMAL_CONDUCTIVITY, 1)
+        CH4.add_property(Component.COLLISION_AREA, 1)
+        CH4.add_property(Component.DIFFUSION_VOLUME, 1)
+        CH4.add_property(Component.DYNAMIC_VISCOSITY, 1)
+        CH4.add_property(Component.MOLECULAR_WEIGHT, 1)
 
         H20 = self.RSQ.addComponent("H2O")
+        H20.add_property(Component.DENSITY, 2)
+        H20.add_property(Component.HEAT_CAPACITY, 2)
+        H20.add_property(Component.THERMAL_CONDUCTIVITY, 2)
+        H20.add_property(Component.COLLISION_AREA, 2)
+        H20.add_property(Component.DIFFUSION_VOLUME, 2)
+        H20.add_property(Component.DYNAMIC_VISCOSITY, 2)
+        H20.add_property(Component.MOLECULAR_WEIGHT, 2)
 
         CO2 = self.RSQ.addComponent("CO2")
+        CO2.add_property(Component.DENSITY, 3)
+        CO2.add_property(Component.HEAT_CAPACITY, 3)
+        CO2.add_property(Component.THERMAL_CONDUCTIVITY, 3)
+        CO2.add_property(Component.COLLISION_AREA, 3)
+        CO2.add_property(Component.DIFFUSION_VOLUME, 3)
+        CO2.add_property(Component.DYNAMIC_VISCOSITY, 3)
+        CO2.add_property(Component.MOLECULAR_WEIGHT, 3)
 
         H2 = self.RSQ.addComponent("H2")
-        H2.add_property(Component.DENSITY, 100)
-        H2.add_property(Component.THERMAL_CONDUCTIVITY, [1, 0.1], MaterialProperty.LINEAR)
-        H2.add_property(Component.HEAT_CAPACITY, [1, 0.1, 0.01], MaterialProperty.POLYNOMIAL)
+        H2.add_property(Component.DENSITY, 4)
+        H2.add_property(Component.HEAT_CAPACITY, 4)
+        H2.add_property(Component.THERMAL_CONDUCTIVITY, 4)
+        H2.add_property(Component.COLLISION_AREA, 4)
+        H2.add_property(Component.DIFFUSION_VOLUME, 4)
+        H2.add_property(Component.DYNAMIC_VISCOSITY, 4)
+        H2.add_property(Component.MOLECULAR_WEIGHT, 4)
 
         #add Catalyst to RSQ
         cat = self.RSQ.addCatalyst("cat1")
@@ -104,12 +131,12 @@ class FixedBedReactor:
     def __create_conservationEquations(self):
         self.log.addEntry("creating conservation equations", 1)
 
-        #TODO add General Conversion Functions (GCF)
+        self.GCF = GeneralConversionFunctions(self.log, self.RSQ)
 
-        self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ)
-        self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ)
-        self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ)
-        self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ)
+        self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF)
+        self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF)
+        self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ, self.GCF)
+        self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ, self.GCF)
 
     def __create_DAEstruct(self):
         self.log.addEntry("creating CasADi DAE structure", 1)

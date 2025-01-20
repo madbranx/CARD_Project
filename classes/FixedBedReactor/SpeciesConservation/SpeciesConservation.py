@@ -1,9 +1,10 @@
 class SpeciesConservation:
-    def __init__(self, log, dimension, RSQ):
+    def __init__(self, log, dimension, RSQ, GCV):
         self.log = log
         self.log.addEntry("initializing species conservation", 2)
         self.dimension = dimension
         self.RSQ = RSQ
+        self.GCV = GCV
 
     def createCasADi(self, ode, T, w_i, u, p):
         self.log.addEntry("creating CasADi species conservation equations (ODE)", 3)

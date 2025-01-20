@@ -11,7 +11,7 @@ class MaterialProperty:
         self.value = value
         self.dependency_type = dependency_type
 
-    def get_function(self, temperature=None):
+    def get_value(self, temperature=None):
         if self.dependency_type == self.CONSTANT:
             expr = self.value
         elif self.dependency_type == self.LINEAR:
@@ -20,7 +20,7 @@ class MaterialProperty:
             expr = sum(coef * (temperature ** i) for i, coef in enumerate(self.value))
         else:
             return None # add Log entry
-        return casADi.Function(self.name, [temperature], [expr])
+        return expr
 
 
 class Component:
@@ -30,6 +30,7 @@ class Component:
     COLLISION_AREA = 4
     DIFFUSION_VOLUME = 5
     DYNAMIC_VISCOSITY = 6
+    MOLECULAR_WEIGHT = 7
 
     def __init__(self, log, name):
         self.log = log
@@ -40,6 +41,7 @@ class Component:
         self.heat_capacity = None
         self.thermal_conductivity = None
         self.dynamic_viscosity = None
+        self.molecular_weight = None
 
 
     def add_property(self, property_type, value=None, dependency_type=MaterialProperty.CONSTANT):
@@ -67,6 +69,10 @@ class Component:
             name = self.name + '_dynamic_viscosity'
             self.dynamic_viscosity = MaterialProperty(self.log, name, value, dependency_type)
 
+        elif property_type == Component.MOLECULAR_WEIGHT:
+            name = self.name + '_molecular_weight'
+            self.molecular_weight = MaterialProperty(self.log, name, value, dependency_type)
+
         else:
             self.log.addError('Unknown property type {}'.format(property_type), 3)
             return None
@@ -91,3 +97,6 @@ class Component:
 
     def get_dynamic_viscosity(self):
         return self.dynamic_viscosity.get_value()
+
+    def get_molecular_weight(self):
+        return self.molecular_weight.get_value()

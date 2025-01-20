@@ -63,4 +63,3 @@ class ReactorSpecificQuantities:
         return self.reaction.getStoichiometricCoefficients()
 
 
-

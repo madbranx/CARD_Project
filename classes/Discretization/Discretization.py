@@ -61,8 +61,6 @@ class Discretization:
         return np.array(faces)
 
 
-
-
     def get_faces(self):
         return self.faces
 

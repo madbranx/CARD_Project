@@ -8,6 +8,7 @@ class ReactorSpecificQuantities:
         self.log = log
         self.parameters = []
         self.components = []
+        self.catalyst = None
         self.reaction = None
 
     def addParameter(self, name, value):
@@ -21,6 +22,12 @@ class ReactorSpecificQuantities:
         component = Component(self.log, name)
         self.components.append(component)
         return component
+
+    def addCatalyst(self, name):
+        self.log.addEntry("adding Catalyst " + name, 2)
+        catalyst = Component(self.log, name)
+        self.catalyst = catalyst
+        return catalyst
 
     def addReaction(self):
         self.log.addEntry("adding Reaction", 2)
@@ -48,6 +55,12 @@ class ReactorSpecificQuantities:
 
     def getComponents(self):
         return self.components
+
+    def getNComponents(self):
+        return len(self.components)
+
+    def getCatalyst(self):
+        return self.catalyst
 
     def getReactionRate(self):
         return self.reaction.getReactionRate()

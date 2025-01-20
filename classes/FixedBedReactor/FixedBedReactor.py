@@ -97,25 +97,45 @@ class FixedBedReactor:
 
         # create AEs/ODEs
         if self.dimension == FixedBedReactor.ONE_D:
-            ae_mass = CasADi.SX.sym("ae_mass", self.n_axial)
-            ae_pressureDrop = CasADi.SX.sym("ae_pressure_drop", self.n_axial)
+            ae_m= CasADi.SX.sym("ae_mass", self.n_axial)
+            ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial)
             ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial, self.n_components))
             ode_T = CasADi.SX.sym("ode_wi", self.n_axial)
         elif self.dimension == FixedBedReactor.TWO_D:
-            ae_mass = CasADi.SX.sym("ae_mass", self.n_axial, self.n_radial)
-            ae_pressureDrop = CasADi.SX.sym("ae_pressure_drop", self.n_axial, self.n_radial)
+            ae_m = CasADi.SX.sym("ae_mass", self.n_axial, self.n_radial)
+            ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial, self.n_radial)
             ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial,self.n_radial, self.n_components))
             ode_T = CasADi.SX.sym("ode_wi", self.n_axial, self.n_radial)
         else:
            return None
 
-        self.MassConservation.createCasADi(ae_mass, T, w_i, u)
+        self.MassConservation.createCasADi(ae_m, T, w_i, u)
+        #TODO
+        # self.PressureDrop.create()
+        # self.SpeciesConservation.create()
+        # self.EnergyConservation.create()
+
+        # Reshape AEs/ODEs
+        [ae, ode] = self.__reshape_CasADi_ae_ode(ae_m, ae_p, ode_wi, ode_T)
+
+        # create DAE struct
+        dae = {'x': x, 'z': u, 'ode': ode, 'alg': ae}
+        return dae
+
+
+    def __reshape_CasADi_ae_ode(self, ae_m, ae_p, ode_wi, ode_T):
+        # TODO
+        # Transform differential variable and ode in 1D vector
+        # w_i_reshaped = casADi.reshape(w_i, n_axial * len(nu), 1)
+        # ode_wi_reshaped = casADi.reshape(ode_wi, n_axial * len(nu), 1)
+        # x = casADi.vertcat(w_i_reshaped, T)
+        # ode = casADi.vertcat(ode_wi_reshaped, ode_T)
+
+        return ae, ode
 
 
 
     def __initialize_CasADi_symbols(self):
-
-
         if self.dimension == FixedBedReactor.ONE_D:
             # Define differential variables
             w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_components))

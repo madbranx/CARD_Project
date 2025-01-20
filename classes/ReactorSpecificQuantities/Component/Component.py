@@ -29,6 +29,7 @@ class Component:
     THERMAL_CONDUCTIVITY = 3
     COLLISION_AREA = 4
     DIFFUSION_VOLUME = 5
+    DYNAMIC_VISCOUSITY = 6
 
     def __init__(self, log, name):
         self.log = log
@@ -38,6 +39,8 @@ class Component:
         self.density = None
         self.heat_capacity = None
         self.thermal_conductivity = None
+        self.dynamic_viscosity = None
+
 
     def add_property(self, property_type, value=None, dependency_type=MaterialProperty.CONSTANT):
         if property_type == Component.DENSITY:
@@ -60,6 +63,10 @@ class Component:
             name = self.name + '_diffusion_volume'
             self.diffusion_volume = MaterialProperty(self.log, name, value, dependency_type)
 
+        elif property_type == Component.DYNAMIC_VISCOUSITY:
+            name = self.name + '_dynamic_viscosity'
+            self.dynamic_viscosity = MaterialProperty(self.log, name, value, dependency_type)
+
         else:
             self.log.addError('Unknown property type {}'.format(property_type), 3)
             return None
@@ -81,3 +88,6 @@ class Component:
 
     def get_diffusion_volume(self):
         return self.diffusion_volume.get_value()
+
+    def get_dynamic_viscosity(self):
+        return self.dynamic_viscosity.get_value()

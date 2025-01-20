@@ -1,4 +1,3 @@
-
 class MassConservation:
     def __init__(self, log, dimension, RSQ):
         self.log = log
@@ -6,12 +5,12 @@ class MassConservation:
         self.RSQ = RSQ
 
 
-    def createCasADi(self, ae, temperature, w_i, u):
+    def createCasADi(self, ae, T, w_i, u, p):
         from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
         if self.dimension == FixedBedReactor.ONE_D:
-            self.__createCasADi_1D(ae, temperature, w_i, u)
+            self.__createCasADi_1D(ae, T, w_i, u)
         elif self.dimension == FixedBedReactor.TWO_D:
-            self.__createCasADi_2D(ae, temperature, w_i, u)
+            self.__createCasADi_2D(ae, T, w_i, u)
 
     def __createCasADi_1D(self, ae, T, w_i, u):
 

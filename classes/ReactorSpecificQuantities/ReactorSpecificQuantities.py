@@ -59,10 +59,10 @@ class ReactorSpecificQuantities:
     def getReactionRate(self):
         return self.reaction.getReactionRate()
 
-    def setStoichCoeffs(self, stoichCoeffs):
-        self.reaction.setStoichCoeffs(stoichCoeffs)
+    def addStoichCoeff(self, name, coefficient):
+        self.reaction.addStoichiometryCoefficient(name, coefficient)
 
-    def getStoichCoeffs(self):
-        return self.reaction.getStoichiometryCoefficients()
+    def getStoichCoeff(self, name):
+        return self.reaction.getStoichiometryCoefficient(name)
 
 

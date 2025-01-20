@@ -1,7 +1,6 @@
 from .EnergyConservation.EnergyConservation import EnergyConservation
 from .MassConservation.MassConservation import MassConservation
 from .PressureDrop.PressureDrop import PressureDrop
-from .SpeciesConservation.MolecularDiffCoff import MolecularDiffCoff
 from .SpeciesConservation.SpeciesConservation import SpeciesConservation
 from ..Discretization.Discretization import Discretization
 from ..ReactorSpecificQuantities.ReactorSpecificQuantities import ReactorSpecificQuantities
@@ -15,6 +14,7 @@ class FixedBedReactor:
     def __init__(self, log, dimension, n_axial, n_radial=None):
         self.log = log
         log.addEntry("creating FixedBedReactor instance", 0)
+
         # Discretization
         self.dimension = dimension
         self.disc_z = None
@@ -22,9 +22,11 @@ class FixedBedReactor:
         if dimension == self.TWO_D:
             self.disc_r = None
             self.n_radial = n_radial
+
         # Reactor Specific Quantities
         self.RSQ = None
         self.n_components = None
+
         # Conservations
         self.SpeciesConservation = None
         self.EnergyConservation = None
@@ -43,6 +45,8 @@ class FixedBedReactor:
         self.log.addEntry("Initiating RSQ", 1)
         self.RSQ = ReactorSpecificQuantities(self.log)
 
+        # TODO add remaining Parameters/Properties
+
         # add Parameters to RSQ
         self.RSQ.addParameter("R", 8.314)
 
@@ -54,6 +58,12 @@ class FixedBedReactor:
         self.RSQ.addParameter("w_i_initial", [0, 1, 0, 0])
 
         # add Components to RSQ
+        CH4 = self.RSQ.addComponent("CH4")
+
+        H20 = self.RSQ.addComponent("H2O")
+
+        CO2 = self.RSQ.addComponent("CO2")
+
         H2 = self.RSQ.addComponent("H2")
         H2.add_property(Component.DENSITY, 100)
         H2.add_property(Component.THERMAL_CONDUCTIVITY, [1, 0.1], MaterialProperty.LINEAR)
@@ -65,7 +75,10 @@ class FixedBedReactor:
 
         # add Reaction to RSQ
         self.RSQ.addReaction()
-        self.RSQ.setStoichCoeffs([-1, -1, 1, 1])
+        self.RSQ.addStoichCoeff("CH4", -1)
+        self.RSQ.addStoichCoeff("H2O", -2)
+        self.RSQ.addStoichCoeff("CO2", 1)
+        self.RSQ.addStoichCoeff("H2", 4)
 
         # add component number to class attribute
         self.n_components = self.RSQ.getNComponents()  # get from RSQ
@@ -89,9 +102,9 @@ class FixedBedReactor:
     def __create_conservationEquations(self):
         self.log.addEntry("Creating conservation equations", 1)
 
-        MDC = MolecularDiffCoff() #TODO add Standartumrechnungen f rho etc
+        #TODO add Standartumrechnungen f rho etc
 
-        self.speciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ)
+        self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ)
         self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ)
         self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ)
@@ -108,38 +121,43 @@ class FixedBedReactor:
         elif self.dimension == FixedBedReactor.TWO_D:
             ae_m = CasADi.SX.sym("ae_mass", self.n_axial, self.n_radial)
             ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial, self.n_radial)
-            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial,self.n_radial, self.n_components))
+            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial, self.n_radial, self.n_components))
             ode_T = CasADi.SX.sym("ode_wi", self.n_axial, self.n_radial)
         else:
            return None
 
-        self.MassConservation.createCasADi(ae_m, T, w_i, u)
-        #TODO
-        # self.PressureDrop.create()
-        # self.SpeciesConservation.create()
-        # self.EnergyConservation.create()
+        # Define AEs/ODEs
+        self.MassConservation.createCasADi(ae_m, T, w_i, u, p)
+        self.PressureDrop.createCasADi(ae_p, T, w_i, u, p)
+        self.SpeciesConservation.createCasADi(ode_wi, T, w_i, u, p)
+        self.EnergyConservation.createCasADi(ode_T, T, w_i, u, p)
 
         # Reshape AEs/ODEs
-        [ae, ode, x, z] = self.__reshape_CasADi_ae_ode(ae_m, ae_p, ode_wi, ode_T)
+        [ae, ode, x, z] = self.__reshape_CasADi_ae_ode(w_i, T, u, p, ae_m, ae_p, ode_wi, ode_T)
 
         # create DAE struct
         self.dae = {'x': x, 'z': z, 'ode': ode, 'alg': ae}
 
 
-    def __reshape_CasADi_ae_ode(self, ae_m, ae_p, ode_wi, ode_T):
-        # TODO
+    def __reshape_CasADi_ae_ode(self,w_i, T, u, p, ae_m, ae_p, ode_wi, ode_T):
         # Transform differential variable and ode in 1D vector
-        # w_i_reshaped = casADi.reshape(w_i, n_axial * len(nu), 1)
-        # x = casADi.vertcat(w_i_reshaped, T)
-        #
-        # ode_wi_reshaped = casADi.reshape(ode_wi, n_axial * len(nu), 1)
-        # ode = casADi.vertcat(ode_wi_reshaped, ode_T)
-        #
-        # ae = casADi.vertcat(ae_u, ae_p)
-        # z = casADi.vertcat(u, p)
+
+        if self.dimension == FixedBedReactor.ONE_D:
+            w_i_reshaped = CasADi.reshape(w_i, self.n_axial * self.n_components, 1)
+            x = CasADi.vertcat(w_i_reshaped, T)
+
+            ode_wi_reshaped = CasADi.reshape(ode_wi, self.n_axial * self.n_components, 1)
+            ode = CasADi.vertcat(ode_wi_reshaped, ode_T)
+
+            ae = CasADi.vertcat(ae_m, ae_p)
+            z = CasADi.vertcat(u, p)
+
+        elif self.dimension == FixedBedReactor.TWO_D:
+            return None # TODO reshape in 2D?
+        else:
+            return None
 
         return ae, ode, x, z
-
 
 
     def __initialize_CasADi_symbols(self):
@@ -147,18 +165,23 @@ class FixedBedReactor:
             # Define differential variables
             w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_components))
             T = CasADi.SX.sym('T', self.n_axial)
+
             # Define algebraic variables
             u = CasADi.SX.sym('u', self.n_axial)
             p = CasADi.SX.sym('p', self.n_axial)
+
         elif self.dimension == FixedBedReactor.TWO_D:
             # Define differential variables
             w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_radial, self.n_components))
             T = CasADi.SX.sym('T', self.n_axial, self.n_radial)
+
             # Define algebraic variables
             u = CasADi.SX.sym('u', self.n_axial,self.n_radial)
             p = CasADi.SX.sym('p', self.n_axial, self.n_radial)
+
         else:
             self.log.addError("dimension not supported")
             return None
+
         return w_i, T, u, p
 

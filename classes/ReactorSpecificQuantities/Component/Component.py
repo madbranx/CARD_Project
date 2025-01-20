@@ -29,7 +29,7 @@ class Component:
     THERMAL_CONDUCTIVITY = 3
     COLLISION_AREA = 4
     DIFFUSION_VOLUME = 5
-    DYNAMIC_VISCOUSITY = 6
+    DYNAMIC_VISCOSITY = 6
 
     def __init__(self, log, name):
         self.log = log
@@ -63,7 +63,7 @@ class Component:
             name = self.name + '_diffusion_volume'
             self.diffusion_volume = MaterialProperty(self.log, name, value, dependency_type)
 
-        elif property_type == Component.DYNAMIC_VISCOUSITY:
+        elif property_type == Component.DYNAMIC_VISCOSITY:
             name = self.name + '_dynamic_viscosity'
             self.dynamic_viscosity = MaterialProperty(self.log, name, value, dependency_type)
 

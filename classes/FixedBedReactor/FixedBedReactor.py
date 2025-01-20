@@ -27,6 +27,8 @@ class FixedBedReactor:
         self.RSQ = None
         self.n_components = None
 
+        self.GCV = None
+
         # Conservations
         self.SpeciesConservation = None
         self.EnergyConservation = None
@@ -84,7 +86,7 @@ class FixedBedReactor:
         self.n_components = self.RSQ.getNComponents()  # get from RSQ
 
     def __create_spacialDiscretization(self):
-        self.log.addEntry("Creating spatial discretization for " + str(self.dimension) + " dimension(s)", 1)
+        self.log.addEntry("creating spatial discretization for " + str(self.dimension) + " dimension(s)", 1)
 
         # Axial discretization
         reactorLength = self.RSQ.getParameterValue("reactorLength")
@@ -100,9 +102,9 @@ class FixedBedReactor:
             self.disc_r = Discretization(self.log, self.n_radial, Discretization.EQUIDISTANT, start=0.0, end=reactorRadius)
 
     def __create_conservationEquations(self):
-        self.log.addEntry("Creating conservation equations", 1)
+        self.log.addEntry("creating conservation equations", 1)
 
-        #TODO add Standartumrechnungen f rho etc
+        #TODO add General Conversion Functions (GCF)
 
         self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ)
@@ -110,33 +112,77 @@ class FixedBedReactor:
         self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ)
 
     def __create_DAEstruct(self):
-        [T, w_i, u, p] = self.__initialize_CasADi_symbols()
+        self.log.addEntry("creating CasADi DAE structure", 1)
+        [w_i, T, u, p] = self.__initialize_CasADi_symbols()
 
         # create AEs/ODEs
+        self.log.addEntry("initializing CasADi AE and ODE structures", 2)
         if self.dimension == FixedBedReactor.ONE_D:
             ae_m= CasADi.SX.sym("ae_mass", self.n_axial)
             ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial)
             ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial, self.n_components))
             ode_T = CasADi.SX.sym("ode_wi", self.n_axial)
+
         elif self.dimension == FixedBedReactor.TWO_D:
-            ae_m = CasADi.SX.sym("ae_mass", self.n_axial, self.n_radial)
-            ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial, self.n_radial)
-            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial, self.n_radial, self.n_components))
-            ode_T = CasADi.SX.sym("ode_wi", self.n_axial, self.n_radial)
+            ae_m = CasADi.SX.sym("ae_mass", self.n_axial* self.n_radial)
+            ae_p = CasADi.SX.sym("ae_pressure_drop", self.n_axial* self.n_radial)
+            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial* self.n_radial, self.n_components))
+            ode_T = CasADi.SX.sym("ode_wi", self.n_axial* self.n_radial)
+
         else:
            return None
 
         # Define AEs/ODEs
+        self.log.addEntry("defining CasADi AE and ODE equations", 2)
         self.MassConservation.createCasADi(ae_m, T, w_i, u, p)
         self.PressureDrop.createCasADi(ae_p, T, w_i, u, p)
         self.SpeciesConservation.createCasADi(ode_wi, T, w_i, u, p)
         self.EnergyConservation.createCasADi(ode_T, T, w_i, u, p)
 
         # Reshape AEs/ODEs
+        self.log.addEntry("reshaping CasADi AE and ODE structures", 2)
         [ae, ode, x, z] = self.__reshape_CasADi_ae_ode(w_i, T, u, p, ae_m, ae_p, ode_wi, ode_T)
 
         # create DAE struct
+        self.log.addEntry("creating CasADi DAE object", 2)
         self.dae = {'x': x, 'z': z, 'ode': ode, 'alg': ae}
+
+
+    def __initialize_CasADi_symbols(self):
+        self.log.addEntry("initializing CasADi symbols", 2)
+        if self.dimension == FixedBedReactor.ONE_D:
+            # Define differential variables
+            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_components))
+            self.log.addEntry("w_i = " + str(self.n_axial) + " x " + str(self.n_components), 3)
+            T = CasADi.SX.sym('T', self.n_axial)
+            self.log.addEntry("T = " + str(self.n_axial), 3)
+
+            # Define algebraic variables
+            u = CasADi.SX.sym('u', self.n_axial)
+            self.log.addEntry("u = " + str(self.n_axial), 3)
+            p = CasADi.SX.sym('p', self.n_axial)
+            self.log.addEntry("p = " + str(self.n_axial), 3)
+
+        elif self.dimension == FixedBedReactor.TWO_D:
+            # Casadi does not support 3D elements -> axial and radial elements are combined (self.n_axial* self.n_radial)!
+
+            # Define differential variables
+            w_i = CasADi.SX.sym('w_i', (self.n_axial* self.n_radial, self.n_components))
+            self.log.addEntry("w_i = (" + str(self.n_axial) + " * " + str(self.n_radial) + ") x " + str(self.n_components), 3)
+            T = CasADi.SX.sym('T', (self.n_axial* self.n_radial))
+            self.log.addEntry("T = (" + str(self.n_axial) + " * " + str(self.n_radial) + ")", 3)
+
+            # Define algebraic variables
+            u = CasADi.SX.sym('u', (self.n_axial* self.n_radial))
+            self.log.addEntry("u = (" + str(self.n_axial) + " * " + str(self.n_radial) + ")", 3)
+            p = CasADi.SX.sym('p', (self.n_axial* self.n_radial))
+            self.log.addEntry("p = (" + str(self.n_axial) + " * " + str(self.n_radial) + ")", 3)
+
+        else:
+            self.log.addError("dimension not supported")
+            return None
+
+        return w_i, T, u, p
 
 
     def __reshape_CasADi_ae_ode(self,w_i, T, u, p, ae_m, ae_p, ode_wi, ode_T):
@@ -153,35 +199,24 @@ class FixedBedReactor:
             z = CasADi.vertcat(u, p)
 
         elif self.dimension == FixedBedReactor.TWO_D:
-            return None # TODO reshape in 2D?
-        else:
-            return None
+            w_i_reshaped = CasADi.reshape(w_i, self.n_axial * self.n_components * self.n_radial, 1)
+            T_reshaped = CasADi.reshape(T, self.n_axial * self.n_radial, 1)
+            x = CasADi.vertcat(w_i_reshaped, T_reshaped)
 
-        return ae, ode, x, z
+            ode_wi_reshaped = CasADi.reshape(ode_wi, self.n_axial * self.n_components * self.n_radial, 1)
+            ode_T_reshaped = CasADi.reshape(ode_T, self.n_axial * self.n_radial, 1)
+            ode = CasADi.vertcat(ode_wi_reshaped, ode_T_reshaped)
 
+            u_reshaped = CasADi.reshape(u, self.n_axial * self.n_radial, 1)
+            p_reshaped = CasADi.reshape(p, self.n_axial * self.n_radial, 1)
+            z = CasADi.vertcat(u_reshaped, p_reshaped)
 
-    def __initialize_CasADi_symbols(self):
-        if self.dimension == FixedBedReactor.ONE_D:
-            # Define differential variables
-            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_components))
-            T = CasADi.SX.sym('T', self.n_axial)
-
-            # Define algebraic variables
-            u = CasADi.SX.sym('u', self.n_axial)
-            p = CasADi.SX.sym('p', self.n_axial)
-
-        elif self.dimension == FixedBedReactor.TWO_D:
-            # Define differential variables
-            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_radial, self.n_components))
-            T = CasADi.SX.sym('T', self.n_axial, self.n_radial)
-
-            # Define algebraic variables
-            u = CasADi.SX.sym('u', self.n_axial,self.n_radial)
-            p = CasADi.SX.sym('p', self.n_axial, self.n_radial)
+            ae_m_reshaped = CasADi.reshape(ae_m, self.n_axial * self.n_radial, 1)
+            ae_p_reshaped = CasADi.reshape(ae_p, self.n_axial * self.n_radial, 1)
+            ae = CasADi.vertcat(ae_m_reshaped, ae_p_reshaped)
 
         else:
             self.log.addError("dimension not supported")
             return None
 
-        return w_i, T, u, p
-
+        return ae, ode, x, z

@@ -20,9 +20,8 @@ class FixedBedReactor:
         self.dimension = dimension
         self.disc_z = None
         self.n_axial = n_axial
-        if dimension == self.TWO_D:
-            self.disc_r = None
-            self.n_radial = n_radial
+        self.disc_r = None
+        self.n_radial = n_radial
 
         # Reactor Specific Quantities
         self.RSQ = None
@@ -55,11 +54,18 @@ class FixedBedReactor:
 
         self.RSQ.addParameter("reactorLength", 10)
         self.RSQ.addParameter("reactorDiameter", 1)
+        self.RSQ.addParameter("cat_diameter", 1)
 
-        self.RSQ.addParameter("T_initial", 200)
-        self.RSQ.addParameter("u_initial", 1)
-        self.RSQ.addParameter("w_i_initial", [0, 1, 0, 0])
-        self.RSQ.addParameter("p_initial", 1e5)
+        # calculate void fraction
+        eps = self.RSQ.calculate_void_fraction()
+        self.RSQ.addParameter("bed_void_fraction", eps)
+
+        self.RSQ.addParameter("dyn_viscosity_fluid", 1e-5) # TODO: Function to calculate viscosity dependent on w_i? -> pressure Drop eq.
+
+        self.RSQ.addParameter("T_in", 200)
+        self.RSQ.addParameter("u_in", 1)
+        self.RSQ.addParameter("w_i_in", [0, 1, 0, 0])
+        self.RSQ.addParameter("p_in", 1e5)
 
         # add Components to RSQ
         CH4 = self.RSQ.addComponent("CH4")
@@ -136,7 +142,7 @@ class FixedBedReactor:
         self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF)
         self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ, self.GCF)
-        self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ, self.GCF)
+        self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
 
     def __create_DAEstruct(self):
         self.log.addEntry("creating CasADi DAE structure", 1)

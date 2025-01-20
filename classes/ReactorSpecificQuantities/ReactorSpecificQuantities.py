@@ -35,6 +35,21 @@ class ReactorSpecificQuantities:
         self.reaction = reaction
         return reaction
 
+    def calculate_void_fraction(self):
+        d_cat = self.getParameterValue("cat_diameter")
+        d_reactor = self.getParameterValue("reactorDiameter")
+
+        ratio = d_cat / d_reactor
+
+        if ratio <= 0.5:
+            epsilon = 0.4 + 0.05 * ratio + 0.412 * (ratio ** 2)
+        elif 0.5 < ratio <= 0.536:
+            epsilon = 0.528 + 2.464 * (ratio - 0.5)
+        else:  # ratio >= 0.536
+            epsilon = 1 - 0.667 * (ratio ** 3) * (2 * ratio - 1) ** -0.5
+
+        return epsilon
+
     def getParameterValue(self, name):
         for parameter in self.parameters:
             if parameter.getName() == name:

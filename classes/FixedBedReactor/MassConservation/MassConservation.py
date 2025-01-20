@@ -17,12 +17,12 @@ class MassConservation:
 
     def __createCasADi_1D(self, ae, T, w_i, u, p):
 
-        T_in = self.RSQ.getParameterValue('T_initial')
-        w_i_in = self.RSQ.getParameterValue('w_i_initial')
-        p_in = self.RSQ.getParameterValue('p_initial')
+        T_in = self.RSQ.getParameterValue('T_in')
+        w_i_in = self.RSQ.getParameterValue('w_i_in')
+        p_in = self.RSQ.getParameterValue('p_in')
         rho_fl_in = self.GCF.rho_fl(w_i_in, T_in, p_in)
 
-        u_in = self.RSQ.getParameterValue('u_initial')
+        u_in = self.RSQ.getParameterValue('u_in')
 
         for z in range(ae.size()[0]):
             rho_fl = self.GCF.rho_fl(w_i[z, :].T, T[z], p[z])

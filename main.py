@@ -6,14 +6,23 @@ reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 10)
 reactor.setUp()
 
 
-# TODO
-# FixedBed: RSQ: define all Parameters, Components (Cat as Component?) & add eps calculation as method
-# Conservations: Implement physics as CasADi functions (set multiple used in own class called in FixedBedReactor)
-# FixedBed -> create DAE struct (depending on DIM)
-
-
+#TODO
+# add all parameters and material properties to FixedBedReactor()
+# Conservations: Implement physics as CasADi functions (1D)
+#       Pressure drop            DONE
+#       Mass conservation        DONE
+#       Species Conservation
+#       Energy Conservation
+# .
+# Function to calculate viscosity dependent on w_i? -> pressure Drop eq.
+# .
+# .
 # Integrator
 # Postprocessing
+# .
+# Validate 1D Model
+# .
+# implement 2D equations
 
 
 log.updateLog()

@@ -1,5 +1,3 @@
-from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
-
 
 class MassConservation:
     def __init__(self, log, dimension, RSQ):
@@ -7,7 +5,9 @@ class MassConservation:
         self.dimension = dimension
         self.RSQ = RSQ
 
+
     def createCasADi(self, ae, temperature, w_i, u):
+        from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
         if self.dimension == FixedBedReactor.ONE_D:
             self.__createCasADi_1D(ae, temperature, w_i, u)
         elif self.dimension == FixedBedReactor.TWO_D:
@@ -15,10 +15,12 @@ class MassConservation:
 
     def __createCasADi_1D(self, ae, T, w_i, u):
 
-        T_in = self.RSQ.getParameter('u_in')
+        T_in = self.RSQ.getParameterValue('T_initial')
+        u_in = self.RSQ.getParameterValue('u_initial')
+        w_i_in = self.RSQ.getParameterValue('w_i_initial')
 
-        for z in T.size()[0]:
-            ae[z] = u[z] - u_in * f_rho(w_i_in, T_in) / f_rho(w_i[z, :].T, T[z])
+        for z in range(T.size()[0]):
+            ae[z] = u[z] - u_in   # TODO finish when f_rho etc is implemented
 
     def __createCasADi_2D(self, ae, temperature, w_i, u):
         pass

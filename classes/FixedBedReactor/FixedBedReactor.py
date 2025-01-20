@@ -24,6 +24,7 @@ class FixedBedReactor:
             self.n_radial = n_radial
         # Reactor Specific Quantities
         self.RSQ = None
+        self.n_components = None
         # Conservations
         self.SpeciesConservation = None
         self.EnergyConservation = None
@@ -45,6 +46,10 @@ class FixedBedReactor:
         self.RSQ.addParameter("reactorLength", 10)
         self.RSQ.addParameter("reactorDiameter", 1)
 
+        self.RSQ.addParameter("T_initial", 200)
+        self.RSQ.addParameter("u_initial", 1)
+        self.RSQ.addParameter("w_i_initial", [0, 1, 0, 0])
+
         # add Components to RSQ
         H2 = self.RSQ.addComponent("H2")
         H2.add_property(Component.DENSITY, 100)
@@ -57,7 +62,10 @@ class FixedBedReactor:
 
         # add Reaction to RSQ
         self.RSQ.addReaction()
-        
+
+        # add component number to class attribute
+        self.n_components = self.RSQ.getNComponents()  # get from RSQ
+
     def __create_spacialDiscretization(self):
         self.log.addEntry("Creating spatial discretization for " + str(self.dimension) + " dimension(s)", 1)
 
@@ -77,7 +85,7 @@ class FixedBedReactor:
     def __create_conservationEquations(self):
         self.log.addEntry("Creating conservation equations", 1)
 
-        MDC = MolecularDiffCoff() #TODO
+        MDC = MolecularDiffCoff() #TODO add Standartumrechnungen f rho etc
 
         self.speciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ)
@@ -85,25 +93,45 @@ class FixedBedReactor:
         self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ)
 
     def __create_DAEstruct(self):
-        # TODO differentiate between 1/2D
+        [T, w_i, u, p] = self.__initialize_CasADi_symbols()
 
-        n_comp = self.RSQ.getNComponents() # get from RSQ
-        print(n_comp)
+        # create AEs/ODEs
+        if self.dimension == FixedBedReactor.ONE_D:
+            ae_mass = CasADi.SX.sym("ae_mass", self.n_axial)
+            ae_pressureDrop = CasADi.SX.sym("ae_pressure_drop", self.n_axial)
+            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial, self.n_components))
+            ode_T = CasADi.SX.sym("ode_wi", self.n_axial)
+        elif self.dimension == FixedBedReactor.TWO_D:
+            ae_mass = CasADi.SX.sym("ae_mass", self.n_axial, self.n_radial)
+            ae_pressureDrop = CasADi.SX.sym("ae_pressure_drop", self.n_axial, self.n_radial)
+            ode_wi = CasADi.SX.sym("ode_wi", (self.n_axial,self.n_radial, self.n_components))
+            ode_T = CasADi.SX.sym("ode_wi", self.n_axial, self.n_radial)
+        else:
+           return None
+
+        self.MassConservation.createCasADi(ae_mass, T, w_i, u)
+
+
+
+    def __initialize_CasADi_symbols(self):
+
 
         if self.dimension == FixedBedReactor.ONE_D:
-            w_i = CasADi.SX.sym('w_i', (self.n_axial, n_comp))  # A,B mol/m^3
-            T = CasADi.SX.sym('T', self.n_axial)  # [K]
+            # Define differential variables
+            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_components))
+            T = CasADi.SX.sym('T', self.n_axial)
             # Define algebraic variables
-            u = CasADi.SX.sym('u', self.n_axial)  # [m/s]
+            u = CasADi.SX.sym('u', self.n_axial)
+            p = CasADi.SX.sym('p', self.n_axial)
         elif self.dimension == FixedBedReactor.TWO_D:
-            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_radial, n_comp))  # A,B mol/m^3
-            T = CasADi.SX.sym('T', self.n_axial, self.n_radial)  # [K]
+            # Define differential variables
+            w_i = CasADi.SX.sym('w_i', (self.n_axial, self.n_radial, self.n_components))
+            T = CasADi.SX.sym('T', self.n_axial, self.n_radial)
             # Define algebraic variables
-            u = CasADi.SX.sym('u', self.n_axial,self.n_radial)  # [m/s]
+            u = CasADi.SX.sym('u', self.n_axial,self.n_radial)
+            p = CasADi.SX.sym('p', self.n_axial, self.n_radial)
         else:
             self.log.addError("dimension not supported")
             return None
+        return w_i, T, u, p
 
-        # create AEs/ODEs
-        ae_mass = CasADi.SX.sym("ae_mass", self.n_axial)
-        self.MassConservation.createCasADi(ae_mass, T, w_i, u)

@@ -8,7 +8,7 @@ reactor.setUp()
 
 # TODO
 # FixedBed: RSQ: define all Parameters, Components (Cat as Component?) & add eps calculation as method
-# Conservations: Implement physics as CasADi functions
+# Conservations: Implement physics as CasADi functions (set multiple used in own class called in FixedBedReactor)
 # FixedBed -> create DAE struct (depending on DIM)
 
 

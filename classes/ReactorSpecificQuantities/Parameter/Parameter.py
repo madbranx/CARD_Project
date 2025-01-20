@@ -4,8 +4,14 @@ class Parameter:
     def __init__(self, log, name, value=None):
         self.log = log
         self.name  = name
+        self.value = None
+        self.SXsym = None
         if value is not None:
-            self.value = casADi.MX.sym(name, value)
+            self.setValue(value)
+
+    def setValue(self, value):
+        self.value = value
+        self.SXsym = casADi.SX.sym(self.name, value)
 
     def getName(self):
         return self.name
@@ -13,5 +19,5 @@ class Parameter:
     def getValue(self):
         return self.value
 
-    def setValue(self, value):
-        self.value = casADi.MX.sym(self.name, value)
+    def getSXsym(self):
+        return self.SXsym

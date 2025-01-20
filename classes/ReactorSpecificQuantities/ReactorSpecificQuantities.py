@@ -1,6 +1,6 @@
-from Parameter.Parameter import Parameter
-from Component.Component import Component
-from Reaction.Reaction import Reaction
+from classes.ReactorSpecificQuantities.Component.Component import Component
+from classes.ReactorSpecificQuantities.Parameter.Parameter import Parameter
+from classes.ReactorSpecificQuantities.Reaction.Reaction import Reaction
 
 
 class ReactorSpecificQuantities:
@@ -25,19 +25,16 @@ class ReactorSpecificQuantities:
         self.reaction = reaction
         return reaction
 
-    def getParameters(self):
-        return self.parameters
-
-    def getComponents(self):
-        return self.components
-
-    def getReaction(self):
-        return self.reaction
-
-    def getParameter(self, name):
+    def getParameterValue(self, name):
         for parameter in self.parameters:
             if parameter.getName() == name:
-                return parameter
+                return parameter.getValue()
+        return None
+
+    def getParameterSXsym(self, name):
+        for parameter in self.parameters:
+            if parameter.getName() == name:
+                return parameter.getSXsym()
         return None
 
     def getComponent(self, name):
@@ -45,6 +42,15 @@ class ReactorSpecificQuantities:
             if component.getName() == name:
                 return component
         return None
+
+    def getComponents(self):
+        return self.components
+
+    def getReactionRate(self):
+        return self.reaction.getReactionRate()
+
+    def getStoichCoeffs(self):
+        return self.reaction.getStoichiometricCoefficients()
 
 
 

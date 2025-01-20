@@ -30,6 +30,7 @@ class FixedBedReactor:
         self.EnergyConservation = None
         self.MassConservation = None
         self.PressureDrop = None
+        self.dae = None
 
     def setUp(self):
         self.__initiateRSQ()
@@ -43,6 +44,8 @@ class FixedBedReactor:
         self.RSQ = ReactorSpecificQuantities(self.log)
 
         # add Parameters to RSQ
+        self.RSQ.addParameter("R", 8.314)
+
         self.RSQ.addParameter("reactorLength", 10)
         self.RSQ.addParameter("reactorDiameter", 1)
 
@@ -62,6 +65,7 @@ class FixedBedReactor:
 
         # add Reaction to RSQ
         self.RSQ.addReaction()
+        self.RSQ.setStoichCoeffs([-1, -1, 1, 1])
 
         # add component number to class attribute
         self.n_components = self.RSQ.getNComponents()  # get from RSQ
@@ -116,22 +120,25 @@ class FixedBedReactor:
         # self.EnergyConservation.create()
 
         # Reshape AEs/ODEs
-        [ae, ode] = self.__reshape_CasADi_ae_ode(ae_m, ae_p, ode_wi, ode_T)
+        [ae, ode, x, z] = self.__reshape_CasADi_ae_ode(ae_m, ae_p, ode_wi, ode_T)
 
         # create DAE struct
-        dae = {'x': x, 'z': u, 'ode': ode, 'alg': ae}
-        return dae
+        self.dae = {'x': x, 'z': z, 'ode': ode, 'alg': ae}
 
 
     def __reshape_CasADi_ae_ode(self, ae_m, ae_p, ode_wi, ode_T):
         # TODO
         # Transform differential variable and ode in 1D vector
         # w_i_reshaped = casADi.reshape(w_i, n_axial * len(nu), 1)
-        # ode_wi_reshaped = casADi.reshape(ode_wi, n_axial * len(nu), 1)
         # x = casADi.vertcat(w_i_reshaped, T)
+        #
+        # ode_wi_reshaped = casADi.reshape(ode_wi, n_axial * len(nu), 1)
         # ode = casADi.vertcat(ode_wi_reshaped, ode_T)
+        #
+        # ae = casADi.vertcat(ae_u, ae_p)
+        # z = casADi.vertcat(u, p)
 
-        return ae, ode
+        return ae, ode, x, z
 
 
 

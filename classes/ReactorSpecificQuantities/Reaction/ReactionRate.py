@@ -41,12 +41,13 @@ class ReactionRate:
         K_eq = 137 * T**(-3.998) * casADi.exp(158.7e3 / (self.R * T))
         return casADi.Function("K_eq", [T], [K_eq])
 
-    def rate_equation(self, T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat):
+    def rate_equation(self, T, p_CH4, p_H2O, p_CO2, p_H2):
         # T in K
         # p_i in bar
         # rho_cat in g_cat / m^3_cat
         k = self.__calc_k(T)
         K_eq = self.__K_eq(T)
+        rho_cat = 1 # TODO get from RSQ (possible?)
 
         r = (k * (p_CO2**0.5) * (p_H2**0.5) * (1 - (p_CH4 * (p_H2O**2)) / (K_eq * p_CO2 * (p_H2**4))) /
              (1 + self.__calc_K_x('OH', T) * p_H2O / (p_H2 ** 0.5) + self.__calc_K_x('H2', T) * (p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5)))

@@ -9,8 +9,8 @@ class Reaction:
     def setStoichiometryCoefficients(self, stoichiometry_coefficients):
         self.stoichiometry_coefficients = stoichiometry_coefficients
 
-    def getReactionRate(self, T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat):
-        return self.reactionRate.rate_equation(T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat)
+    def getReactionRate(self, T, p_CH4, p_H2O, p_CO2, p_H2):
+        return self.reactionRate.rate_equation(T, p_CH4, p_H2O, p_CO2, p_H2)
 
     def getStoichiometryCoefficients(self):
         return self.stoichiometry_coefficients

@@ -25,3 +25,14 @@ class GeneralConversionFunctions:
         unity = CasADi.DM.ones(len(Mw_i))
         Mw_fl =  1 / (CasADi.dot(w_i / CasADi.SX(Mw_i), unity))
         return Mw_fl
+
+    def massFraction_weighted_average(self, w_i, material_property, T=None):  # property = Component.DENSITY, ...
+        components = self.RSQ.getComponents()
+
+        summ = 0
+        for component, w in zip(components, w_i):
+            prop = component.get_property(material_property, T)
+            summ = summ + (w / prop)
+
+        return 1/summ
+

@@ -46,10 +46,9 @@ class SpeciesConservation:
                 ode[z, comp] = (
                                 - left_side
                                 - self.axialMassFlow.calc(T[z], w_i[z,:].T, u[z], p[z], comp)
-                                + self.changeByReaction.calc(T[z], w_i[z,:].T, comp)
+                                + self.changeByReaction.calc(T[z], w_i[z,:].T, p, comp)
                                 )
 
     def __createCasADi_2D(self):
         # TODO
         self.radialMassFlow.calc()
-        pass

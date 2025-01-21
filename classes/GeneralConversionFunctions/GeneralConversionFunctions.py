@@ -29,3 +29,19 @@ class GeneralConversionFunctions:
         unity = CasADi.DM.ones(len(property_values))
         return 1 / (CasADi.dot(w_i / CasADi.SX(property_values), unity))
 
+    #TODO
+    # check if this works right!
+
+    def moleFractions(self, w_i):
+        Mw_i = self.RSQ.getMolarWeights()
+        Mw_fl = self.massFraction_weighted_average(w_i, Component.MOLECULAR_WEIGHT)
+        return w_i*Mw_i/Mw_fl
+
+    def partial_pressures(self, w_i, p):
+        return self.moleFractions(w_i)*p
+
+    def concentrations(self, w_i, T, p):
+        R = self.RSQ.getParameterValue("R")
+        p_i = self.partial_pressures(w_i, p)
+        return p_i/(R*T)
+

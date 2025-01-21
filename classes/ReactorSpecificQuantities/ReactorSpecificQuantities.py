@@ -9,7 +9,7 @@ class ReactorSpecificQuantities:
         self.parameters = []
         self.components = []
         self.catalyst = None
-        self.reaction = None
+        self.reactions = []
 
     def addParameter(self, name, value):
         self.log.addEntry("adding Parameter " + name + " = " + str(value), 2)
@@ -29,11 +29,13 @@ class ReactorSpecificQuantities:
         self.catalyst = catalyst
         return catalyst
 
-    def addReaction(self):
+    def addReaction(self, reaction):
         self.log.addEntry("adding Reaction", 2)
-        reaction = Reaction(self.log)
-        self.reaction = reaction
+        self.reactions.append(reaction)
         return reaction
+
+    def getReactions(self):
+        return self.reactions
 
     def calculate_void_fraction(self):
         d_cat = self.getParameterValue("cat_diameter")
@@ -71,22 +73,8 @@ class ReactorSpecificQuantities:
     def getCatalyst(self):
         return self.catalyst
 
-    def getReactionRate(self):
-        return self.reaction.getReactionRate()
-
-    def addStoichCoeff(self, name, coefficient):
-        self.reaction.addStoichiometryCoefficient(name, coefficient)
-
-    def getStoichCoeff(self, name):
-        return self.reaction.getStoichiometryCoefficient(name)
-
-    def getStoichCoeffs(self):
-        return self.reaction.getStoichiometryCoefficients()
-
     def getMolarWeights(self):
         Mw_i = []
         for component in self.getComponents():
             Mw_i.append(component.get_molecular_weight())
         return Mw_i
-
-

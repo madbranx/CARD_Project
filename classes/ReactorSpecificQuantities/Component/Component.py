@@ -80,6 +80,9 @@ class Component:
         self.log.addEntry("adding property " + name + " as type " + str(dependency_type), 3)
 
 
+    def getName(self):
+        return self.name
+
     def get_density(self, temperature):
         return self.density.get_value(temperature)
 

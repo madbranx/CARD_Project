@@ -4,6 +4,8 @@ from .PressureDrop.PressureDrop import PressureDrop
 from .SpeciesConservation.SpeciesConservation import SpeciesConservation
 from ..Discretization.Discretization import Discretization
 from ..GeneralConversionFunctions.GeneralConversionFunctions import GeneralConversionFunctions
+from ..ReactorSpecificQuantities.Reaction.Reaction import Reaction
+from ..ReactorSpecificQuantities.Reaction.ReactionRateKoschany import ReactionRateKoschany
 from ..ReactorSpecificQuantities.ReactorSpecificQuantities import ReactorSpecificQuantities
 from ..ReactorSpecificQuantities.Component.Component import Component, MaterialProperty
 
@@ -55,7 +57,12 @@ class FixedBedReactor:
         # add Parameters to RSQ
         self.RSQ.addParameter("reactorLength", 10)
         self.RSQ.addParameter("reactorDiameter", 1)
+
         self.RSQ.addParameter("cat_diameter", 1)
+        self.RSQ.addParameter("cat_tortuosity", 1)
+        self.RSQ.addParameter("cat_porosity", 1)
+
+        self.RSQ.addParameter("diameter_pore", 1)
 
         # calculate void fraction
         eps = self.RSQ.calculate_void_fraction()
@@ -107,13 +114,16 @@ class FixedBedReactor:
         cat = self.RSQ.addCatalyst("cat1")
         cat.add_property(Component.DENSITY, 2000)
 
-        # add Reaction to RSQ
-        self.RSQ.addReaction()
-        # TODO change StoichKoeffs into array [must be defined in the same order as the Components above!]
-        self.RSQ.addStoichCoeff("CH4", -1)
-        self.RSQ.addStoichCoeff("H2O", -2)
-        self.RSQ.addStoichCoeff("CO2", 1)
-        self.RSQ.addStoichCoeff("H2", 4)
+        # add Reactions to RSQ
+
+        # CH4 + 2 H20 -> CO2 + 4 H2
+        reaction1 = Reaction(self.log)
+        reaction1.setStoichiometryCoefficients([-1, -2, 1, 4])
+        # set reaction Rate
+        reactionRate1 = ReactionRateKoschany(self.log)
+        reaction1.setReactionRate(reactionRate1)
+
+        self.RSQ.addReaction(reaction1)
 
         # add component number to class attribute
         self.n_components = self.RSQ.getNComponents()  # get from RSQ

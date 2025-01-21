@@ -3,7 +3,8 @@
 
 import casadi as casADi
 
-class ReactionRate:
+# TODO add RSQ, GCF to class!
+class ReactionRateKoschany:
     def __init__(self, log):
         self.log = log
         self.T_ref = 550        # K
@@ -20,7 +21,7 @@ class ReactionRate:
     def __calc_k (self, T):
         # T in K
         k = self.k0_ref * casADi.exp(self.E_A / self.R *( 1/self.T_ref - 1/T))
-        return casADi.Function("k", [T], [k])
+        return k
 
     # methode to calculate adsorption constant K_x for OH, H2 and mix
     def __calc_K_x(self, species, T):
@@ -33,17 +34,19 @@ class ReactionRate:
         dH_x = self.AdsorptionConstants[species]['dH']
 
         K_x = K_x_ref * casADi.exp(dH_x/self.R *( 1/self.T_ref - 1/T))
-        return casADi.Function(f"K_x_{species}", [T], [K_x])
+        return K_x
 
     # methode to calculate equilibrium constant K_eq
     def __K_eq(self, T):
         # T in K
         K_eq = 137 * T**(-3.998) * casADi.exp(158.7e3 / (self.R * T))
-        return casADi.Function("K_eq", [T], [K_eq])
+        return K_eq
 
-    def rate_equation(self, T, p_CH4, p_H2O, p_CO2, p_H2):
+    def rate_equation(self, w_i, T):
+        # TODO add GCF see above
+        [p_CH4, p_H2O, p_CO2, p_H2 ] = self.GCF.partialPressures(w_i, p)
         # T in K
-        # p_i in bar
+        # p_i in bar #TODO check units
         # rho_cat in g_cat / m^3_cat
         k = self.__calc_k(T)
         K_eq = self.__K_eq(T)
@@ -54,5 +57,5 @@ class ReactionRate:
 
         # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
         r = r * rho_cat * 1000
-        return casADi.Function("rate_equation", [T, p_CH4, p_H2O, p_CO2, p_H2, rho_cat], [r])
+        return r
 

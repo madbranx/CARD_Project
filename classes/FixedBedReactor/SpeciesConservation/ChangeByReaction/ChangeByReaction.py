@@ -1,7 +1,6 @@
 from classes.FixedBedReactor.SpeciesConservation.ChangeByReaction.EffectivenessFactor.EffectivenessFactor import \
     EffectivenessFactor
 
-
 class ChangeByReaction:
 
     def __init__(self,log, RSQ, GCF):
@@ -11,20 +10,21 @@ class ChangeByReaction:
         self.effFactor = EffectivenessFactor(self.log, self.RSQ, self.GCF)
 
     # Following Methods use location specific Arguments -> can be used for 1D and 2D!
-    def calc(self, T, w_i, comp):
+    def calc(self, T, w_i, p, comp):
         eps = self.RSQ.getParameterValue("bed_void_fraction")
         Mw_i = self.RSQ.getMolarWeights()
-        stoich_coeffs = self.RSQ.getStoichCoeffs()
 
-        #TODO use get Reaction -> Reaction.calcReactionrate
-        # calcReactionrate should use w_i as input -> define function in GCF to calc p from w_i
-        # give reaction rate to eff factor as argument
-        # .
-        # Dont use RSQ to get RRate/Stoich ....
-        # Use Reaction directly -> iterate over reactions: for reaction in self.RSQ.getReactions(): ....
+        # effectiveness Factor is always calculated with the reaction 1 -> no function of the other reactions
+        eff_factor = self.effFactor.calc(w_i, T, p)
 
-        reaction_rate = self.RSQ.getReactionRate()
-        eff_factor = self.effFactor.calc(T, w_i)
+        reactions = self.RSQ.getReactions()
+        sum_stoichiometric_rate = 0
 
-        return (1-eps)*Mw_i[comp]*stoich_coeffs[comp]*eff_factor*reaction_rate
+        # calculate the stoichiometric factor & reaction rate for each reaction and sum them up
+        for reaction in reactions:
+            stoich_factor = reaction.getStoichiometryCoefficients()[comp]
+            reaction_rate = reaction.getReactionRate(w_i, T)
+            sum_stoichiometric_rate = (sum_stoichiometric_rate + stoich_factor * reaction_rate)
+
+        return (1-eps)*Mw_i[comp]*sum_stoichiometric_rate*eff_factor
 

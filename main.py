@@ -2,7 +2,7 @@ from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
 from classes.Log.Log import Log
 
 log = Log("first simulation")
-reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 10)
+reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 1)
 reactor.setUp()
 
 

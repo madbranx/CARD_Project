@@ -43,7 +43,7 @@ class PressureDrop:
                 ae[z] = (p[z] - p[z-1]) + factor
 
     def __A(self,z, w_i, T, eps, d_cat):
-        visc_fl = self.GCF.massFraction_weighted_average(w_i[z, :].T, T[z], Component.DYNAMIC_VISCOSITY)
+        visc_fl = self.GCF.massFraction_weighted_average(w_i[z, :].T, Component.DYNAMIC_VISCOSITY,  T[z])
 
         A = (np.pow(1 - eps, 2) / np.pow(eps, 3)) * (150 * visc_fl / np.pow(d_cat, 2))
         return A

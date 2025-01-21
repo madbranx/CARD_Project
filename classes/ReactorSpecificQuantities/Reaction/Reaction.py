@@ -17,3 +17,6 @@ class Reaction:
             if name == coefficient[0]:
                 return coefficient[1]
         return None
+
+    def getStoichiometryCoefficients(self):
+        return self.stoichiometry_coefficients

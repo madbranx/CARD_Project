@@ -80,4 +80,13 @@ class ReactorSpecificQuantities:
     def getStoichCoeff(self, name):
         return self.reaction.getStoichiometryCoefficient(name)
 
+    def getStoichCoeffs(self):
+        return self.reaction.getStoichiometryCoefficients()
+
+    def getMolarWeights(self):
+        Mw_i = []
+        for component in self.getComponents():
+            Mw_i.append(component.get_molecular_weight())
+        return Mw_i
+
 

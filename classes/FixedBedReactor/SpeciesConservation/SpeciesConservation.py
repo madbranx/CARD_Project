@@ -1,23 +1,55 @@
+from classes.FixedBedReactor.SpeciesConservation.AxialMassFlow.AxialMassFlow import AxialMassFlow
+from classes.FixedBedReactor.SpeciesConservation.ChangeByReaction.ChangeByReaction import ChangeByReaction
+from classes.FixedBedReactor.SpeciesConservation.RadialMassFlow.RadialMassFlow import RadialMassFlow
+
+
 class SpeciesConservation:
-    def __init__(self, log, dimension, RSQ, GCV):
+    def __init__(self, log, dimension, RSQ, GCF, disc_axial, disc_radial = None):
         self.log = log
         self.log.addEntry("initializing species conservation", 2)
         self.dimension = dimension
         self.RSQ = RSQ
-        self.GCV = GCV
+        self.GCF = GCF
+        self.disc_axial = disc_axial
+        self.disc_radial = disc_radial
+
+        # Initialize Calculation Classes
+        self.axialMassFlow = AxialMassFlow(log, self.GCF)
+        self.radialMassFlow = RadialMassFlow(log, self.RSQ, self.GCF)
+        self.changeByReaction = ChangeByReaction(log, self.RSQ, self.GCF)
 
     def createCasADi(self, ode, T, w_i, u, p):
         self.log.addEntry("creating CasADi species conservation equations (ODE)", 3)
         from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
+
         if self.dimension == FixedBedReactor.ONE_D:
-            self.__createCasADi_1D(ode)
+            self.__createCasADi_1D(ode, T, w_i, u, p)
+
         elif self.dimension == FixedBedReactor.TWO_D:
             self.__createCasADi_2D()
 
-    def __createCasADi_1D(self, ode):
-        for comp in range(4):
+    def __createCasADi_1D(self, ode, T, w_i, u, p):
+        eps = self.RSQ.getParameterValue("bed_void_fraction")
+        w_i_in = self.RSQ.getParameterValue("w_i_in")
+        delta_axial = self.disc_axial.get_differences()
+
+        n_components = self.RSQ.getNComponents()
+        for comp in range(n_components):
             for z in range(ode.size()[0]):
-                ode[z, comp] = 1
+                rho_fl = self.GCF.rho_fl(w_i[z, :].T, T[z], p[z])
+
+                if z == 0:  # Boundary Condition
+                    left_side = (w_i[z, comp] - w_i_in[comp]) * eps * rho_fl
+                else:
+                    left_side = (w_i[z, comp] - w_i[z - 1, comp]) * eps * rho_fl
+
+                ode[z, comp] = (
+                                - left_side
+                                - self.axialMassFlow.calc(T[z], w_i[z,:].T, u[z], p[z], comp)
+                                + self.changeByReaction.calc(T[z], w_i[z,:].T, comp)
+                                )
 
     def __createCasADi_2D(self):
+        # TODO
+        self.radialMassFlow.calc()
         pass

@@ -49,9 +49,10 @@ class FixedBedReactor:
 
         # TODO add remaining Parameters/Properties
 
-        # add Parameters to RSQ
+        # add Constants to RSQ
         self.RSQ.addParameter("R", 8.314)
 
+        # add Parameters to RSQ
         self.RSQ.addParameter("reactorLength", 10)
         self.RSQ.addParameter("reactorDiameter", 1)
         self.RSQ.addParameter("cat_diameter", 1)
@@ -65,7 +66,7 @@ class FixedBedReactor:
         self.RSQ.addParameter("w_i_in", [0, 1, 0, 0])
         self.RSQ.addParameter("p_in", 1e5)
 
-        # add Components to RSQ
+        # add Components and their Properties to RSQ
         CH4 = self.RSQ.addComponent("CH4")
         CH4.add_property(Component.DENSITY, 1)
         CH4.add_property(Component.HEAT_CAPACITY, 1)
@@ -108,6 +109,7 @@ class FixedBedReactor:
 
         # add Reaction to RSQ
         self.RSQ.addReaction()
+        # TODO change StoichKoeffs into array [must be defined in the same order as the Components above!]
         self.RSQ.addStoichCoeff("CH4", -1)
         self.RSQ.addStoichCoeff("H2O", -2)
         self.RSQ.addStoichCoeff("CO2", 1)
@@ -137,7 +139,7 @@ class FixedBedReactor:
 
         self.GCF = GeneralConversionFunctions(self.log, self.RSQ)
 
-        self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF)
+        self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF)
         self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ, self.GCF)
         self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)

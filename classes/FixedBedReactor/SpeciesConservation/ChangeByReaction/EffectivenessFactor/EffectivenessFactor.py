@@ -5,14 +5,14 @@ import numpy as np
 import casadi as casADi
 
 class EffectivenessFactor:
-    def __init__(self, log, RSQ, stdFunc):
+    def __init__(self, log, RSQ, GCF):
         self.log = log
         self.RSQ = RSQ
-        self.stdFunctions = stdFunc
+        self.GCF = GCF
         self.R = RSQ.getParameterValue("R")
         self.pi = np.pi
 
-    def calc_effectiveness_factor(self, T, w_i):
+    def calc(self, T, w_i):
 
         thiele = self.__calc_thiele(T, w_i)
         effectiveness_factor = 3/thiele * ( 1/casADi.tanh(thiele) - 1/thiele )
@@ -20,14 +20,19 @@ class EffectivenessFactor:
 
     def __calc_thiele(self, T, w_i):
 
-        concentration_CO2 = 1 # TODO calc from w_i array
+        # TODO calc from w_i array
+        concentration_CO2 = 1
         stochiometry_CO2 = self.RSQ.getStoichCoeffs()[1]
         diameter_particle = self.RSQ.getParameterValue("diameter_particle")
-        [p_CH4, p_H2O, p_CO2, p_H2 ] = [1, 2, 3, 4] # TODO calc from w_i array
+
+        # TODO calc from w_i array
+        [p_CH4, p_H2O, p_CO2, p_H2 ] = [1, 2, 3, 4]
 
         eff_diff_coff = self.__calc_eff_diff_coff(T)
 
+        #TODO
         # reaction rate wie impelemtieren??
+        # fix call
         reaction_rate = self.RSQ.getReactionRate()
         reaction_rate = reaction_rate(T, p_CH4, p_H2O, p_CO2, p_H2)
 
@@ -41,8 +46,12 @@ class EffectivenessFactor:
 
         # Checked
         knudsen_diff_coff = self.__calc_knudsen_diff_coff(T)
+
+        #TODO TEMP
         # molar diff coff, wie implementieren??
-        molar_diff_coff = 7.1497e-5 #TODO TEMP
+        molar_diff_coff = 7.1497e-5
+
+
         eff_diff_coff = ( tortuosity_particle**2 / porosity_particle * (1/molar_diff_coff + 1/knudsen_diff_coff) )**(-1)
         return eff_diff_coff
 

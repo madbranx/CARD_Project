@@ -3,11 +3,14 @@
 
 class AxialMassFlow:
 
-    def __init__(self):
-        pass
+    def __init__(self,log, GCF):
+        self.log = log
+        self.GCF = GCF
 
-    def calc(self,axial_flowfield, mass_fraction, fluid_density):
-        # axial_flowfield in m/s
-        # fluid_density in kg/m^3
-        axial_mass_flux = - axial_flowfield * mass_fraction * fluid_density
-        return axial_mass_flux
+    # Following Methods use location specific Arguments -> can be used for 1D and 2D!
+    def calc(self, T, w_i, u, p, comp):
+        # Only convection
+        rho_fl = self.GCF.rho_fl(w_i, T, p)
+
+        j_i_ax = -u*rho_fl*w_i[comp]
+        return j_i_ax

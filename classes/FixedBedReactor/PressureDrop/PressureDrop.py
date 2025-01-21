@@ -4,14 +4,14 @@ from classes.ReactorSpecificQuantities.Component.Component import Component
 
 
 class PressureDrop:
-    def __init__(self, log, dimension, RSQ, GCF, disc_z, disc_r):
+    def __init__(self, log, dimension, RSQ, GCF, disc_axial, disc_radial):
         self.log = log
         self.log.addEntry("initializing pressure drop", 2)
         self.dimension = dimension
         self.RSQ = RSQ
         self.GCF = GCF
-        self.disc_z = disc_z
-        self.disc_r = disc_r
+        self.disc_z = disc_axial
+        self.disc_r = disc_radial
 
     def createCasADi(self, ae, T, w_i, u, p):
         self.log.addEntry("creating CasADi pressure drop equations (AE)", 3)
@@ -24,6 +24,8 @@ class PressureDrop:
     def __createCasADi_1D(self, ae, T, w_i, u, p):
         self.__Ergun1D(ae, T, w_i, u, p)
 
+    #TODO
+    # put Ergun in class and make method use location specific Arguments -> can be used for 1D and 2D!
 
     def __Ergun1D(self, ae, T, w_i, u, p):
         eps = self.RSQ.getParameterValue("bed_void_fraction")

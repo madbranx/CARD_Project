@@ -1,5 +1,8 @@
 import numpy as np
 
+from classes.ReactorSpecificQuantities.Component.Component import Component
+
+
 class PressureDrop:
     def __init__(self, log, dimension, RSQ, GCF, disc_z, disc_r):
         self.log = log
@@ -28,7 +31,7 @@ class PressureDrop:
         delta_z = self.disc_z.get_differences()
         for z in range(ae.size()[0]):
 
-            A = self.__A(eps, d_cat)
+            A = self.__A(z, w_i, T, eps, d_cat)
             B = self.__B(z, w_i, T, p, eps, d_cat)
 
             factor = delta_z[z] * (A * u[z] + B * np.pow(u[z], 2))
@@ -39,9 +42,10 @@ class PressureDrop:
             else:
                 ae[z] = (p[z] - p[z-1]) + factor
 
-    def __A(self, eps, d_cat):
-        my_fl = self.RSQ.getParameterValue("dyn_viscosity_fluid")
-        A = (np.pow(1 - eps, 2) / np.pow(eps, 3)) * (150 * my_fl / np.pow(d_cat, 2))
+    def __A(self,z, w_i, T, eps, d_cat):
+        visc_fl = self.GCF.massFraction_weighted_average(w_i[z, :].T, T[z], Component.DYNAMIC_VISCOSITY)
+
+        A = (np.pow(1 - eps, 2) / np.pow(eps, 3)) * (150 * visc_fl / np.pow(d_cat, 2))
         return A
 
     def __B(self, z, w_i, T, p, eps, d_cat):

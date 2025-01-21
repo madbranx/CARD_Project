@@ -14,7 +14,7 @@ reactor.setUp()
 #       Species Conservation
 #       Energy Conservation
 # .
-# Function to calculate viscosity dependent on w_i? -> pressure Drop eq.
+# Function to calculate viscosity dependent on w_i? -> pressure Drop eq.        DONE
 # .
 # .
 # Integrator

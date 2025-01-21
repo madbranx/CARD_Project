@@ -60,8 +60,6 @@ class FixedBedReactor:
         eps = self.RSQ.calculate_void_fraction()
         self.RSQ.addParameter("bed_void_fraction", eps)
 
-        self.RSQ.addParameter("dyn_viscosity_fluid", 1e-5) # TODO: Function to calculate viscosity dependent on w_i? -> pressure Drop eq.
-
         self.RSQ.addParameter("T_in", 200)
         self.RSQ.addParameter("u_in", 1)
         self.RSQ.addParameter("w_i_in", [0, 1, 0, 0])

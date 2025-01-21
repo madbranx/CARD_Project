@@ -95,8 +95,25 @@ class Component:
     def get_diffusion_volume(self):
         return self.diffusion_volume.get_value()
 
-    def get_dynamic_viscosity(self):
-        return self.dynamic_viscosity.get_value()
+    def get_dynamic_viscosity(self, temperature):
+        return self.dynamic_viscosity.get_value(temperature)
 
     def get_molecular_weight(self):
         return self.molecular_weight.get_value()
+
+    def get_property(self, property_type, temperature=None):
+        if property_type == Component.DENSITY:
+            return self.density.get_value(temperature)
+        elif property_type == Component.HEAT_CAPACITY:
+            return self.heat_capacity.get_value(temperature)
+        elif property_type == Component.THERMAL_CONDUCTIVITY:
+            return self.thermal_conductivity.get_value(temperature)
+        elif property_type == Component.COLLISION_AREA:
+            return self.collision_area.get_value()
+        elif property_type == Component.DIFFUSION_VOLUME:
+            return self.diffusion_volume.get_value()
+        elif property_type == Component.DYNAMIC_VISCOSITY:
+            return self.dynamic_viscosity.get_value(temperature)
+        elif property_type == Component.MOLECULAR_WEIGHT:
+            return self.molecular_weight.get_value()
+

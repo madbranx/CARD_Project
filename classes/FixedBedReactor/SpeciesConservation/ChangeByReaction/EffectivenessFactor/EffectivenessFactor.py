@@ -4,11 +4,16 @@
 import numpy as np
 import casadi as casADi
 
+from classes.FixedBedReactor.SpeciesConservation.ChangeByReaction.EffectivenessFactor.MixtureAveragedDiffusionCoefficient import \
+    MixtureAveragedDiffusionCoefficient
+
+
 class EffectivenessFactor:
     def __init__(self, log, RSQ, GCF):
         self.log = log
         self.RSQ = RSQ
         self.GCF = GCF
+        self.mixAvgDiffCoeff = MixtureAveragedDiffusionCoefficient(self.log, self.RSQ, self.GCF)
 
     def calc(self, w_i, T, p):
 
@@ -28,22 +33,21 @@ class EffectivenessFactor:
         stoichiometry_CO2 = stoichiometry_coefficients[2]
         reaction_rate = reaction_1.getReactionRate(w_i, T, p)
 
-        # calculate the effective diffusion coefficient
-
-        eff_diff_coff = self.__calc_eff_diff_coff(T)
+        # calculate the effective diffusion coefficient of CO2
+        eff_diff_coff = self.__calc_eff_diff_coff(T, w_i, p)
 
         thiele = diameter_particle / 2 * ((stoichiometry_CO2 * reaction_rate) / (eff_diff_coff * concentration_CO2)) ** 0.5
         return thiele
 
-    def __calc_eff_diff_coff(self, T):
+    def __calc_eff_diff_coff(self, T, w_i, p):
         tortuosity_particle = self.RSQ.getParameterValue("cat_tortuosity")
         porosity_particle = self.RSQ.getParameterValue("cat_porosity")
 
         knudsen_diff_coff = self.__calc_knudsen_diff_coff(T)
 
-        #TODO
-        # molar diff coff, how to implement??
-        molar_diff_coff = 7.1497e-5
+        #effective molar diffusion coefficient of CO2 in the gas mixture
+        # index of CO2 = 3
+        molar_diff_coff = self.mixAvgDiffCoeff.calc(w_i, T, p, 3)
 
         eff_diff_coff = ( tortuosity_particle**2 / porosity_particle * (1/molar_diff_coff + 1/knudsen_diff_coff) )**(-1)
         return eff_diff_coff

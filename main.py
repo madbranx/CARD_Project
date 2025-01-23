@@ -7,7 +7,6 @@ reactor.setUp()
 
 ##
 dae = reactor.getDAEstruct()
-print(dae)
 
 #TODO
 # add all material properties to FixedBedReactor()

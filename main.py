@@ -1,12 +1,18 @@
 from classes.FixedBedReactor.FixedBedReactor import FixedBedReactor
+from classes.Integrator.Integrator import Integrator
 from classes.Log.Log import Log
+from classes.Postprocessing.Postprocessor import Postprocessor
 
 log = Log("first simulation")
+
 reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 2)
 reactor.setUp()
 
-##
-dae = reactor.getDAEstruct()
+integrator = Integrator(reactor)
+integrator.integrate()
+
+postprocessor = Postprocessor()
+
 
 #TODO
 # add all material properties to FixedBedReactor()

@@ -21,6 +21,8 @@ postprocessor = Postprocessor()
 # .
 # Validate 1D Model
 # .
+# Create ULM diagramm
+# .
 # Conservations: Implement physics as CasADi functions ("D)
 #       Pressure drop            TBD
 #       Mass conservation        TBD

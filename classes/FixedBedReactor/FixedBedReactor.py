@@ -7,7 +7,7 @@ from ..GeneralConversionFunctions.GeneralConversionFunctions import GeneralConve
 from ..ReactorSpecificQuantities.Reaction.Reaction import Reaction
 from ..ReactorSpecificQuantities.Reaction.ReactionRateKoschany import ReactionRateKoschany
 from ..ReactorSpecificQuantities.ReactorSpecificQuantities import ReactorSpecificQuantities
-from ..ReactorSpecificQuantities.Component.Component import Component, MaterialProperty
+from ..ReactorSpecificQuantities.Component.Component import Component
 
 import casadi as CasADi
 
@@ -59,26 +59,31 @@ class FixedBedReactor:
         self.RSQ.addParameter("R", 8.314)
 
         # add Parameters to RSQ
-        self.RSQ.addParameter("reactorLength", 10)
-        self.RSQ.addParameter("reactorDiameter", 1)
+        self.RSQ.addParameter("reactorLength", 2.5)
+        self.RSQ.addParameter("reactorDiameter", 0.02)
 
-        self.RSQ.addParameter("cat_diameter", 1)
-        self.RSQ.addParameter("cat_tortuosity", 1)
-        self.RSQ.addParameter("cat_porosity", 1)
+        self.RSQ.addParameter("cat_diameter", 0.002)
+        self.RSQ.addParameter("cat_tortuosity", 2)
+        self.RSQ.addParameter("cat_porosity", 0.6)
 
-        self.RSQ.addParameter("diameter_pore", 1)
+        self.RSQ.addParameter("diameter_pore", 10e-9)
 
         # calculate void fraction
         eps = self.RSQ.calculate_void_fraction()
+        eps = 0.4 # given by task
         self.RSQ.addParameter("bed_void_fraction", eps)
 
-        self.RSQ.addParameter("T_in", 200)
+        self.RSQ.addParameter("T_in", 300)
         self.RSQ.addParameter("u_in", 1)
-        self.RSQ.addParameter("w_i_in", [0, 1, 0, 0])
-        self.RSQ.addParameter("p_in", 1e5)
+        self.RSQ.addParameter("w_i_in", [0, 0, 1, 4]) # CH4, H20, CO2, H2
+        self.RSQ.addParameter("p_in", 5e5)
+
+        # Parameters given by task for 1D calculation
+        self.RSQ.addParameter("T_wall", 550)
+        self.RSQ.addParameter("lambda_total", 200)
 
         # add Components and their Properties to RSQ
-        CH4 = self.RSQ.addComponent("CH4")
+        CH4 = self.RSQ.addComponent("CH4") # SOURCE:
         CH4.add_property(Component.DENSITY, 1)
         CH4.add_property(Component.HEAT_CAPACITY, 1)
         CH4.add_property(Component.THERMAL_CONDUCTIVITY, 1)
@@ -87,7 +92,7 @@ class FixedBedReactor:
         CH4.add_property(Component.DYNAMIC_VISCOSITY, 1)
         CH4.add_property(Component.MOLECULAR_WEIGHT, 1)
 
-        H20 = self.RSQ.addComponent("H2O")
+        H20 = self.RSQ.addComponent("H2O") # SOURCE:
         H20.add_property(Component.DENSITY, 2)
         H20.add_property(Component.HEAT_CAPACITY, 2)
         H20.add_property(Component.THERMAL_CONDUCTIVITY, 2)
@@ -96,7 +101,7 @@ class FixedBedReactor:
         H20.add_property(Component.DYNAMIC_VISCOSITY, 2)
         H20.add_property(Component.MOLECULAR_WEIGHT, 2)
 
-        CO2 = self.RSQ.addComponent("CO2")
+        CO2 = self.RSQ.addComponent("CO2") # SOURCE:
         CO2.add_property(Component.DENSITY, 3)
         CO2.add_property(Component.HEAT_CAPACITY, 3)
         CO2.add_property(Component.THERMAL_CONDUCTIVITY, 3)
@@ -105,7 +110,7 @@ class FixedBedReactor:
         CO2.add_property(Component.DYNAMIC_VISCOSITY, 3)
         CO2.add_property(Component.MOLECULAR_WEIGHT, 3)
 
-        H2 = self.RSQ.addComponent("H2")
+        H2 = self.RSQ.addComponent("H2") # SOURCE:
         H2.add_property(Component.DENSITY, 4)
         H2.add_property(Component.HEAT_CAPACITY, 4)
         H2.add_property(Component.THERMAL_CONDUCTIVITY, 4)
@@ -114,9 +119,11 @@ class FixedBedReactor:
         H2.add_property(Component.DYNAMIC_VISCOSITY, 4)
         H2.add_property(Component.MOLECULAR_WEIGHT, 4)
 
-        #add Catalyst to RSQ
+        #add Catalyst to RSQ, Values given by Task
         cat = self.RSQ.addCatalyst("cat1")
-        cat.add_property(Component.DENSITY, 2000)
+        cat.add_property(Component.DENSITY, 2355.2)
+        cat.add_property(Component.HEAT_CAPACITY, 1107)
+        cat.add_property(Component.THERMAL_CONDUCTIVITY, 3.6)
 
         # add Reactions to RSQ
 
@@ -126,6 +133,7 @@ class FixedBedReactor:
         # set reaction Rate
         reactionRate1 = ReactionRateKoschany(self.log, self.GCF, self.RSQ)
         reaction1.setReactionRate(reactionRate1)
+        reaction1.setReactionEnthalpy(164900)
 
         self.RSQ.addReaction(reaction1)
 
@@ -152,7 +160,7 @@ class FixedBedReactor:
         self.log.addEntry("creating conservation equations", 1)
 
         self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
-        self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF)
+        self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
         self.MassConservation = MassConservation(self.log, self.dimension, self.RSQ, self.GCF)
         self.PressureDrop = PressureDrop(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
 
@@ -209,6 +217,7 @@ class FixedBedReactor:
             self.log.addEntry("p = " + str(self.n_axial), 3)
 
         elif self.dimension == FixedBedReactor.TWO_D:
+            # TODO best variant?
             # Casadi does not support 3D elements -> axial and radial elements are combined (self.n_axial* self.n_radial)!
 
             # Define differential variables

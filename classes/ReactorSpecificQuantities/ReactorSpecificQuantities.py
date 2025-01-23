@@ -1,6 +1,5 @@
 from classes.ReactorSpecificQuantities.Component.Component import Component
 from classes.ReactorSpecificQuantities.Parameter.Parameter import Parameter
-from classes.ReactorSpecificQuantities.Reaction.Reaction import Reaction
 
 
 class ReactorSpecificQuantities:

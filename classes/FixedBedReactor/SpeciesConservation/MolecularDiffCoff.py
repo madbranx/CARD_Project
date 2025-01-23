@@ -16,8 +16,8 @@ class MolecularDiffCoff:
         molar_mass_j = molar_mass_j * 1e2      # kg/mol -> g/mol
 
         # Diffusion coefficient of i in j after Fuller in m^2/s
-        DiffCoff = ( 1e-4 * (0.00143 * T**1.75 * ((1/molar_mass_i) + (1/molar_mass_j))**(0.5)) /
-                     (p * (2)**(0.5) * (diff_volume_i**(1/3) + diff_volume_j**(1/3))**2))
+        DiffCoff = (1e-4 * (0.00143 * T ** 1.75 * ((1/molar_mass_i) + (1/molar_mass_j)) ** 0.5) /
+                    (p * 2 ** 0.5 * (diff_volume_i ** (1 / 3) + diff_volume_j ** (1 / 3)) ** 2))
 
         return DiffCoff
 

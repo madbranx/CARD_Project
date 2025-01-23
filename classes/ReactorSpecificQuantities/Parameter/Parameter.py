@@ -1,5 +1,3 @@
-import casadi as casADi
-
 class Parameter:
     def __init__(self, log, name, value=None):
         self.log = log

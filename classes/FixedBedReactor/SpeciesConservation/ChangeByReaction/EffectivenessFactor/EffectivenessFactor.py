@@ -32,7 +32,7 @@ class EffectivenessFactor:
 
         eff_diff_coff = self.__calc_eff_diff_coff(T)
 
-        thiele = diameter_particle / 2 * ((stoichiometry_CO2 * reaction_rate) / (eff_diff_coff * concentration_CO2)) ** (0.5)
+        thiele = diameter_particle / 2 * ((stoichiometry_CO2 * reaction_rate) / (eff_diff_coff * concentration_CO2)) ** 0.5
         return thiele
 
     def __calc_eff_diff_coff(self, T):
@@ -42,7 +42,7 @@ class EffectivenessFactor:
         knudsen_diff_coff = self.__calc_knudsen_diff_coff(T)
 
         #TODO
-        # molar diff coff, wie implementieren??
+        # molar diff coff, how to implement??
         molar_diff_coff = 7.1497e-5
 
         eff_diff_coff = ( tortuosity_particle**2 / porosity_particle * (1/molar_diff_coff + 1/knudsen_diff_coff) )**(-1)

@@ -1,5 +1,3 @@
-import casadi as casADi
-
 class MaterialProperty:
     CONSTANT = 1
     LINEAR = 2
@@ -17,7 +15,7 @@ class MaterialProperty:
         elif self.dependency_type == self.LINEAR:
             expr = self.value[0] * temperature + self.value[1]
         elif self.dependency_type == self.POLYNOMIAL:
-            expr = sum(coef * (temperature ** i) for i, coef in enumerate(self.value))
+            expr = sum(coefficient * (temperature ** i) for i, coefficient in enumerate(self.value))
         else:
             return None # add Log entry
         return expr

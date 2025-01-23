@@ -45,6 +45,9 @@ class FixedBedReactor:
         self.__create_DAEstruct()
         self.log.updateLog()
 
+    def getDAEstruct(self):
+        return self.dae
+
     def __initiate_RSQ_GCF(self):
         self.log.addEntry("Initiating RSQ", 1)
         self.RSQ = ReactorSpecificQuantities(self.log)
@@ -262,3 +265,5 @@ class FixedBedReactor:
             return None
 
         return ae, ode, x, z
+
+

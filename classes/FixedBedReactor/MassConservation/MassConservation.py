@@ -28,7 +28,6 @@ class MassConservation:
             rho_fl = self.GCF.rho_fl(w_i[z, :].T, T[z], p[z])
             ae[z] = u[z] - u_in * rho_fl/rho_fl_in
 
-
     def __createCasADi_2D(self, ae, temperature, w_i, u, p):
         pass
         # TODO

@@ -2,6 +2,8 @@
 # and mixture averaging
 # Till Kasselmann 14.01.2025
 
+# TODO
+
 class MolecularDiffCoff:
 
     def __init__(self):

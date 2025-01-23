@@ -29,9 +29,6 @@ class GeneralConversionFunctions:
         unity = CasADi.DM.ones(len(property_values))
         return 1 / (CasADi.dot(w_i / CasADi.SX(property_values), unity))
 
-    #TODO
-    # check if this works right!
-
     def moleFractions(self, w_i):
         Mw_i = self.RSQ.getMolarWeights()
         Mw_fl = self.massFraction_weighted_average(w_i, Component.MOLECULAR_WEIGHT)

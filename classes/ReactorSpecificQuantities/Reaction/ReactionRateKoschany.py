@@ -3,10 +3,13 @@
 
 import casadi as casADi
 
-# TODO add RSQ, GCF to class!
 class ReactionRateKoschany:
-    def __init__(self, log):
+    def __init__(self, log, GCF, RSQ):
         self.log = log
+        self.GCF = GCF
+        self.RSQ = RSQ
+
+        # Kinetic specific Variables
         self.T_ref = 550        # K
         self.k0_ref = 3.46e-4   # mol/(bar s g_cat)
         self.E_A = 77.5e3       # J/mol
@@ -16,6 +19,27 @@ class ReactionRateKoschany:
             'H2': {'K_ref': 0.44, 'dH': -6.2e3},    # bar^(-0.5), J/mol
             'mix': {'K_ref': 0.88, 'dH': -10e3},    # bar^(-0.5), J/mol
         }
+
+    def rate_equation(self, w_i, T, p):
+        # p_i in bar
+        p_i = self.GCF.partial_pressures(w_i, p)*1e-5
+        p_CH4= p_i[0]
+        p_H2O = p_i[1]
+        p_CO2 = p_i[2]
+        p_H2 = p_i[3]
+        # rho_cat in g_cat / m^3_cat
+        cat = self.RSQ.getCatalyst()
+        rho_cat = cat.get_density(T)/1000
+
+        k = self.__calc_k(T)
+        K_eq = self.__K_eq(T)
+
+        r = (k * (p_CO2**0.5) * (p_H2**0.5) * (1 - (p_CH4 * (p_H2O**2)) / (K_eq * p_CO2 * (p_H2**4))) /
+             (1 + self.__calc_K_x('OH', T) * p_H2O / (p_H2 ** 0.5) + self.__calc_K_x('H2', T) * (p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5)))
+
+        # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
+        r = r * rho_cat * 1000
+        return r
 
     # methode to calculate rate coefficient k
     def __calc_k (self, T):
@@ -41,21 +65,3 @@ class ReactionRateKoschany:
         # T in K
         K_eq = 137 * T**(-3.998) * casADi.exp(158.7e3 / (self.R * T))
         return K_eq
-
-    def rate_equation(self, w_i, T):
-        # TODO add GCF see above
-        [p_CH4, p_H2O, p_CO2, p_H2 ] = self.GCF.partialPressures(w_i, p)
-        # T in K
-        # p_i in bar #TODO check units
-        # rho_cat in g_cat / m^3_cat
-        k = self.__calc_k(T)
-        K_eq = self.__K_eq(T)
-        rho_cat = 1 # TODO get from RSQ (possible?)
-
-        r = (k * (p_CO2**0.5) * (p_H2**0.5) * (1 - (p_CH4 * (p_H2O**2)) / (K_eq * p_CO2 * (p_H2**4))) /
-             (1 + self.__calc_K_x('OH', T) * p_H2O / (p_H2 ** 0.5) + self.__calc_K_x('H2', T) * (p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5)))
-
-        # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
-        r = r * rho_cat * 1000
-        return r
-

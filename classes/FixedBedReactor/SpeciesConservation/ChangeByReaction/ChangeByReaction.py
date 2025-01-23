@@ -23,7 +23,7 @@ class ChangeByReaction:
         # calculate the stoichiometric factor & reaction rate for each reaction and sum them up
         for reaction in reactions:
             stoich_factor = reaction.getStoichiometryCoefficients()[comp]
-            reaction_rate = reaction.getReactionRate(w_i, T)
+            reaction_rate = reaction.getReactionRate(w_i, T, p)
             sum_stoichiometric_rate = (sum_stoichiometric_rate + stoich_factor * reaction_rate)
 
         return (1-eps)*Mw_i[comp]*sum_stoichiometric_rate*eff_factor

@@ -15,5 +15,5 @@ class Reaction:
     def getStoichiometryCoefficients(self):
         return self.stoichiometry_coefficients
 
-    def getReactionRate(self, w_i, T):
-        return self.reactionRate.rate_equation(w_i, T)
+    def getReactionRate(self, w_i, T, p):
+        return self.reactionRate.rate_equation(w_i, T, p)

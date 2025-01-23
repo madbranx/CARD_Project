@@ -39,15 +39,16 @@ class FixedBedReactor:
         self.dae = None
 
     def setUp(self):
-        self.__initiateRSQ()
+        self.__initiate_RSQ_GCF()
         self.__create_spacialDiscretization()
         self.__create_conservationEquations()
         self.__create_DAEstruct()
         self.log.updateLog()
 
-    def __initiateRSQ(self):
+    def __initiate_RSQ_GCF(self):
         self.log.addEntry("Initiating RSQ", 1)
         self.RSQ = ReactorSpecificQuantities(self.log)
+        self.GCF = GeneralConversionFunctions(self.log, self.RSQ)
 
         # TODO add remaining Parameters/Properties
 
@@ -120,7 +121,7 @@ class FixedBedReactor:
         reaction1 = Reaction(self.log)
         reaction1.setStoichiometryCoefficients([-1, -2, 1, 4])
         # set reaction Rate
-        reactionRate1 = ReactionRateKoschany(self.log)
+        reactionRate1 = ReactionRateKoschany(self.log, self.GCF, self.RSQ)
         reaction1.setReactionRate(reactionRate1)
 
         self.RSQ.addReaction(reaction1)
@@ -146,8 +147,6 @@ class FixedBedReactor:
 
     def __create_conservationEquations(self):
         self.log.addEntry("creating conservation equations", 1)
-
-        self.GCF = GeneralConversionFunctions(self.log, self.RSQ)
 
         self.SpeciesConservation = SpeciesConservation(self.log, self.dimension, self.RSQ, self.GCF, self.disc_z, self.disc_r)
         self.EnergyConservation = EnergyConservation(self.log, self.dimension, self.RSQ, self.GCF)

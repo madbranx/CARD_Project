@@ -11,7 +11,7 @@ reactor.setUp()
 # Conservations: Implement physics as CasADi functions (1D)
 #       Pressure drop            DONE -> make ergun class ... (same structure as Species Conservation)
 #       Mass conservation        DONE -> apply structure here too
-#       Species Conservation     WORK -> check Reaction Rate, GCF
+#       Species Conservation     DONE
 #       Energy Conservation      TBD
 # .
 # .

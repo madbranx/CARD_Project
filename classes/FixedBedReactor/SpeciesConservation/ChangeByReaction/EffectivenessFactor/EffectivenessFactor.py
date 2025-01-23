@@ -26,7 +26,7 @@ class EffectivenessFactor:
         reaction_1 = self.RSQ.getReactions()[0]
         stoichiometry_coefficients = reaction_1.getStoichiometryCoefficients()
         stoichiometry_CO2 = stoichiometry_coefficients[2]
-        reaction_rate = reaction_1.getReactionRate(w_i, T)
+        reaction_rate = reaction_1.getReactionRate(w_i, T, p)
 
         # calculate the effective diffusion coefficient
 

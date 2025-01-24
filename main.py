@@ -5,11 +5,11 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 
 log = Log("first simulation 1D")
 
-reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 100)
+reactor = FixedBedReactor(log, FixedBedReactor.ONE_D, 20)
 reactor.setUp()
 
 integrator = Integrator(log, reactor)
-integrator.setup(1e-13, 1e-13, 0, 1, 100)
+integrator.setup(1e-13, 1e-13, 0, 0.001, 100)
 integrator.integrate()
 
 postprocessor = Postprocessor()

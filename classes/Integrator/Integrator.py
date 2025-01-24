@@ -89,14 +89,14 @@ class Integrator:
         # AxMassFlow
         from classes.FixedBedReactor.SpeciesConservation.AxialMassFlow.AxialMassFlow import AxialMassFlow
         axMassFlow_inst = AxialMassFlow(self.log, GCF)
-        f_axMassFlow_CasADi = CasADi.Function('f_eta_casADi', [T_f,w_f, u_f, p_f], [axMassFlow_inst.calc(T_f,w_f, u_f, p_f, 2)])
+        #f_axMassFlow_CasADi = CasADi.Function('f_eta_casADi', [T_f,w_f, u_f, p_f], [axMassFlow_inst.calc(T_f,w_f, u_f, p_f, 2)])
 
         axMassFLow = np.empty(shape=(n_axial, t_steps))
 
         for t in range(t_steps):
             for z in range(n_axial):
                 eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
-                axMassFLow[z, t] = f_axMassFlow_CasADi( T_res[z, t], w_i_res[z, t, :], u_res[z, t], p_res[z, t])
+                #axMassFLow[z, t] = f_axMassFlow_CasADi( T_res[z, t], w_i_res[z, t, :],w_i_res[z-1, t, :], u_res[z, t], p_res[z, t])
 
                 #print(axMassFLow[z, 100])
 
@@ -124,7 +124,7 @@ class Integrator:
         axs[1].set_ylabel(r'$T \; \mathregular{/K}$')
         axs[2].set_ylabel(r'$u \; \mathregular{/ms^{-1}}$')
         axs[3].set_ylabel(r'$p / Pa$')
-        axs[4].set_ylabel(r'$eff Factor / Pa$')
+        axs[4].set_ylabel(r'$eff Factor / -$')
         axs[4].set_xlabel(r'$z/L$')
         plt.show()
 
@@ -132,6 +132,7 @@ class Integrator:
     def __setInitialValues(self):
         self.log.addEntry("setting initial values", 1)
         w_i_in, T_in, u_in, p_in = self.reactor.getInputValues()
+
         n_axial, n_radial = self.reactor.getSpatialDiscretizations()
         n_comps = self.reactor.getNComponents()
         if n_radial is None:

@@ -59,9 +59,9 @@ class EnergyConservation:
             ode[z] =    (
                         - left_side
                         - conv_HF
-                        - axial_heatConduction
-                        - radial_heatConduction
-                        - reactionHeat
+                        #- axial_heatConduction
+                        #- radial_heatConduction
+                        #- reactionHeat
                         )
 
     def __createCasADi_2D(self):

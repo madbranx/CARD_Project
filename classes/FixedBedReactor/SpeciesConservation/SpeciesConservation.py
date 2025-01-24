@@ -40,13 +40,15 @@ class SpeciesConservation:
 
                 if z == 0:  # Boundary Condition
                     left_side = (w_i[z, comp] - w_i_in[comp]) * eps * rho_fl
+                    axialMassFlow = self.axialMassFlow.calc(T[z], w_i[z,:].T, w_i_in, u[z], p[z], comp)
                 else:
                     left_side = (w_i[z, comp] - w_i[z - 1, comp]) * eps * rho_fl
+                    axialMassFlow = self.axialMassFlow.calc(T[z], w_i[z, :].T, w_i[z-1,:].T, u[z], p[z], comp)
 
                 ode[z, comp] = (
                                 - left_side
-                                - self.axialMassFlow.calc(T[z], w_i[z,:].T, u[z], p[z], comp)/delta_axial[z]
-                                + self.changeByReaction.calc(T[z], w_i[z,:].T, p[z], comp)
+                                - axialMassFlow/delta_axial[z]
+                                #+ self.changeByReaction.calc(T[z], w_i[z,:].T, p[z], comp)
                                 )
 
     def __createCasADi_2D(self):

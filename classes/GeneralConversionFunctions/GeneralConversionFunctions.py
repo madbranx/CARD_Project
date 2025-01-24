@@ -1,5 +1,3 @@
-import casadi as CasADi
-
 from classes.ReactorSpecificQuantities.Component.Component import Component
 
 

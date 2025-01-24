@@ -38,13 +38,13 @@ class EnergyConservation:
             rho_cp_eff = self.GCF.rho_cp_eff(w_i[z, :].T, T[z], p[z])
 
             if z == 0:  # Boundary Condition
-                left_side = (T[z] - T_in) * rho_cp_eff
-                conv_HF = (T[z] - T_in) /delta_axial[z] * self.convectiveHeatFlux.calc(T[z], w_i[z,:].T, u[z], p[z])
-                axial_heatConduction = (T[z] - T_in) / pow(delta_axial[z],2) * (-self.effAxialHeatConductivity.calc(T[z], w_i[z,:].T, u[z], p[z]))
+                # left_side = (T[z] - T_in) * rho_cp_eff
+                conv_HF = (T[z] - T_in) / delta_axial[z] * self.convectiveHeatFlux.calc(T[z], w_i[z,:].T, u[z], p[z])
+                axial_heatConduction = (T[z] - T_in) / (delta_axial[z]**2) * (-self.effAxialHeatConductivity.calc(T[z], w_i[z,:].T, u[z], p[z]))
             else:
-                left_side = (T[z] - T[z-1]) * rho_cp_eff
+                # left_side = (T[z] - T[z-1]) * rho_cp_eff
                 conv_HF = (T[z] - T[z-1]) / delta_axial[z] * self.convectiveHeatFlux.calc(T[z], w_i[z,:].T, u[z], p[z])
-                axial_heatConduction = (T[z] - T[z-1]) / pow(delta_axial[z], 2) * (-self.effAxialHeatConductivity.calc(T[z], w_i[z,:].T, u[z], p[z]))
+                axial_heatConduction = (T[z] - T[z-1]) / (delta_axial[z]**2) * (-self.effAxialHeatConductivity.calc(T[z], w_i[z,:].T, u[z], p[z]))
 
             # 1D radial heat conduction using overall lambda
             # TODO correct?
@@ -57,11 +57,10 @@ class EnergyConservation:
 
 
             ode[z] =    (
-                        - left_side
-                        - conv_HF
-                        #- axial_heatConduction
-                        #- radial_heatConduction
-                        #- reactionHeat
+                        - conv_HF / rho_cp_eff
+                        - axial_heatConduction / rho_cp_eff
+                        #- radial_heatConduction / rho_cp_eff
+                        #- reactionHeat / rho_cp_eff
                         )
 
     def __createCasADi_2D(self):

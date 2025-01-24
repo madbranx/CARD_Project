@@ -48,6 +48,20 @@ class FixedBedReactor:
     def getDAEstruct(self):
         return self.dae
 
+    def getInputValues(self):
+        w_i_in = self.RSQ.getParameterValue("w_i_in")
+        T_in = self.RSQ.getParameterValue("T_in")
+        u_in = self.RSQ.getParameterValue("u_in")
+        p_in = self.RSQ.getParameterValue("p_in")
+
+        return w_i_in, T_in, u_in, p_in
+
+    def getSpatialDiscretizations(self):
+        return self.n_axial, self.n_radial
+
+    def getNComponents(self):
+        return self.n_components
+
     def __initiate_RSQ_GCF(self):
         self.log.addEntry("Initiating RSQ", 1)
         self.RSQ = ReactorSpecificQuantities(self.log)
@@ -75,7 +89,7 @@ class FixedBedReactor:
 
         self.RSQ.addParameter("T_in", 300)
         self.RSQ.addParameter("u_in", 1)
-        self.RSQ.addParameter("w_i_in", [0, 0, 1, 4]) # CH4, H20, CO2, H2
+        self.RSQ.addParameter("w_i_in", [0, 0, 0.2, 0.8]) # CH4, H20, CO2, H2
         self.RSQ.addParameter("p_in", 5e5)
 
         # Parameters given by task for 1D calculation
@@ -83,41 +97,41 @@ class FixedBedReactor:
         self.RSQ.addParameter("lambda_total", 200)
 
         # add Components and their Properties to RSQ
-        CH4 = self.RSQ.addComponent("CH4") # SOURCE:
-        CH4.add_property(Component.DENSITY, 1)
-        CH4.add_property(Component.HEAT_CAPACITY, 1)
-        CH4.add_property(Component.THERMAL_CONDUCTIVITY, 1)
-        CH4.add_property(Component.COLLISION_AREA, 1)
-        CH4.add_property(Component.DIFFUSION_VOLUME, 1)
-        CH4.add_property(Component.DYNAMIC_VISCOSITY, 1)
-        CH4.add_property(Component.MOLECULAR_WEIGHT, 1)
+        CH4 = self.RSQ.addComponent("CH4") # SOURCE: CHAT GPT
+        CH4.add_property(Component.DENSITY, 0.348)
+        CH4.add_property(Component.HEAT_CAPACITY, 2640)
+        CH4.add_property(Component.THERMAL_CONDUCTIVITY, 0.066)
+        CH4.add_property(Component.COLLISION_AREA, 0.46e-18)
+        CH4.add_property(Component.DIFFUSION_VOLUME, 25.14)
+        CH4.add_property(Component.DYNAMIC_VISCOSITY, 2.32e-5)
+        CH4.add_property(Component.MOLECULAR_WEIGHT, 0.01604)
 
-        H20 = self.RSQ.addComponent("H2O") # SOURCE:
-        H20.add_property(Component.DENSITY, 2)
-        H20.add_property(Component.HEAT_CAPACITY, 2)
-        H20.add_property(Component.THERMAL_CONDUCTIVITY, 2)
-        H20.add_property(Component.COLLISION_AREA, 2)
-        H20.add_property(Component.DIFFUSION_VOLUME, 2)
-        H20.add_property(Component.DYNAMIC_VISCOSITY, 2)
-        H20.add_property(Component.MOLECULAR_WEIGHT, 2)
+        H20 = self.RSQ.addComponent("H2O") # SOURCE: CHAT GPT
+        H20.add_property(Component.DENSITY, 0.322)
+        H20.add_property(Component.HEAT_CAPACITY, 2090)
+        H20.add_property(Component.THERMAL_CONDUCTIVITY, 0.031)
+        H20.add_property(Component.COLLISION_AREA, 0.46e-18)
+        H20.add_property(Component.DIFFUSION_VOLUME, 13.1)
+        H20.add_property(Component.DYNAMIC_VISCOSITY, 2.96e-5)
+        H20.add_property(Component.MOLECULAR_WEIGHT, 0.01802)
 
-        CO2 = self.RSQ.addComponent("CO2") # SOURCE:
-        CO2.add_property(Component.DENSITY, 3)
-        CO2.add_property(Component.HEAT_CAPACITY, 3)
-        CO2.add_property(Component.THERMAL_CONDUCTIVITY, 3)
-        CO2.add_property(Component.COLLISION_AREA, 3)
-        CO2.add_property(Component.DIFFUSION_VOLUME, 3)
-        CO2.add_property(Component.DYNAMIC_VISCOSITY, 3)
-        CO2.add_property(Component.MOLECULAR_WEIGHT, 3)
+        CO2 = self.RSQ.addComponent("CO2") # SOURCE: CHAT GPT
+        CO2.add_property(Component.DENSITY, 0.725)
+        CO2.add_property(Component.HEAT_CAPACITY, 1160)
+        CO2.add_property(Component.THERMAL_CONDUCTIVITY, 0.051)
+        CO2.add_property(Component.COLLISION_AREA, 0.52e-18)
+        CO2.add_property(Component.DIFFUSION_VOLUME, 26.9)
+        CO2.add_property(Component.DYNAMIC_VISCOSITY, 2.75e-5)
+        CO2.add_property(Component.MOLECULAR_WEIGHT, 0.04401)
 
-        H2 = self.RSQ.addComponent("H2") # SOURCE:
-        H2.add_property(Component.DENSITY, 4)
-        H2.add_property(Component.HEAT_CAPACITY, 4)
-        H2.add_property(Component.THERMAL_CONDUCTIVITY, 4)
-        H2.add_property(Component.COLLISION_AREA, 4)
-        H2.add_property(Component.DIFFUSION_VOLUME, 4)
-        H2.add_property(Component.DYNAMIC_VISCOSITY, 4)
-        H2.add_property(Component.MOLECULAR_WEIGHT, 4)
+        H2 = self.RSQ.addComponent("H2") # SOURCE: CHAT GPT
+        H2.add_property(Component.DENSITY, 0.041)
+        H2.add_property(Component.HEAT_CAPACITY, 1432)
+        H2.add_property(Component.THERMAL_CONDUCTIVITY, 0.373)
+        H2.add_property(Component.COLLISION_AREA, 0.27e-18)
+        H2.add_property(Component.DIFFUSION_VOLUME, 6.12)
+        H2.add_property(Component.DYNAMIC_VISCOSITY, 1e-5)
+        H2.add_property(Component.MOLECULAR_WEIGHT, 0.002016)
 
         #add Catalyst to RSQ, Values given by Task
         cat = self.RSQ.addCatalyst("cat1")

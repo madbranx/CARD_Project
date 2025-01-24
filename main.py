@@ -16,7 +16,7 @@ postprocessor = Postprocessor()
 
 
 #TODO
-# add all material properties to FixedBedReactor()
+# add collision area for h2o
 # Integrator                    WORKING -> Implement for 2D
 # .
 # BUGFIXING EQUATIONS

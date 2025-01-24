@@ -26,10 +26,15 @@ class GeneralConversionFunctions:
         property_values = []
         for component in components:
             property_values.append(component.get_property(material_property, T))
+        summ = 0
+        for i, property_value in enumerate(property_values):
+            summ += w_i[i] / property_value
+        print(summ)
+        return 1/summ
 
-        print(property_values)
-        unity = CasADi.DM.ones(len(property_values))
-        return 1 / (CasADi.dot(w_i / CasADi.SX(property_values), unity))
+
+        #unity = CasADi.DM.ones(len(property_values))
+        #return 1 / (CasADi.dot(w_i / property_values, unity))
 
     def moleFractions(self, w_i):
         Mw_i = self.RSQ.getMolarWeights()

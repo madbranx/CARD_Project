@@ -7,7 +7,7 @@ from ..GeneralConversionFunctions.GeneralConversionFunctions import GeneralConve
 from ..ReactorSpecificQuantities.Reaction.Reaction import Reaction
 from ..ReactorSpecificQuantities.Reaction.ReactionRateKoschany import ReactionRateKoschany
 from ..ReactorSpecificQuantities.ReactorSpecificQuantities import ReactorSpecificQuantities
-from ..ReactorSpecificQuantities.Component.Component import Component
+from ..ReactorSpecificQuantities.Component.Component import Component, MaterialProperty
 
 import casadi as CasADi
 
@@ -102,38 +102,38 @@ class FixedBedReactor:
         # add Components and their Properties to RSQ
         CH4 = self.RSQ.addComponent("CH4") # SOURCE: NIST-Database with polynomial fit at 5 bar
         CH4.add_property(Component.DENSITY, 0.348)
-        CH4.add_property(Component.HEAT_CAPACITY, [25.455571, 2.549214e-02, 3.318571e-05])
-        CH4.add_property(Component.THERMAL_CONDUCTIVITY, [2.054738e-03, 7.050143e-05, 1.239619e-07])
+        CH4.add_property(Component.HEAT_CAPACITY, [25.455571, 2.549214e-02, 3.318571e-05], MaterialProperty.POLYNOMIAL)
+        CH4.add_property(Component.THERMAL_CONDUCTIVITY, [2.054738e-03, 7.050143e-05, 1.239619e-07], MaterialProperty.POLYNOMIAL)
         CH4.add_property(Component.COLLISION_AREA, 0.46e-18)
         CH4.add_property(Component.DIFFUSION_VOLUME, 25.14)
-        CH4.add_property(Component.DYNAMIC_VISCOSITY, [5.223333e-07, 3.968143e-08, -1.364762e-11])
+        CH4.add_property(Component.DYNAMIC_VISCOSITY, [5.223333e-07, 3.968143e-08, -1.364762e-11], MaterialProperty.POLYNOMIAL)
         CH4.add_property(Component.MOLECULAR_WEIGHT, 0.01604)
 
         H20 = self.RSQ.addComponent("H2O") # SOURCE: NIST-Database with polynomial fit at 5 bar
         H20.add_property(Component.DENSITY, 0.322)
-        H20.add_property(Component.HEAT_CAPACITY, [43.064143, -2.033657e-02, 1.881429e-05])
-        H20.add_property(Component.THERMAL_CONDUCTIVITY, [-2.047571e-03, 5.770379e-05, 4.061786e-08])
+        H20.add_property(Component.HEAT_CAPACITY, [43.064143, -2.033657e-02, 1.881429e-05], MaterialProperty.POLYNOMIAL)
+        H20.add_property(Component.THERMAL_CONDUCTIVITY, [-2.047571e-03, 5.770379e-05, 4.061786e-08], MaterialProperty.POLYNOMIAL)
         H20.add_property(Component.COLLISION_AREA, 0.46e-18)
         H20.add_property(Component.DIFFUSION_VOLUME, 13.1)
-        H20.add_property(Component.DYNAMIC_VISCOSITY, [-4.954286e-06, 4.593789e-08, -3.341071e-12])
+        H20.add_property(Component.DYNAMIC_VISCOSITY, [-4.954286e-06, 4.593789e-08, -3.341071e-12], MaterialProperty.POLYNOMIAL)
         H20.add_property(Component.MOLECULAR_WEIGHT, 0.01802)
 
         CO2 = self.RSQ.addComponent("CO2") # SOURCE: NIST-Database with polynomial fit at 5 bar
         CO2.add_property(Component.DENSITY, 0.725)
-        CO2.add_property(Component.HEAT_CAPACITY, [27.000304, 4.421494e-02, -1.689345e-05])
-        CO2.add_property(Component.THERMAL_CONDUCTIVITY, [-9.104310e-03, 8.906750e-05, -8.951190e-09])
+        CO2.add_property(Component.HEAT_CAPACITY, [27.000304, 4.421494e-02, -1.689345e-05], MaterialProperty.POLYNOMIAL)
+        CO2.add_property(Component.THERMAL_CONDUCTIVITY, [-9.104310e-03, 8.906750e-05, -8.951190e-09], MaterialProperty.POLYNOMIAL)
         CO2.add_property(Component.COLLISION_AREA, 0.52e-18)
         CO2.add_property(Component.DIFFUSION_VOLUME, 26.9)
-        CO2.add_property(Component.DYNAMIC_VISCOSITY, [-6.721429e-08, 5.467619e-08, -1.347381e-11])
+        CO2.add_property(Component.DYNAMIC_VISCOSITY, [-6.721429e-08, 5.467619e-08, -1.347381e-11], MaterialProperty.POLYNOMIAL)
         CO2.add_property(Component.MOLECULAR_WEIGHT, 0.04401)
 
         H2 = self.RSQ.addComponent("H2") # SOURCE: NIST-Database with polynomial fit at 5 bar
         H2.add_property(Component.DENSITY, 0.041)
-        H2.add_property(Component.HEAT_CAPACITY, [28.838423, 1.066071e-04, 1.225595e-06])
-        H2.add_property(Component.THERMAL_CONDUCTIVITY, [6.286452e-02, 4.312905e-04, -3.483333e-08])
+        H2.add_property(Component.HEAT_CAPACITY, [28.838423, 1.066071e-04, 1.225595e-06], MaterialProperty.POLYNOMIAL)
+        H2.add_property(Component.THERMAL_CONDUCTIVITY, [6.286452e-02, 4.312905e-04, -3.483333e-08], MaterialProperty.POLYNOMIAL)
         H2.add_property(Component.COLLISION_AREA, 0.27e-18)
         H2.add_property(Component.DIFFUSION_VOLUME, 6.12)
-        H2.add_property(Component.DYNAMIC_VISCOSITY, [2.801093e-06, 2.172896e-08, -3.832798e-12])
+        H2.add_property(Component.DYNAMIC_VISCOSITY, [2.801093e-06, 2.172896e-08, -3.832798e-12], MaterialProperty.POLYNOMIAL)
         H2.add_property(Component.MOLECULAR_WEIGHT, 0.002016)
 
         #add Catalyst to RSQ, Values given by Task

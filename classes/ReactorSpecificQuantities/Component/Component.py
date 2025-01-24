@@ -1,3 +1,5 @@
+import casadi as CasADi
+
 class MaterialProperty:
     CONSTANT = 1
     LINEAR = 2

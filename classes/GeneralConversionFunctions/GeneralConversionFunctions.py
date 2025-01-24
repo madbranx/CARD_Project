@@ -29,7 +29,6 @@ class GeneralConversionFunctions:
         summ = 0
         for i, property_value in enumerate(property_values):
             summ += w_i[i] / property_value
-        print(summ)
         return 1/summ
 
 

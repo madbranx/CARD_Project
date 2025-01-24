@@ -34,7 +34,5 @@ postprocessor = Postprocessor()
 #       Energy Conservation      TBD
 
 
-
-
 log.updateLog()
 log.export()

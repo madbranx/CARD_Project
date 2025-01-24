@@ -98,7 +98,7 @@ class Integrator:
                 eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
                 axMassFLow[z, t] = f_axMassFlow_CasADi( T_res[z, t], w_i_res[z, t, :], u_res[z, t], p_res[z, t])
 
-                print(axMassFLow[z, 100])
+                #print(axMassFLow[z, 100])
 
 
         # Plot results

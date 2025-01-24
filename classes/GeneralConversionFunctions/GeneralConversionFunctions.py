@@ -27,6 +27,7 @@ class GeneralConversionFunctions:
         for component in components:
             property_values.append(component.get_property(material_property, T))
 
+        print(property_values)
         unity = CasADi.DM.ones(len(property_values))
         return 1 / (CasADi.dot(w_i / CasADi.SX(property_values), unity))
 
@@ -60,7 +61,7 @@ class GeneralConversionFunctions:
         d_p = self.RSQ.getParameterValue("cat_diameter")
         rho_fl = self.rho_fl(w_i, T, p)
 
-        Re = u * d_p + rho_fl / eta_fl
+        Re = u * d_p * rho_fl / eta_fl
         return Re
 
     def Pr(self, w_i, T):

@@ -48,6 +48,9 @@ class FixedBedReactor:
     def getDAEstruct(self):
         return self.dae
 
+    def getRSQ(self):
+        return self.RSQ
+
     def getInputValues(self):
         w_i_in = self.RSQ.getParameterValue("w_i_in")
         T_in = self.RSQ.getParameterValue("T_in")
@@ -160,9 +163,9 @@ class FixedBedReactor:
         # Axial discretization
         reactorLength = self.RSQ.getParameterValue("reactorLength")
         self.log.addEntry("axial discretization", 2)
-        #self.disc_z = Discretization(self.log, self.n_z, Discretization.EQUIDISTANT, start=0.0, end=reactorLength)
-        ranges = [(0, reactorLength/2, 4), (reactorLength/2, reactorLength, 1)]
-        self.disc_z = Discretization(self.log, self.n_axial, Discretization.ARRAY, start=0.0, end=reactorLength, ranges=ranges)
+        self.disc_z = Discretization(self.log, self.n_axial, Discretization.EQUIDISTANT, start=0.0, end=reactorLength)
+        #ranges = [(0, reactorLength/2, 4), (reactorLength/2, reactorLength, 1)]
+        #self.disc_z = Discretization(self.log, self.n_axial, Discretization.ARRAY, start=0.0, end=reactorLength, ranges=ranges)
 
         # Radial discretization
         reactorRadius = self.RSQ.getParameterValue("reactorDiameter") / 2

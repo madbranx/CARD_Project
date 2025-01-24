@@ -4,6 +4,7 @@ import casadi as CasADi
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Integrator:
 
     def __init__(self, log, reactor):
@@ -58,25 +59,73 @@ class Integrator:
         u_res = ae_res[:n_axial, :]
         p_res = ae_res[n_axial:, :]
 
+        w_i_in, T_in, u_in, p_in = self.reactor.getInputValues()
+
+        from classes.GeneralConversionFunctions.GeneralConversionFunctions import GeneralConversionFunctions
+        RSQ = self.reactor.getRSQ()
+        GCF = GeneralConversionFunctions(self.log, RSQ)
+
+        MassFluxDev = np.empty(shape=(n_axial, t_steps))
+        mdot_0 = (u_in * GCF.rho_fl(w_i_in, T_in, p_in)).__float__()
+        for t in range(t_steps):
+            for z in range(n_axial):
+                MassFluxDev[z, t] = abs(mdot_0 - (u_res[z, t] * GCF.rho_fl(w_i_res[z, t, :].T, T_res[z, t],
+                                                                      p_res[z, t]).__float__())) / mdot_0 * 100
+                #print(MassFluxDev[z, t])
+        print("Maximal mass flux deviation: ", np.max(MassFluxDev))
+
+        w_f = CasADi.SX.sym('w_f', 4)
+        T_f = CasADi.SX.sym('T_f')
+        p_f = CasADi.SX.sym('p_f')
+        u_f = CasADi.SX.sym('u_f')
+
+        # ETA
+        from classes.FixedBedReactor.SpeciesConservation.ChangeByReaction.EffectivenessFactor.EffectivenessFactor import \
+            EffectivenessFactor
+        eff_factor = EffectivenessFactor(self.log, RSQ, GCF)
+        f_eta_casADI = CasADi.Function('f_eta_casADi', [w_f, T_f, p_f], [eff_factor.calc(w_f, T_f, p_f)])
+        eta = np.empty(shape=(n_axial, t_steps))
+
+        # AxMassFlow
+        from classes.FixedBedReactor.SpeciesConservation.AxialMassFlow.AxialMassFlow import AxialMassFlow
+        axMassFlow_inst = AxialMassFlow(self.log, GCF)
+        f_axMassFlow_CasADi = CasADi.Function('f_eta_casADi', [T_f,w_f, u_f, p_f], [axMassFlow_inst.calc(T_f,w_f, u_f, p_f, 2)])
+
+        axMassFLow = np.empty(shape=(n_axial, t_steps))
+
+        for t in range(t_steps):
+            for z in range(n_axial):
+                eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
+                axMassFLow[z, t] = f_axMassFlow_CasADi( T_res[z, t], w_i_res[z, t, :], u_res[z, t], p_res[z, t])
+
+                print(axMassFLow[z, 100])
+
+
         # Plot results
         # Generate plot
-        fig, axs = plt.subplots(4, 1, figsize=(4.2, 5.7), constrained_layout=True, sharex=True)
+        fig, axs = plt.subplots(5, 1, figsize=(4.2, 6.7), constrained_layout=True, sharex=True)
         # Define colors
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
         # Plot
-        axs[0].plot(w_i_res[:, 100, 0], color=colors[0])
-        axs[0].plot(w_i_res[:, 100, 1], color=colors[1])
-        axs[0].plot(w_i_res[:, 100, 2], color=colors[2])
-        axs[0].plot(w_i_res[:, 100, 3], color=colors[3])
-        axs[1].plot(T_res[:, 100], color=colors[0])
-        axs[2].plot(u_res[:, 100], color=colors[0])
-        axs[3].plot(p_res[:, 100], color=colors[0])
+        t_step = 100
+
+        axs[0].plot(w_i_res[:, t_step, 0], color=colors[0])
+        axs[0].plot(w_i_res[:, t_step, 1], color=colors[1])
+        axs[0].plot(w_i_res[:, t_step, 2], color=colors[2])
+        axs[0].plot(w_i_res[:, t_step, 3], color=colors[3])
+        axs[1].plot(T_res[:, t_step], color=colors[0])
+        axs[2].plot(u_res[:, t_step], color=colors[0])
+        axs[3].plot(p_res[:, t_step], color=colors[0])
+
+        axs[4].plot(eta[:, t_step], color=colors[0])
+        axs[4].set_ylim([0, 1.1])
         # Axis
         axs[0].set_ylabel(r'$w_{\mathregular{A}}$')
         axs[1].set_ylabel(r'$T \; \mathregular{/K}$')
         axs[2].set_ylabel(r'$u \; \mathregular{/ms^{-1}}$')
         axs[3].set_ylabel(r'$p / Pa$')
-        axs[3].set_xlabel(r'$z/L$')
+        axs[4].set_ylabel(r'$eff Factor / Pa$')
+        axs[4].set_xlabel(r'$z/L$')
         plt.show()
 
 

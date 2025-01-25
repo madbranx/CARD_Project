@@ -1,12 +1,11 @@
-from shlex import quote
-
-from classes.ConservationEquations.EnergyConservation import EnergyConservation
-from classes.ConservationEquations.MassConservation import MassConservation
-from classes.ConservationEquations.PressureDrop import PressureDrop
-from classes.ConservationEquations.SpeciesConservation import SpeciesConservation
-from classes.Parameters.Discretization import Discretization
-
 import casadi as CasADi
+
+from V1.classes.Discretization.Discretization import Discretization
+from V2.classes.ConservationEquations.EnergyConservation import EnergyConservation
+from V2.classes.ConservationEquations.MassConservation import MassConservation
+from V2.classes.ConservationEquations.PressureDrop import PressureDrop
+from V2.classes.ConservationEquations.SpeciesConservation import SpeciesConservation
+
 
 class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, SpeciesConservation):
     def __init__(self, dimension, n_axial, n_radial=1):

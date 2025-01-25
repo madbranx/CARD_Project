@@ -1,4 +1,4 @@
-from classes.Parameters.Discretization import Discretization
+from V2.classes.Parameters.Discretization import Discretization
 
 import casadi as CasADi
 import numpy as np
@@ -95,7 +95,7 @@ class Integrator:
             for z in range(n_axial):
                 MassFluxDev[z, t] = abs(mdot_0 - (u_res[z, t] * self.reactor.rho_fl(w_i_res[z, t, :].T, T_res[z, t],
                                                                       p_res[z, t]).__float__())) / mdot_0 * 100
-                #print(MassFluxDev[z, t])
+                print(MassFluxDev[z, t])
         print("Maximal mass flux deviation: ", np.max(MassFluxDev))
 
         w_f = CasADi.SX.sym('w_f', 4)
@@ -110,9 +110,6 @@ class Integrator:
         for t in range(t_steps):
             for z in range(n_axial):
                 eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
-                #axMassFLow[z, t] = f_axMassFlow_CasADi( T_res[z, t], w_i_res[z, t, :],w_i_res[z-1, t, :], u_res[z, t], p_res[z, t])
-
-                #print(axMassFLow[z, 100])
 
 
         # Plot results

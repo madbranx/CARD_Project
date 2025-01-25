@@ -1,5 +1,5 @@
-from classes.Parameters.Component import Component
-from classes.Properties.Kinetics import Kinetics
+from V2.classes.Parameters.Component import Component
+from V2.classes.Properties.Kinetics import Kinetics
 
 class PressureDrop(Kinetics):
     def __init__(self):

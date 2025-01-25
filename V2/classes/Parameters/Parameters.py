@@ -1,4 +1,4 @@
-from classes.Parameters.Component import Component, MaterialProperty
+from V2.classes.Parameters.Component import Component, MaterialProperty
 
 import numpy as np
 

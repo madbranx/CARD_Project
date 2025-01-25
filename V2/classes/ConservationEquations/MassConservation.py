@@ -1,4 +1,4 @@
-from classes.Properties.Kinetics import Kinetics
+from V2.classes.Properties.Kinetics import Kinetics
 
 class MassConservation(Kinetics):
     def __init__(self):

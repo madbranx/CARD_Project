@@ -1,16 +1,17 @@
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(1, 5)
+reactor = FixedBedReactor(1, 100)
 integrator = Integrator(reactor)
 integrator.setup(1e-13, 1e-13, 0, 10, 100)
 integrator.integrate()
+
 
 #TODO V2
 # add collision area for h2o
 # Integrator                    WORKING -> Implement for 2D
 # .
-# BUGFIXING EQUATIONS -> Mass Flux deviation without reaction???
+
 # .
 # Postprocessing                TBD
 # .

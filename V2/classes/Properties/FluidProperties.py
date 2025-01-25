@@ -1,5 +1,7 @@
-from classes.Parameters.Parameters import Parameters
-from classes.Parameters.Component import Component
+from V2.classes.Parameters.Parameters import Parameters
+from V2.classes.Parameters.Component import Component
+
+import casadi as CasADi
 
 
 class FluidProperties(Parameters):
@@ -7,6 +9,8 @@ class FluidProperties(Parameters):
     def __init__(self):
         super().__init__()
 
+    def rho_comp(self, w_i, T, p):
+        return self.concentrations(w_i, T, p)*self.getMolarWeights()
 
     def rho_fl(self, w_i, T, p):
         Mw_fl = self.massFraction_weighted_average(w_i, Component.MOLECULAR_WEIGHT)
@@ -36,8 +40,9 @@ class FluidProperties(Parameters):
 
     def moleFractions(self, w_i):
         Mw_i = self.getMolarWeights()
-        Mw_fl = self.massFraction_weighted_average(w_i, Component.MOLECULAR_WEIGHT)
-        return w_i*Mw_i/Mw_fl
+        moles = w_i / Mw_i
+        tot_moles = CasADi.sum1(moles)
+        return moles/tot_moles
 
     def partial_pressures(self, w_i, p):
         return self.moleFractions(w_i)*p

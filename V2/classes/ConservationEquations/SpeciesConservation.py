@@ -44,12 +44,12 @@ class SpeciesConservation(Kinetics):
         reaction_rate = self.rate_equation(w_i, T, p)
 
         # calculate the effective diffusion coefficient
-        eff_diff_coff = self.__calc_eff_diff_coff(T, w_i, p, comp)
+        eff_diff_coff = self.calc_eff_diff_coff(T, w_i, p, comp)
 
         thiele = diameter_particle / 2 * ((stoichiometry_CO2 * reaction_rate) / (eff_diff_coff * concentration_CO2)) ** 0.5
         return thiele
 
-    def __calc_eff_diff_coff(self, T, w_i, p, comp):
+    def calc_eff_diff_coff(self, T, w_i, p, comp):
         tortuosity_particle = self.cat_tortuosity
         porosity_particle = self.cat_porosity
         molar_mass = self.getMolarWeights()[comp]
@@ -58,8 +58,8 @@ class SpeciesConservation(Kinetics):
 
         molar_diff_coff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
 
-        eff_diff_coff = (tortuosity_particle ** 2 / porosity_particle * (
-                    1 / molar_diff_coff + 1 / knudsen_diff_coff)) ** (-1)
+        eff_diff_coff = 1 / ((tortuosity_particle ** 2 / porosity_particle) * (
+                    1 / molar_diff_coff + 1 / knudsen_diff_coff))
         return eff_diff_coff
 
     def Knudsen_diff_coff(self, T, molarMass):
@@ -76,7 +76,9 @@ class SpeciesConservation(Kinetics):
         for component in self.components:
             diff_volumes.append(component.get_property(Component.DIFFUSION_VOLUME))
             molar_weights.append(component.get_property(Component.MOLECULAR_WEIGHT))
-            densities.append(component.get_property(Component.DENSITY, T))
+            #densities.append(component.get_property(Component.DENSITY, T)) # Using material properties
+
+        densities = self.rho_comp(w_i, T, p) # Using ideal Gas Law
 
         # get fluid mixture values for the density and molar mass
         rho_fl = self.rho_fl(w_i, T, p)

@@ -37,6 +37,9 @@ class Component:
         self.dynamic_viscosity = None
         self.molecular_weight = None
 
+    def get_Name(self):
+        return self.name
+
     def add_property(self, property_type, value=None, dependency_type=MaterialProperty.CONSTANT):
         if property_type == Component.DENSITY:
             self.density = MaterialProperty(value, dependency_type)

@@ -1,6 +1,6 @@
 import casadi as CasADi
 
-from V1.classes.Discretization.Discretization import Discretization
+from V2.classes.Parameters.Discretization import Discretization
 from V2.classes.ConservationEquations.EnergyConservation import EnergyConservation
 from V2.classes.ConservationEquations.MassConservation import MassConservation
 from V2.classes.ConservationEquations.PressureDrop import PressureDrop
@@ -76,12 +76,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 before_z = current -1
                 before_r = current-len(axial_deltas)
 
-                ## 1) MASS CONSERVATION
-                if z == 0:  # Inlet Boundary Condition
-                    quot_u = u[current] / self.u_in
-                else:
-                    quot_u = u[current] / u[before_z]
-                self.AE_m[current] = -quot_u + self.massConservation(T[current], w_i[current, :].T, p[current])
+            ## 1) MASS CONSERVATION
+                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
 
                 ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
@@ -90,7 +86,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     delta_p =  p[current] - p[before_z]
                 self.AE_p[current] = delta_p / delta_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
 
-                ## 3) ENERGY CONSERVATION
+            ## 3) ENERGY CONSERVATION
                 # 3.1) Axial Energy Conversation
                 if z == 0:  # Inlet Boundary Condition
                     delta_T =  (T[current] - self.T_in)
@@ -99,7 +95,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                 axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T / delta_z
 
-                lambda_eff_axial = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current])
+                lambda_eff_axial = self.effAxialThermalConductivity(T[current], w_i[current, :].T, u[current], p[current])
                 axial_heatConduction = (-lambda_eff_axial) * delta_T / (delta_z ** 2)
 
                 ## 3.2) Radial Energy Conversation
@@ -119,13 +115,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 # 3.3) Combined Energy Conversation
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])
                 self.ODE_T[current] = ((
-                                       -axial_convectiveHeatFlux
+                                       - axial_convectiveHeatFlux
                                        - axial_heatConduction
-                                       #- radial_heatConduction
-                                       #- reactionHeat
+                                       - radial_heatConduction
+                                       #+ reactionHeat
                                        ) / (self.rho_cp_eff(w_i[current, :].T, T[current], p[current])))
 
-                # 4) SPECIES CONSERVATION
+            # 4) SPECIES CONSERVATION
                 for comp in range(self.n_components):
 
                     # 4.1) Axial Species Conversation
@@ -150,8 +146,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     changeByReaction = self.changeByReaction(T[current], w_i[current, :].T, p[current], comp)
 
                     self.ODE_wi[current, comp] = ((
-                                                  -axialMassFlow
-                                                  #+ changeByReaction
+                                                  - axialMassFlow
+                                                  - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 
 

@@ -1,0 +1,50 @@
+checked Functions
+
+Parameters
+	constant Parameters
+	component Properties
+	
+FluidProperties
+	rho cp eff
+	mole fractions (corrected)
+	partial pressures
+	concentrations
+	rho_comp -> difference to rho from material properties-> when using those also change rho_fl for consistency
+	rho_fl
+	Re (>300)
+	Pr (0.719)
+	massFraction_weighted_average
+
+Kinetics
+	rate Equation (corrected rho_cat unit conversion, missing **2 in rate eq) = 1.4025e-05 ?? correct? mol/m^3cat/s (seems low)
+
+Mass Conservation
+	fixed wrong implementation in FixedBed
+
+Pressure Drop
+	Ergun
+
+Species Conservation (positive = removal from cell)
+    axialMassFlow ~~ 0 because w_i = const over length
+	Change by reaction (values for CO2) = 3.75345e-07 kg/m^3/s
+		Knudsen 1.2664501554349599e-06
+		Mixtureavg (with Fuller) 1.38097e-05
+		eff Diff Koeff 1.74624e-07
+		effFactor = 0.99 ?
+
+Energy Conservation (negative = intake into volume) [delta_z = 0.5m]
+    convectiveHeatFlux = 2151 [*delta_T / delta_z]
+    radial heat flux (1D) = -10000000.0
+    effAxialThermalConductivity = 3.12847 [*delta T / delta z **]
+    Reaction Heat = -1.40637 (very low bc of low rate equation)
+
+
+	
+
+
+
+
+
+
+
+

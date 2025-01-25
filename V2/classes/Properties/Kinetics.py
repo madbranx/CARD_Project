@@ -1,7 +1,7 @@
 import casadi as CasADi
 
-from classes.Parameters.Component import Component
-from classes.Properties.FluidProperties import FluidProperties
+from V2.classes.Parameters.Component import Component
+from V2.classes.Properties.FluidProperties import FluidProperties
 
 
 class Kinetics(FluidProperties):
@@ -19,28 +19,30 @@ class Kinetics(FluidProperties):
             'H2': {'K_ref': 0.44, 'dH': -6.2e3},    # bar^(-0.5), J/mol
             'mix': {'K_ref': 0.88, 'dH': -10e3},    # bar^(-0.5), J/mol
         }
-        self.reactionEnthalpy = 164900
+        self.reactionEnthalpy = -164900
 
     def rate_equation(self, w_i, T, p):
         # p_i in bar
+        # [p_CH4, p_H2O, p_CO2, p_H2] = self.partial_pressures(w_i, p) * 1e-5
         p_i = self.partial_pressures(w_i, p) * 1e-5
         p_CH4 = p_i[0]
         p_H2O = p_i[1]
         p_CO2 = p_i[2]
         p_H2 = p_i[3]
 
-        # rho_cat in g_cat / m^3_cat
-        rho_cat = self.cat.get_property(Component.DENSITY, T) / 1000
-
         k = self.__calc_k(T)
         K_eq = self.__K_eq(T)
 
         r = (k * (p_CO2 ** 0.5) * (p_H2 ** 0.5) * (1 - (p_CH4 * (p_H2O ** 2)) / (K_eq * p_CO2 * (p_H2 ** 4))) /
              (1 + self.__calc_K_x('OH', T) * p_H2O / (p_H2 ** 0.5) + self.__calc_K_x('H2', T) * (
-                         p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5)))
+                         p_H2 ** 0.5) + self.__calc_K_x('mix', T) * (p_CO2 ** 0.5))**2)
 
-        # Conversion from mol/(g_cat*s) into mol/(m^3_cat*s)
-        r = r * rho_cat * 1000
+        # rho_cat from [kg_cat / m^3_cat] into [g_cat / m^3_cat]
+        rho_cat = self.cat.get_property(Component.DENSITY, T) * 1000
+
+        # Conversion of r from [mol/(g_cat*s)] into [mol/(m^3_cat*s)]
+        r *= rho_cat
+
         return r
 
     # methode to calculate rate coefficient k
@@ -52,10 +54,6 @@ class Kinetics(FluidProperties):
     # methode to calculate adsorption constant K_x for OH, H2 and mix
     def __calc_K_x(self, species, T):
         # T in K
-        # Species string input for AdsorptionConstants dictionary
-        if species not in self.AdsorptionConstants:
-            raise ValueError(f"Unknown species in adsorption constant K_x: {species}")
-
         K_x_ref = self.AdsorptionConstants[species]['K_ref']
         dH_x = self.AdsorptionConstants[species]['dH']
 

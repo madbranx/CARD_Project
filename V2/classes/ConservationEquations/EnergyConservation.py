@@ -29,7 +29,7 @@ class EnergyConservation(Kinetics):
     def __Pe_eff(self, T, w_i, u, p):
         Pe_z_fl = 2
         lambda_fl = self.massFraction_weighted_average(w_i, Component.THERMAL_CONDUCTIVITY, T)
-        lambda_cat = self.cat.get_thermal_conductivity(T)
+        lambda_cat = self.cat.get_property(Component.THERMAL_CONDUCTIVITY, T)
 
         Re = self.Re(w_i, T, u, p)
         Pr = self.Pr(w_i, T)

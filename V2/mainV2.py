@@ -6,7 +6,7 @@ integrator = Integrator(reactor)
 integrator.setup(1e-13, 1e-13, 0, 1, 100)
 integrator.integrate()
 
-#TODO
+#TODO V2
 # add collision area for h2o
 # Integrator                    WORKING -> Implement for 2D
 # .
@@ -17,6 +17,7 @@ integrator.integrate()
 # Validate 1D Model             TBD
 # .
 # Create ULM diagramm           TBD
+# add Log?
 # .
 # Conservations: Implement physics as CasADi functions ("D)
 #       Pressure drop            TBD

@@ -76,6 +76,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 before_z = current -1
                 before_r = current-len(axial_deltas)
 
+
             ## 1) MASS CONSERVATION
                 self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
 
@@ -111,6 +112,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                         radial_heatConduction = 0
                 else: # 1D radial thermal conduction with U_radial = const.
                     radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
+                    pass
 
                 # 3.3) Combined Energy Conversation
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])
@@ -147,7 +149,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  - changeByReaction
+                                                  #- changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 
 

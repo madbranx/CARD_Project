@@ -1,7 +1,7 @@
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(1, 20)
+reactor = FixedBedReactor(1, 5)
 integrator = Integrator(reactor)
 integrator.setup(1e-13, 1e-13, 0, 1, 100)
 integrator.integrate()

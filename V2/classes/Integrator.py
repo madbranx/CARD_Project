@@ -41,15 +41,15 @@ class Integrator:
 
         x_0 = np.zeros(n_axial * n_radial * (n_components + 1))
 
-        # TODO make it work for 2D !
         # setting initial values for w_i
         for comp in range(n_components):
             if comp == 0:
-                x_0[0: n_axial] = w_i_in[0]
+                x_0[0: n_axial*n_radial] = w_i_in[0]
             else:
-                x_0[n_axial*comp : n_axial*(comp+1)] = w_i_in[comp]
+                x_0[n_axial*n_radial*comp : n_axial*n_radial*(comp+1)] = w_i_in[comp]
+
         # setting initial values for T
-        x_0[n_components * n_axial:] = T_in
+        x_0[n_components*n_axial*n_radial:] = T_in
         self.x_0 = x_0
 
         z_0= np.zeros(n_axial * n_radial * 2)
@@ -136,9 +136,9 @@ class Integrator:
         axs[0].plot(w_i_res[:, t_step, 2], color=colors[2])
         axs[0].plot(w_i_res[:, t_step, 3], color=colors[3])
         axs[1].plot(T_res[:, t_step], color=colors[0])
-        axs[1].set_ylim([300, 350])
+        axs[1].set_ylim([500, 600])
         axs[2].plot(u_res[:, t_step], color=colors[0])
-        axs[3].plot(p_res[:, t_step], color=colors[0])
+        axs[3].plot(p_res[:, t_step]*1e-5, color=colors[0])
 
         axs[4].plot(eta[:, t_step], color=colors[0])
         axs[4].set_ylim([0, 1.1])
@@ -146,7 +146,7 @@ class Integrator:
         axs[0].set_ylabel(r'$w_{\mathregular{A}}$')
         axs[1].set_ylabel(r'$T \; \mathregular{/K}$')
         axs[2].set_ylabel(r'$u \; \mathregular{/ms^{-1}}$')
-        axs[3].set_ylabel(r'$p / Pa$')
+        axs[3].set_ylabel(r'$p / bar$')
         axs[4].set_ylabel(r'$eff Factor / -$')
         axs[4].set_xlabel(r'$z/L$')
         plt.show()

@@ -147,7 +147,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  #- changeByReaction
+                                                  - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 
 

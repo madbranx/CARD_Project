@@ -1,9 +1,9 @@
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(1, 5)
+reactor = FixedBedReactor(1, 8)
 integrator = Integrator(reactor)
-integrator.setup(1e-13, 1e-13, 0, 1, 10)
+integrator.setup(1e-13, 1e-13, 0, 10, 100)
 integrator.integrate()
 
 
@@ -17,7 +17,7 @@ integrator.integrate()
 # .
 # Validate 1D Model             TBD
 # .
-# Create ULM diagramm           TBD
+# Create ULM diagram           TBD
 # add Log?
 # .
 # Conservations: Implement physics as CasADi functions ("D)

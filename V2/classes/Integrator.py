@@ -115,10 +115,10 @@ class Integrator:
                 if z == 0:
                     pass
                 eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
-                print(eta[z, t])
+                #print(eta[z, t])
                 check = f_check_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t], u_res[z, t])
                 #print("w_i", w_i_res[z, t, :])
-                print("conv heat flux", self.reactor.axialMassFlow(T_res[z, t], w_i_res[z, t, :], w_i_res[z-1, t, :], u_res[z, t], p_res[z, t], 2))
+                #print("conv heat flux", self.reactor.axialMassFlow(T_res[z, t], w_i_res[z, t, :], w_i_res[z-1, t, :], u_res[z, t], p_res[z, t], 2))
                 #print("rate eq.", check)
 
 

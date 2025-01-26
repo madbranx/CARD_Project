@@ -35,7 +35,7 @@ Species Conservation (positive = removal from cell)
 Energy Conservation (negative = intake into volume) [delta_z = 0.5m]
     convectiveHeatFlux = 2151 [*delta_T / delta_z]
     radial heat flux (1D) = -10000000.0
-    effAxialThermalConductivity = 3.12847 [*delta T / delta z **]
+    effAxialThermalConductivity = 3.12847 [*delta T / delta z **]  -> u* instead of u+ (fixed)
     Reaction Heat = -1.40637 (very low bc of low rate equation)
 
 

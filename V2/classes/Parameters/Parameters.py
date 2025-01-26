@@ -20,7 +20,7 @@ class Parameters:
         #self.eps = self.__calculate_void_fraction()
         self.eps = 0.4 # given by task
 
-        self.T_in = 500  # K
+        self.T_in = 300  # K
         self.u_in= 1  # m/s
         # molar inlet ratio H2:CO2 = 4:1
         self.w_i_in = [0, 0, 0.84514, 0.1548] # kg/kg CH4, H20, CO2, H2

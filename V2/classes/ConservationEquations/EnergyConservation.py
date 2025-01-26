@@ -23,7 +23,7 @@ class EnergyConservation(Kinetics):
 
         Pe_eff = self.__Pe_eff(T, w_i, u, p)
 
-        lambda_eff_axial = u + rho_fl * cp_fl * self.cat_diameter / Pe_eff
+        lambda_eff_axial = u * rho_fl * cp_fl * self.cat_diameter / Pe_eff
         return lambda_eff_axial
 
     def __Pe_eff(self, T, w_i, u, p):
@@ -34,7 +34,7 @@ class EnergyConservation(Kinetics):
         Re = self.Re(w_i, T, u, p)
         Pr = self.Pr(w_i, T)
 
-        Pe_eff = 1/((1/Pe_z_fl)+((lambda_fl/lambda_cat)/(Re/Pr)))
+        Pe_eff = 1/((1/Pe_z_fl)+((lambda_cat/lambda_fl)/(Re/Pr)))
         return Pe_eff
 
     ## RADIAL HEAT CONDUCTION
@@ -52,4 +52,4 @@ class EnergyConservation(Kinetics):
         eff_factor = self.species_conservation.effFactor(w_i, T, p)
         reaction_rate = self.rate_equation(w_i, T, p)
 
-        return (1-self.eps) * eff_factor * reaction_rate * self.reactionEnthalpy
+        return -(1-self.eps) * eff_factor * reaction_rate * self.reactionEnthalpy

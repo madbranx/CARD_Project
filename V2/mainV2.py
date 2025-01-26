@@ -1,9 +1,9 @@
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(1, 5)
+reactor = FixedBedReactor(1, 200)
 integrator = Integrator(reactor)
-integrator.setup(1e-13, 1e-13, 0, 1, 100)
+integrator.setup(1e-13, 1e-13, 0, 1000, 1000)
 integrator.integrate()
 
 

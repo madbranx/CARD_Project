@@ -118,9 +118,9 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])
                 self.ODE_T[current] = ((
                                        - axial_convectiveHeatFlux
-                                       #- axial_heatConduction
-                                       #- radial_heatConduction
-                                       #+ reactionHeat
+                                       - axial_heatConduction
+                                       - radial_heatConduction
+                                       + reactionHeat
                                        ) / (self.rho_cp_eff(w_i[current, :].T, T[current], p[current])))
 
             # 4) SPECIES CONSERVATION
@@ -149,7 +149,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  #- changeByReaction
+                                                  - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 
 

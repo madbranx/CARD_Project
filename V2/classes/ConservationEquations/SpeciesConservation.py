@@ -12,7 +12,7 @@ class SpeciesConservation(Kinetics):
         # Only convection
         rho_fl = self.rho_fl(w_i, T, p)
 
-        j_i_ax = -u*rho_fl*(w_i[comp]-w_i_in[comp])
+        j_i_ax = u*rho_fl*(w_i[comp]-w_i_in[comp])
         return j_i_ax
 
     ## RADIAL MASS FLOW #TODO

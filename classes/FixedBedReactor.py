@@ -70,8 +70,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         p = self.p
         u = self.u
 
-        radial_deltas = self.radial_discretization.get_differences()
-        axial_deltas = self.axial_discretization.get_differences()
+        radial_deltas = self.radial_discretization.get_differences_faces()
+        axial_deltas = self.axial_discretization.get_differences_faces()
 
         for r, delta_r in enumerate(radial_deltas):
             for z, delta_z in enumerate(axial_deltas):

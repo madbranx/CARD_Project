@@ -12,7 +12,7 @@ class Discretization:
         self.end = kwargs.get('end', 1.0)
         self.faces = None
         self.centroids = None
-        self.differences = None
+        self.differences_faces = None
         self.__create()
 
     def __create(self):
@@ -24,7 +24,8 @@ class Discretization:
             self.faces = self.__equidistant()
 
         self.centroids = (self.faces[:-1] + self.faces[1:]) / 2
-        self.differences = np.diff(self.faces)
+        self.differences_faces = np.diff(self.faces)
+        self.differences_centroids = np.diff(self.centroids)
 
     def __equidistant(self):
         return np.linspace(self.start, self.end, self.num_volumes+1)
@@ -57,5 +58,8 @@ class Discretization:
     def get_centroids(self):
         return self.centroids
 
-    def get_differences(self):
-        return self.differences
+    def get_differences_faces(self):
+        return self.differences_faces
+
+    def get_differences_centroids(self):
+        return self.differences_centroids

@@ -19,10 +19,9 @@ postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 # print(reactor.massFraction_weighted_average(w, Component.HEAT_CAPACITY, 500))
 
 # Questions
-# Validation Data @ which timepoints/physics/material properties etc.?
-# What causes difference to validation data? reaction rate?
-# Create Ignition/Extinction Arcs after 2D implementation?
-# Radial mass flow: how to get the second derivative?
+# Create Ignition/Extinction Arcs after 2D implementation? - 1D and 2D
+#   calc Till Kasselmann steady state, plot X over T wall
+#   extinction, last steady state x=1 as starting values
 
 
 #TODO V2

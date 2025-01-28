@@ -125,6 +125,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
             # 4) SPECIES CONSERVATION
                 for comp in range(self.n_components):
+                    radialMassFlow = 0
 
                     # 4.1) Axial Species Conversation
                     if z == 0:  # Inlet Boundary Condition
@@ -135,20 +136,20 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
                         if r == 0: # Middle Symmetry Boundary Condition
-                            pass
-                            # TODO
+                            # Neumann boundary condition: d(w_i)/dr = 0
+                            radialMassFlow = 0
                         elif r == self.radial_discretization.num_volumes:  # Reactor Wall Boundary condition
-                            pass
-                            # TODO
+                            # Dirichlet boundy condition: j_r = 0
+                            radialMassFlow = 0
                         else:
-                            pass
-                            # TODO
+                            radialMassFlow = self.radialMassFlow(T[current], w_i[current, :].T, w_i[before_r, :].T, u[current], p[current], comp) / delta_r
 
                     # 4.3) Combined Species Conversation
                     changeByReaction = self.changeByReaction(T[current], w_i[current, :].T, p[current], comp)
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
+                                                  - radialMassFlow
                                                   - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 

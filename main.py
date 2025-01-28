@@ -16,6 +16,7 @@ postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 # Validation Data @ which timepoints/physics/material properties etc.?
 # What causes difference to validation data? reaction rate?
 # Create Ignition/Extinction Arcs after 2D implementation?
+# Radial mass flow: how to get the second derivative?
 
 
 #TODO V2

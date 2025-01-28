@@ -20,7 +20,7 @@ class SpeciesConservation(Kinetics):
         # TODO not finished
         # Only Diffusion and Crossmixing
         cat_diameter = self.cat_diameter
-        void_fraction = self.eps    # TODO constant eps for validation
+        void_fraction = self.eps
 
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
         eff_DiffCoff = (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8

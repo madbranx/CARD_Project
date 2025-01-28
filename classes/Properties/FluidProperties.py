@@ -35,8 +35,15 @@ class FluidProperties(Parameters):
             property_values.append(component.get_property(material_property, T))
         summ = 0
         for i, property_value in enumerate(property_values):
-            summ += w_i[i] / property_value
-        return 1/summ
+            if material_property == Component.MOLECULAR_WEIGHT:
+                summ += w_i[i] / property_value
+            else:
+                summ += w_i[i] * property_value
+        if material_property == Component.MOLECULAR_WEIGHT:
+            return 1 / summ
+        else:
+            return summ
+
 
     def moleFractions(self, w_i):
         Mw_i = self.getMolarWeights()

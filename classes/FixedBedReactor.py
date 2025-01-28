@@ -15,7 +15,10 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         # Discretizations
         if dimension == 1:
             n_radial = 1
-        self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+
+        ranges_z = [[0, self.reactorLength/3, 3], [self.reactorLength/3, self.reactorLength, 1]]
+        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
         self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
         if self.dimension == 1:
             self.n_spatial = self.axial_discretization.num_volumes
@@ -112,7 +115,6 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                         radial_heatConduction = 0
                 else: # 1D radial thermal conduction with U_radial = const.
                     radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
-                    pass
 
                 # 3.3) Combined Energy Conversation
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])
@@ -125,7 +127,6 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
             # 4) SPECIES CONSERVATION
                 for comp in range(self.n_components):
-                    radialMassFlow = 0
 
                     # 4.1) Axial Species Conversation
                     if z == 0:  # Inlet Boundary Condition
@@ -134,6 +135,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                         axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, w_i[before_z, :].T, u[current], p[current], comp) / delta_z
 
                     # 4.2) Radial Species Conversation
+
                     if self.dimension == 2:
                         if r == 0: # Middle Symmetry Boundary Condition
                             # Neumann boundary condition: d(w_i)/dr = 0
@@ -143,6 +145,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                             radialMassFlow = 0
                         else:
                             radialMassFlow = self.radialMassFlow(T[current], w_i[current, :].T, w_i[before_r, :].T, u[current], p[current], comp) / delta_r
+                    else:  # 1D
+                        radialMassFlow = 0
 
                     # 4.3) Combined Species Conversation
                     changeByReaction = self.changeByReaction(T[current], w_i[current, :].T, p[current], comp)

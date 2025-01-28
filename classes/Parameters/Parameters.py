@@ -24,7 +24,6 @@ class Parameters:
         self.u_in= 1  # m/s
         # molar inlet ratio H2:CO2 = 4:1
         self.w_i_in = [0, 0, 0.8452, 0.1548] # kg/kg CH4, H20, CO2, H2
-        #self.w_i_in = [0, 0, 0.8, 0.2]
         self.p_in = 5e5 # Pa
 
         # Parameters given by task for 1D calculation
@@ -109,11 +108,11 @@ class Parameters:
         H2.add_property(Component.COLLISION_AREA, 0.27e-18)
         H2.add_property(Component.DIFFUSION_VOLUME, 6.12)
 
-        # check_temperature = 500
-        # self.checkPropertyValues(CH4, check_temperature)
-        # self.checkPropertyValues(H20, check_temperature)
-        # self.checkPropertyValues(CO2, check_temperature)
-        # self.checkPropertyValues(H2, check_temperature)
+        check_temperature = 500
+        self.checkPropertyValues(CH4, check_temperature)
+        self.checkPropertyValues(H2O, check_temperature)
+        self.checkPropertyValues(CO2, check_temperature)
+        self.checkPropertyValues(H2, check_temperature)
 
         self.components = [CH4, H2O, CO2, H2]
 

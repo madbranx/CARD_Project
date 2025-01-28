@@ -11,7 +11,7 @@ class Kinetics(FluidProperties):
         self.nu = [-1, -2, 1, 4]
 
         # Kinetic specific Variables
-        self.T_ref = 550        # K
+        self.T_ref = 555        # K
         self.k0_ref = 3.46e-4   # mol/(bar s g_cat)
         self.E_A = 77.5e3       # J/mol
         self.AdsorptionConstants = {

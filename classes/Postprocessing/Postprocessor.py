@@ -63,34 +63,22 @@ class Postprocessor:
 
         plt.show()
 
-    def plot1D(self, name, result):
-        pass
+    def plot1D(self, name, result, timestep):
 
+        w_i, T, u, p = result.get_values(timestep)
+        z_pos = result.get_z_pos() / self.reactor.reactorLength
 
+        w_f = CasADi.SX.sym('w_f', 4)
+        T_f = CasADi.SX.sym('T_f')
+        p_f = CasADi.SX.sym('p_f')
+        u_f = CasADi.SX.sym('u_f')
 
-        # w_f = CasADi.SX.sym('w_f', 4)
-        # T_f = CasADi.SX.sym('T_f')
-        # p_f = CasADi.SX.sym('p_f')
-        # u_f = CasADi.SX.sym('u_f')
-        #
-        # # ETA
-        # f_eta_casADI = CasADi.Function('f_eta_casADi', [w_f, T_f, p_f], [self.reactor.effFactor(w_f, T_f, p_f)])
-        # eta = np.empty(shape=(n_spatial, t_steps))
-        #
-        # # check function
-        # f_check_casADI = CasADi.Function('f_check_casADI', [w_f, T_f, p_f, u_f], [])
-        # for t in range(t_steps):
-        #     for z in range(n_spatial):
-        #         if z == 0:
-        #             pass
-        #         eta[z, t] = f_eta_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t])
-        #         check = f_check_casADI(w_i_res[z, t, :], T_res[z, t], p_res[z, t], u_res[z, t])
-        #
-        #
+        Reynolds = CasADi.Function('f_Re_CasADi', [w_f, T_f, u_f, p_f], [self.reactor.Re(w_f, T_f,u_f, p_f)])
 
+        check = Reynolds(w_i[z_pos, timestep, :], T[z_pos, timestep], p[z_pos, timestep], u[z_pos, timestep])
 
+        fig, ax = plt.subplots(1, 1, figsize=(4.2, 5.7), constrained_layout=True, sharex=True)
 
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
-
-
-
+        ax.plot(z_pos, check, color=colors[0], linestyle="--")

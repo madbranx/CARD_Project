@@ -2,10 +2,10 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(1, 100)
+reactor = FixedBedReactor(2, 60, 20)
 
 integrator = Integrator(reactor)
-integrator.setup(1e-11, 1e-11, 0, 1000, 100)
+integrator.setup(1e-5, 1e-5, 0, 100, 10)
 results = integrator.integrate()
 
 postprocessor = Postprocessor(reactor, "../results/01")

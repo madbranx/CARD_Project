@@ -16,8 +16,7 @@ class SpeciesConservation(Kinetics):
         return j_i_ax
 
     ## RADIAL MASS FLOW
-    def radialMassFlow(self, T, w_i, w_i_in, u, p, comp):
-        # TODO not finished
+    def radialMassFlow(self, T, p, u, comp, w_i, w_i_in, w_i_out, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_coordinate_in, r_coordinate_out, r_coordinate):
         # Only Diffusion and Crossmixing
         cat_diameter = self.cat_diameter
         void_fraction = self.eps
@@ -25,8 +24,11 @@ class SpeciesConservation(Kinetics):
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
         eff_DiffCoff = (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
 
-        j_i_r = -eff_DiffCoff * (w_i_in[comp] - w_i[comp])
-        return j_i_r
+        j_r_in = -eff_DiffCoff * (w_i_in[comp] - w_i[comp]) / delta_r_centeroids_in
+        j_r_out = -eff_DiffCoff * (w_i[comp] - w_i_out[comp]) / delta_r_centeroids_out
+
+        radial_mass_flow = 1/r_coordinate * (j_r_in * r_coordinate_in - j_r_out * r_coordinate_out) / delta_r_faces
+        return radial_mass_flow
 
     ## CHANGE BY REACTION
     def changeByReaction(self, T, w_i, p, comp):

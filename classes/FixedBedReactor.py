@@ -141,7 +141,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                             # Neumann boundary condition: d(w_i)/dr = 0
                             radialMassFlow = 0
                         elif r == self.radial_discretization.num_volumes:  # Reactor Wall Boundary condition
-                            # Dirichlet boundy condition: j_r = 0
+                            # Dirichlet boundary condition: j_r = 0
                             radialMassFlow = 0
                         else:
                             radialMassFlow = self.radialMassFlow(T[current], w_i[current, :].T, w_i[before_r, :].T, u[current], p[current], comp) / delta_r

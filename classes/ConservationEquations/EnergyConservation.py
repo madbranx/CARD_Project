@@ -2,6 +2,8 @@ from classes.ConservationEquations.SpeciesConservation import SpeciesConservatio
 from classes.Parameters.Component import Component
 from classes.Properties.Kinetics import Kinetics
 
+import casadi as CasADi
+
 
 class EnergyConservation(Kinetics):
     def __init__(self):
@@ -38,9 +40,14 @@ class EnergyConservation(Kinetics):
         return Pe_eff
 
     ## RADIAL HEAT CONDUCTION
-    def effRadialThermalConductivity(self, T, w_i, u, p):
-        # TODO
-        pass
+    def effRadialThermalConductivity(self, T, T_in, T_out, p, w_i, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_coordinate_in, r_coordinate_out, r_coordinate):
+        thermalConductivity_radial = self.__calc_thermalConductivity_bed(T, w_i, p)
+
+        q_r_in = -thermalConductivity_radial * (T_in - T) / delta_r_centeroids_in
+        q_r_out = -thermalConductivity_radial * (T - T_out) / delta_r_centeroids_out
+
+        radial_heat_conduction = 1/r_coordinate * (q_r_in * r_coordinate_in - q_r_out * r_coordinate_out) / delta_r_faces
+        return radial_heat_conduction
 
 
     def wall_HeatTransferCoefficient(self, T, w_i, u, p):
@@ -53,3 +60,98 @@ class EnergyConservation(Kinetics):
         reaction_rate = self.rate_equation(w_i, T, p)
 
         return -(1-self.eps) * eff_factor * reaction_rate * self.reactionEnthalpy
+
+    ## Methodes for calculating radial heat conduction
+
+    def __calc_thermalConductivity_bed(self, T, w_i, p):
+        k_G = self.__calc_k_G(T, p, w_i)
+        k_cat = self.__calc_k_cat(T, w_i)
+        k_rad = self.__calc_k_rad(T, w_i)
+        k_c = self.__calc_k_c(T, p, w_i)
+
+        thermalConductivity_bed = (((1 - CasADi.sqrt(1 - self.eps)) * self.eps * (1/(self.eps - 1 + 1/k_G) + k_rad)
+                                    + CasADi.sqrt(1 - self.eps) * (self.cat_flatteningCoefficient * k_cat + (1 - self.cat_flatteningCoefficient) * k_c)
+                                    ) / self.__calc_fluid_conductivity(T, w_i))
+        return thermalConductivity_bed
+
+    def __calc_k_c(self, T, p, w_i):
+        N = self.__calc_N(T, p, w_i)
+        B = self.__calc_deformationParameter()
+        k_cat = self.__calc_k_cat(T, w_i)
+        k_rad = self.__calc_k_rad(T, w_i)
+        k_G = self.__calc_k_G(T, p, w_i)
+
+        term1 = ((2/N) * (
+                (B * (k_cat + k_rad - 1)) / (N**2 * k_G * k_cat)
+                * CasADi.log((k_cat + k_rad) / (B * (k_G + (1 - k_G) * (k_cat + k_rad))))
+                ))
+        term2 = (((B + 1) / (2 * B)) * (
+                (k_rad / k_G) - B * (1 + ((1 - k_G) / k_G) * k_rad)
+                ))
+        term3 = (B - 1) / (N * k_G)
+        return term1 + term2 - term3
+
+    def __calc_N(self, T, p, w_i):
+        N = (1 / self.__calc_k_G(T, p, w_i) *
+            (1 + (self.__calc_k_rad(T, w_i) - self.__calc_deformationParameter() * self.__calc_k_G(T, p, w_i)) / self.__calc_k_cat(T, w_i))
+             - self.__calc_deformationParameter() * (1 / self.__calc_k_G(T, p, w_i) - 1) * (1 + self.__calc_k_rad(T, w_i) / self.__calc_k_cat(T, w_i)))
+        return N
+
+    def __calc_k_G(self, T, p, w_i):
+        # Gas kinetics to calculate mean free path of gas mixture
+        # effective collision area weighted by molar fraction
+        collisionAreas = []
+        moleFractions = self.moleFractions(w_i)
+        particleDiameter = self.cat_diameter
+
+        for component in self.components:
+            collisionAreas.append(component.get_property(Component.COLLISION_AREA))
+        # mole fraction weighted effective collision area
+        eff_collisionArea = sum(moleFractions[component] * collisionAreas[component] for component in range(len(self.components)))
+
+        meanFreePath = 1 / CasADi.sqrt(2) * self.boltzmann * T / (p * eff_collisionArea)
+        return 1 / (1 + meanFreePath/particleDiameter)
+
+    def __calc_k_cat(self, T, w_i):
+        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.__calc_fluid_conductivity(T, w_i)
+
+    def __calc_deformationParameter(self):
+        return self.cat_shapeFactor * ((1 - self.eps)/self.eps) ** (10/9) * self.cat_distributionFunction
+
+    def __calc_k_rad(self, T, w_i):
+        # Heat conduction parameter for radiation
+        radiationCoefficient = self.cat_radiationCoefficient
+        emissionCoefficient = self.cat_emissionCoefficient
+        particleDiameter = self.cat_diameter
+
+        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.__calc_fluid_conductivity(T, w_i)
+        return k_rad
+
+    def __calc_fluid_conductivity(self, T, w_i):
+        # Get component properties
+        viscosity = []
+        thermal_conductivity = []
+        molar_weight = []
+        for component in self.components:
+            viscosity.append(component.get_property(Component.DYNAMIC_VISCOSITY, T))
+            thermal_conductivity.append(component.get_property(Component.THERMAL_CONDUCTIVITY, T))
+            molar_weight.append(component.get_property(Component.MOLECULAR_WEIGHT))
+        moleFraction = self.moleFractions(w_i)
+
+        # Calculate the gas mixture thermal conductivity employing viscosity mixing rule
+        fluid_conductivity = (sum(moleFraction[comp_i] * thermal_conductivity[comp_i] / (
+            sum(moleFraction[comp_j] *
+            self.__calc_compActivity(molar_weight[comp_i], molar_weight[comp_j], viscosity[comp_i], viscosity[comp_j])
+            for comp_j in range(len(self.components))))
+        for comp_i in range(len(self.components))))
+        return fluid_conductivity
+
+
+    def __calc_compActivity(self, molar_weight_i, molar_weight_j, viscosity_i, viscosity_j):
+        compActivity = ((1 + CasADi.sqrt(viscosity_i/viscosity_j) * (molar_weight_j/molar_weight_i)**(1/4))**2 /
+                        (CasADi.sqrt(8 * (1 + molar_weight_i/molar_weight_j))))
+        return compActivity
+
+
+    ### Methodes for calculating wall heat transfer coefficient
+

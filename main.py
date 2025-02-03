@@ -2,21 +2,17 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(2, 60, 20)
+reactor = FixedBedReactor(2, 50, 20)
 
 integrator = Integrator(reactor)
-integrator.setup(1e-5, 1e-5, 0, 100, 10)
+integrator.setup(1e-5, 1e-5, 0, 1000, 100)
 results = integrator.integrate()
 
-postprocessor = Postprocessor(reactor, "../results/01")
-postprocessor.plot_1D_vs_ValidationData("test", results, 100)
+#postprocessor = Postprocessor(reactor, "../results/01")
+#postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 
-
-# import casadi as CasADi
-# from classes.Parameters.Component import Component
-# w = CasADi.SX([0, 0, 0.8, 0.2])
-#
-# print(reactor.massFraction_weighted_average(w, Component.HEAT_CAPACITY, 500))
+postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot2D("test2", results,10)
 
 # Questions
 # Create Ignition/Extinction Arcs after 2D implementation? - 1D and 2D

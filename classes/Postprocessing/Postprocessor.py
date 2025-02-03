@@ -82,3 +82,28 @@ class Postprocessor:
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
         ax.plot(z_pos, check, color=colors[0], linestyle="--")
+
+
+    def plot2D(self, name, result, timestep):
+        fig, axs = plt.subplots(4, 1, figsize=(4, 12), constrained_layout=True)
+
+        w_i, T, p, u = result.get_2D_values(timestep)
+        z_pos = result.get_z_pos() / self.reactor.reactorLength
+        r_pos = result.get_r_pos() / self.reactor.reactorDiameter
+
+        print(result.get_z_pos())
+        print(z_pos)
+
+        ### GPT
+
+        # Using meshgrid to create coordinate matrices
+        z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
+
+        axs[0].pcolormesh(z_mesh, r_mesh, T, cmap='inferno', shading='auto')
+        axs[1].pcolormesh(z_mesh, r_mesh, u, cmap='coolwarm', shading='auto')
+        axs[2].pcolormesh(z_mesh, r_mesh, p, cmap='Wistia', shading='auto')
+        axs[3].pcolormesh(z_mesh, r_mesh, w_i[1,:,:], cmap='Spectral', shading='auto')
+
+
+        plt.show()
+

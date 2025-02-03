@@ -105,15 +105,33 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                 ## 3.2) Radial Energy Conversation
                 if self.dimension == 2:
+                    r_loc = self.radial_discretization.get_centroids()[r]
+                    d_r_faces = self.radial_discretization.get_differences_faces()[r]
                     if r == 0:  # Middle Symmetry Boundary Condition
+                        # Boundary condition: d(q_in)/dr = 0
+                        # -> T_in = T to achieve q_in = 0
+                        r_loc_in = 1  # Set to 1 for numerical reason
+                        r_loc_out = self.radial_discretization.get_centroids()[r + 1]
+                        d_r_centeroids_in = 1  # Set to 1 for numerical reason
+                        d_r_centeroids_out = self.radial_discretization.get_differences_centroids()[r]
+
+                        radial_heatConduction = self.effRadialThermalConductivity(T[current], T[current], T[after_r],
+                                                                                  p[current], w_i[current, :].T,
+                                                                                  d_r_centeroids_in, d_r_centeroids_out,
+                                                                                  d_r_faces, r_loc_in, r_loc_out, r_loc)
+                    elif r == self.radial_discretization.num_volumes - 1:  # Reactor Wall Boundary condition
                         # TODO
-                        radial_heatConduction = 0
-                    elif r == self.radial_discretization.num_volumes:  # Reactor Wall Boundary condition
-                        # TODO
-                        radial_heatConduction = 0
+                        radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
                     else:
-                        # TODO
-                        radial_heatConduction = 0
+                        r_loc_in = self.radial_discretization.get_centroids()[r - 1]
+                        r_loc_out = self.radial_discretization.get_centroids()[r + 1]
+                        d_r_centeroids_in = self.radial_discretization.get_differences_centroids()[r - 1]
+                        d_r_centeroids_out = self.radial_discretization.get_differences_centroids()[r]
+
+                        radial_heatConduction =0.5* self.effRadialThermalConductivity(T[current], T[before_r], T[after_r],
+                                                                                  p[current], w_i[current, :].T,
+                                                                                  d_r_centeroids_in, d_r_centeroids_out,
+                                                                                  d_r_faces, r_loc_in, r_loc_out, r_loc)
                 else: # 1D radial thermal conduction with U_radial = const.
                     radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
 
@@ -147,8 +165,10 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                             d_r_centeroids_in = 1       # Set to 1 for numerical reason
                             d_r_centeroids_out = self.radial_discretization.get_differences_centroids()[r]
 
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp, w_i[current, :].T, w_i[current, :].T, w_i[after_r, :].T, d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
-                        elif r == self.radial_discretization.num_volumes-1:  # Reactor Wall Boundary condition
+                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
+                                                                 w_i[current, :].T, w_i[current, :].T, w_i[after_r, :].T,
+                                                                 d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
+                        elif r == self.radial_discretization.num_volumes - 1:  # Reactor Wall Boundary condition
                             # Boundary condition: d(w_i_out)/dr = 0
                             # -> w_i_out = w_i to achieve j_i_out
                             r_loc_in = self.radial_discretization.get_centroids()[r-1]
@@ -156,14 +176,18 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                             d_r_centeroids_in = self.radial_discretization.get_differences_centroids()[r-1]
                             d_r_centeroids_out = 1      # Set to 1 for numerical reason
 
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp, w_i[current, :].T, w_i[before_r, :].T, w_i[current, :].T, d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
+                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
+                                                                 w_i[current, :].T, w_i[before_r, :].T, w_i[current, :].T,
+                                                                 d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
                         else:
                             r_loc_in = self.radial_discretization.get_centroids()[r-1]
                             r_loc_out = self.radial_discretization.get_centroids()[r+1]
                             d_r_centeroids_in = self.radial_discretization.get_differences_centroids()[r-1]
                             d_r_centeroids_out = self.radial_discretization.get_differences_centroids()[r]
 
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp, w_i[current, :].T, w_i[before_r, :].T, w_i[after_r, :].T, d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
+                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
+                                                                 w_i[current, :].T, w_i[before_r, :].T, w_i[after_r, :].T,
+                                                                 d_r_centeroids_in, d_r_centeroids_out, d_r_faces, r_loc_in, r_loc_out, r_loc)
                     else:  # 1D
                         radialMassFlow = 0
 

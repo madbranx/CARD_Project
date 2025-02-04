@@ -28,6 +28,10 @@ class Results:
         r_pos = self.radialDiscretization.get_centroids()
         return r_pos
 
+    def get_r_faces(self):
+        r_faces = self.radialDiscretization.get_faces()
+        return r_faces
+
     def get_2D_values(self, t_step):
         # TODO number of components hardcoded
         n_axial_volumes = self.axialDiscretization.num_volumes

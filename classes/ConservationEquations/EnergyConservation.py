@@ -40,19 +40,28 @@ class EnergyConservation(Kinetics):
         return Pe_eff
 
     ## RADIAL HEAT CONDUCTION
-    def effRadialThermalConductivity(self, T, T_in, T_out, p, w_i, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_coordinate_in, r_coordinate_out, r_coordinate):
+    def effRadialThermalConductivity(self, T, T_in, T_out, p, w_i, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.__calc_thermalConductivity_bed(T, w_i, p)
 
-        q_r_in = -thermalConductivity_radial * (T_in - T) / delta_r_centeroids_in
-        q_r_out = -thermalConductivity_radial * (T - T_out) / delta_r_centeroids_out
+        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centeroids_in
+        q_r_out = -thermalConductivity_radial * (T_out - T) / delta_r_centeroids_out
 
-        radial_heat_conduction = 1/r_coordinate * (q_r_in * r_coordinate_in - q_r_out * r_coordinate_out) / delta_r_faces
+        radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
         return radial_heat_conduction
 
 
-    def wall_HeatTransferCoefficient(self, T, w_i, u, p):
-        # TODO
-        pass
+    def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
+        thermalConductivity_radial = self.__calc_thermalConductivity_bed(T, w_i, p)
+        alpha_wall = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
+        T_inner_wall = self.__calc_innerWallTemperature(T, p, w_i)
+
+        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centeroids_out
+        q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?
+
+        radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
+        return radial_heat_conduction
+
+
 
     ## REACTION HEAT
     def reactionHeat(self, T, w_i, p):
@@ -98,11 +107,15 @@ class EnergyConservation(Kinetics):
         return N
 
     def __calc_k_G(self, T, p, w_i):
+        particleDiameter = self.cat_diameter
+        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
+        return 1 / (1 + meanFreePath/particleDiameter)
+
+    def __calc_meanFreePath(self, T, p, w_i):
         # Gas kinetics to calculate mean free path of gas mixture
         # effective collision area weighted by molar fraction
         collisionAreas = []
         moleFractions = self.moleFractions(w_i)
-        particleDiameter = self.cat_diameter
 
         for component in self.components:
             collisionAreas.append(component.get_property(Component.COLLISION_AREA))
@@ -110,7 +123,7 @@ class EnergyConservation(Kinetics):
         eff_collisionArea = sum(moleFractions[component] * collisionAreas[component] for component in range(len(self.components)))
 
         meanFreePath = 1 / CasADi.sqrt(2) * self.boltzmann * T / (p * eff_collisionArea)
-        return 1 / (1 + meanFreePath/particleDiameter)
+        return meanFreePath
 
     def __calc_k_cat(self, T, w_i):
         return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.__calc_fluid_conductivity(T, w_i)
@@ -120,7 +133,7 @@ class EnergyConservation(Kinetics):
 
     def __calc_k_rad(self, T, w_i):
         # Heat conduction parameter for radiation
-        radiationCoefficient = self.cat_radiationCoefficient
+        radiationCoefficient = self.radiation_blackBody
         emissionCoefficient = self.cat_emissionCoefficient
         particleDiameter = self.cat_diameter
 
@@ -155,3 +168,31 @@ class EnergyConservation(Kinetics):
 
     ### Methodes for calculating wall heat transfer coefficient
 
+    def __calc_heatTransferCoefficient_rad(self, T):
+        C_w = self.radiation_blackBody / (1/self.reactor_emissionCoefficient + 1/self.cat_emissionCoefficient -1)
+        alpha_rad = 4 * C_w * T**3
+        return alpha_rad
+
+    def __calc_heatTransferCoefficient_cond(self, T, p, w_i):
+        particleDiameter = self.cat_diameter
+        conductivity_fluid = self.__calc_fluid_conductivity(T, w_i)
+        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
+        s_jac = 1   #TODO
+
+        alpha_cond = 4 * conductivity_fluid / particleDiameter * (
+                    (1 + 2 * (meanFreePath + s_jac) / particleDiameter) *
+                    CasADi.log(1 + particleDiameter / (2 * (meanFreePath + s_jac))) - 1)
+        return alpha_cond
+
+    def __calc_heatTransferCoefficient_contact(self, T, p, w_i):
+        return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
+
+    def __calc_resistanceWall(self):
+        k_wall = 1 / (1 / self.reactor_thermalConductivity * CasADi.log((self.reactorDiameter + self.reactor_wallThickness) / self.reactorDiameter))
+        return k_wall
+
+    def __calc_innerWallTemperature(self, T, p, w_i):
+        alpha_bed = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
+        k_wall = self.__calc_resistanceWall()
+        T_wall = self.T_wall
+        return (alpha_bed * T + k_wall * T_wall) / (alpha_bed + k_wall)

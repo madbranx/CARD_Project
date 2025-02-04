@@ -90,9 +90,9 @@ class Postprocessor:
         w_i, T, p, u = result.get_2D_values(timestep)
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = result.get_r_pos() / self.reactor.reactorDiameter
+        r_faces = result.get_r_faces()
 
-        print(result.get_z_pos())
-        print(z_pos)
+        print(r_faces)
 
         ### GPT
 

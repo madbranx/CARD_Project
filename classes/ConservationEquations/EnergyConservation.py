@@ -47,8 +47,8 @@ class EnergyConservation(Kinetics):
         q_r_out = -thermalConductivity_radial * (T_out - T) / delta_r_centeroids_out
 
         radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
-        return radial_heat_conduction
-
+        #return radial_heat_conduction
+        return 200
 
     def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.__calc_thermalConductivity_bed(T, w_i, p)
@@ -59,7 +59,8 @@ class EnergyConservation(Kinetics):
         q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?
 
         radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
-        return radial_heat_conduction
+        #return radial_heat_conduction
+        return 200
 
 
 
@@ -193,6 +194,6 @@ class EnergyConservation(Kinetics):
 
     def __calc_innerWallTemperature(self, T, p, w_i):
         alpha_bed = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
-        alpha_wall = self.__calc_resistanceWall() / self.reactor_areaCoverage
+        alpha_wall = self.__calc_resistanceWall() / self.reactor_wallThickness
         T_wall = self.T_wall
         return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)

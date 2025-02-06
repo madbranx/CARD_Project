@@ -2,17 +2,17 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(2, 40, 20)
+reactor = FixedBedReactor(2, 30, 10)
 
 integrator = Integrator(reactor)
-integrator.setup(1e-5, 1e-5, 0, 100, 100)
+integrator.setup(1e-5, 1e-5, 0, 1000, 100)
 results = integrator.integrate()
 
 #postprocessor = Postprocessor(reactor, "../results/01")
 #postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 
 postprocessor = Postprocessor(reactor, "../results/02")
-postprocessor.plot2D("test2", results,10)
+postprocessor.plot2D_Temperature("test2", results,10)
 
 
 # Questions

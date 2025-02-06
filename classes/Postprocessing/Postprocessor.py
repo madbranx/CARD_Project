@@ -1,7 +1,10 @@
+from classes.Postprocessing.TOLcmaps import TOLcmaps
+
 import numpy as np
 import pandas as pd
 import casadi as CasADi
 from matplotlib import pyplot as plt
+from matplotlib import colors as clr
 
 class Postprocessor:
     def __init__(self, reactor, exportLocation):
@@ -84,26 +87,31 @@ class Postprocessor:
         ax.plot(z_pos, check, color=colors[0], linestyle="--")
 
 
-    def plot2D(self, name, result, timestep):
-        fig, axs = plt.subplots(4, 1, figsize=(4, 12), constrained_layout=True)
+    def plot2D_Temperature(self, name, result, timestep):
+        fig, axs = plt.subplots(2, 1, figsize=(7, 7), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
+
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = result.get_r_pos() / self.reactor.reactorDiameter
-        r_faces = result.get_r_faces()
-
-        print(r_faces)
-
-        ### GPT
 
         # Using meshgrid to create coordinate matrices
         z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
 
-        axs[0].pcolormesh(z_mesh, r_mesh, T, cmap='inferno', shading='auto')
-        axs[1].pcolormesh(z_mesh, r_mesh, u, cmap='coolwarm', shading='auto')
-        axs[2].pcolormesh(z_mesh, r_mesh, p, cmap='Wistia', shading='auto')
-        axs[3].pcolormesh(z_mesh, r_mesh, w_i[1,:,:], cmap='Spectral', shading='auto')
+        # Get color map from TOLcmaps
+        tol_cmap = TOLcmaps()
+        cmp = tol_cmap.get('sunset')
+
+        # Color map normalization to specific temperature range #TODO hardcoded
+        T_min = 300
+        T_max = 900
+        norm_cmp = clr.Normalize(vmin=T_min, vmax=T_max)
 
 
+        axs[0].pcolormesh(z_mesh, r_mesh, T, cmap=cmp, norm=norm_cmp)
+        #axs[0].colorbar(label='Temperature / K')
+
+        axs[1].pcolormesh(z_mesh, r_mesh, T, cmap='inferno', norm=norm_cmp)
+        #axs[1].colorbar(label='Temperature / K')
         plt.show()
 

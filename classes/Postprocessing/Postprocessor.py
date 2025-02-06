@@ -105,13 +105,13 @@ class Postprocessor:
         # Color map normalization to specific temperature range #TODO hardcoded
         T_min = 300
         T_max = 900
-        norm_cmp = clr.Normalize(vmin=T_min, vmax=T_max)
+        #norm_cmp = clr.Normalize(vmin=T_min, vmax=T_max)
 
 
-        axs[0].pcolormesh(z_mesh, r_mesh, T, cmap=cmp, norm=norm_cmp)
-        #axs[0].colorbar(label='Temperature / K')
+        plot = axs[0].pcolormesh(z_mesh, r_mesh, T, cmap=cmp, vmin=T_min, vmax=T_max)
+        fig.colorbar(plot, label='Temperature / K', ax=axs[0])
 
-        axs[1].pcolormesh(z_mesh, r_mesh, T, cmap='inferno', norm=norm_cmp)
-        #axs[1].colorbar(label='Temperature / K')
+        plot2 = axs[1].pcolormesh(z_mesh, r_mesh, T, cmap='inferno')
+        fig.colorbar(plot2, label='Temperature / K', ax=axs[1])
         plt.show()
 

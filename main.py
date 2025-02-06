@@ -2,7 +2,7 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(2, 30, 10)
+reactor = FixedBedReactor(2, 30, 15)
 
 integrator = Integrator(reactor)
 integrator.setup(1e-5, 1e-5, 0, 1000, 100)

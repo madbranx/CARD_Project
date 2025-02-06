@@ -193,6 +193,6 @@ class EnergyConservation(Kinetics):
 
     def __calc_innerWallTemperature(self, T, p, w_i):
         alpha_bed = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
-        k_wall = self.__calc_resistanceWall()
+        alpha_wall = self.__calc_resistanceWall() / self.reactor_areaCoverage
         T_wall = self.T_wall
-        return (alpha_bed * T + k_wall * T_wall) / (alpha_bed + k_wall)
+        return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)

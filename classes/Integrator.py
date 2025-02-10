@@ -62,6 +62,7 @@ class Integrator:
         self.z_0 = z_0
 
     def integrate(self):
+        print("starting integration ...")
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
         self.__printMassDeviation()

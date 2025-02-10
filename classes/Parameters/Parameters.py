@@ -4,6 +4,9 @@ import numpy as np
 
 class Parameters:
     def __init__(self):
+
+        self.temperature_dependent_matProps = True
+
         self.R =  8.314  # J/(kgK)
         self.pi = np.pi
         self.boltzmann = 1.380649e-23    # J/K
@@ -45,6 +48,7 @@ class Parameters:
         # Components (incl. cat)
         self.components = None
         self.Cat = None
+
         self.__initializeComponents()
 
     def __initializeComponents(self):
@@ -57,64 +61,69 @@ class Parameters:
         # Collision Area                m^2
         # Diffusion Volume              -
 
-
+    # CH4
         CH4 = Component("CH4") # SOURCE: NIST-Database with polynomial fit at 5 bar
         CH4.add_property(Component.DENSITY, 0.348)
 
-        CH4.add_property(Component.HEAT_CAPACITY, [1587.0057,1.5893,0.00207], MaterialProperty.POLYNOMIAL)
-        CH4.add_property(Component.THERMAL_CONDUCTIVITY, [2.054738e-03, 7.050143e-05, 1.239619e-07], MaterialProperty.POLYNOMIAL)
-        CH4.add_property(Component.DYNAMIC_VISCOSITY, [5.223333e-07, 3.968143e-08, -1.364762e-11], MaterialProperty.POLYNOMIAL)
-
-        # CH4.add_property(Component.HEAT_CAPACITY, 2899.1557)
-        # CH4.add_property(Component.THERMAL_CONDUCTIVITY, 0.068295928)
-        # CH4.add_property(Component.DYNAMIC_VISCOSITY, 1.69511433e-05)
+        if self.temperature_dependent_matProps is True:
+            CH4.add_property(Component.HEAT_CAPACITY, [1587.0057,1.5893,0.00207], MaterialProperty.POLYNOMIAL)
+            CH4.add_property(Component.THERMAL_CONDUCTIVITY, [2.054738e-03, 7.050143e-05, 1.239619e-07], MaterialProperty.POLYNOMIAL)
+            CH4.add_property(Component.DYNAMIC_VISCOSITY, [5.223333e-07, 3.968143e-08, -1.364762e-11], MaterialProperty.POLYNOMIAL)
+        else:
+            CH4.add_property(Component.HEAT_CAPACITY, 2899.1557)
+            CH4.add_property(Component.THERMAL_CONDUCTIVITY, 0.068295928)
+            CH4.add_property(Component.DYNAMIC_VISCOSITY, 1.69511433e-05)
 
         CH4.add_property(Component.MOLECULAR_WEIGHT, 0.01604)
         CH4.add_property(Component.COLLISION_AREA, 0.46e-18)
         CH4.add_property(Component.DIFFUSION_VOLUME, 25.14)
 
+    # H2O
         H2O = Component("H2O") # SOURCE: NIST-Database with polynomial fit at 5 bar
         H2O.add_property(Component.DENSITY, 0.322)
 
-        H2O.add_property(Component.HEAT_CAPACITY, [2389.797, -1.129, 0.001044], MaterialProperty.POLYNOMIAL)
-        H2O.add_property(Component.THERMAL_CONDUCTIVITY, [-2.047571e-03, 5.770379e-05, 4.061786e-08], MaterialProperty.POLYNOMIAL)
-        H2O.add_property(Component.DYNAMIC_VISCOSITY, [-4.954286e-06, 4.593789e-08, -3.341071e-12], MaterialProperty.POLYNOMIAL)
-
-        # H2O.add_property(Component.HEAT_CAPACITY, 2086.297)
-        # H2O.add_property(Component.THERMAL_CONDUCTIVITY, 0.036958789)
-        # H2O.add_property(Component.DYNAMIC_VISCOSITY, 1.717939125e-05)
+        if self.temperature_dependent_matProps is True:
+            H2O.add_property(Component.HEAT_CAPACITY, [2389.797, -1.129, 0.001044], MaterialProperty.POLYNOMIAL)
+            H2O.add_property(Component.THERMAL_CONDUCTIVITY, [-2.047571e-03, 5.770379e-05, 4.061786e-08], MaterialProperty.POLYNOMIAL)
+            H2O.add_property(Component.DYNAMIC_VISCOSITY, [-4.954286e-06, 4.593789e-08, -3.341071e-12], MaterialProperty.POLYNOMIAL)
+        else:
+            H2O.add_property(Component.HEAT_CAPACITY, 2086.297)
+            H2O.add_property(Component.THERMAL_CONDUCTIVITY, 0.036958789)
+            H2O.add_property(Component.DYNAMIC_VISCOSITY, 1.717939125e-05)
 
         H2O.add_property(Component.MOLECULAR_WEIGHT, 0.01802)
         H2O.add_property(Component.COLLISION_AREA, 0.46e-18)
         H2O.add_property(Component.DIFFUSION_VOLUME, 13.1)
 
-
+    # CO2
         CO2 = Component("CO2") # SOURCE: NIST-Database with polynomial fit at 5 bar
         CO2.add_property(Component.DENSITY, 0.725)
 
-        CO2.add_property(Component.HEAT_CAPACITY, [613.504,1.005,-0.000384], MaterialProperty.POLYNOMIAL)
-        CO2.add_property(Component.THERMAL_CONDUCTIVITY, [-9.104310e-03, 8.906750e-05, -8.951190e-09], MaterialProperty.POLYNOMIAL)
-        CO2.add_property(Component.DYNAMIC_VISCOSITY, [-6.721429e-08, 5.467619e-08, -1.347381e-11], MaterialProperty.POLYNOMIAL)
-
-        # CO2.add_property(Component.HEAT_CAPACITY, 1020.004)
-        # CO2.add_property(Component.THERMAL_CONDUCTIVITY, 0.0331916425)
-        # CO2.add_property(Component.DYNAMIC_VISCOSITY, 2.390242821e-05)
+        if self.temperature_dependent_matProps is True:
+            CO2.add_property(Component.HEAT_CAPACITY, [613.504,1.005,-0.000384], MaterialProperty.POLYNOMIAL)
+            CO2.add_property(Component.THERMAL_CONDUCTIVITY, [-9.104310e-03, 8.906750e-05, -8.951190e-09], MaterialProperty.POLYNOMIAL)
+            CO2.add_property(Component.DYNAMIC_VISCOSITY, [-6.721429e-08, 5.467619e-08, -1.347381e-11], MaterialProperty.POLYNOMIAL)
+        else:
+            CO2.add_property(Component.HEAT_CAPACITY, 1020.004)
+            CO2.add_property(Component.THERMAL_CONDUCTIVITY, 0.0331916425)
+            CO2.add_property(Component.DYNAMIC_VISCOSITY, 2.390242821e-05)
 
         CO2.add_property(Component.MOLECULAR_WEIGHT, 0.04401)
         CO2.add_property(Component.COLLISION_AREA, 0.52e-18)
         CO2.add_property(Component.DIFFUSION_VOLUME, 26.9)
 
-
+    # H2
         H2 = Component("H2") # SOURCE: NIST-Database with polynomial fit at 5 bar
         H2.add_property(Component.DENSITY, 0.041)
 
-        H2.add_property(Component.HEAT_CAPACITY, [14304.773, 0.05288, 0.000608], MaterialProperty.POLYNOMIAL)
-        H2.add_property(Component.THERMAL_CONDUCTIVITY, [6.286452e-02, 4.312905e-04, -3.483333e-08], MaterialProperty.POLYNOMIAL)
-        H2.add_property(Component.DYNAMIC_VISCOSITY, [2.801093e-06, 2.172896e-08, -3.832798e-12], MaterialProperty.POLYNOMIAL)
-
-        # H2.add_property(Component.HEAT_CAPACITY, 14483.213)
-        # H2.add_property(Component.THERMAL_CONDUCTIVITY, 0.2698014375)
-        # H2.add_property(Component.DYNAMIC_VISCOSITY, 1.27073735)
+        if self.temperature_dependent_matProps is True:
+            H2.add_property(Component.HEAT_CAPACITY, [14304.773, 0.05288, 0.000608], MaterialProperty.POLYNOMIAL)
+            H2.add_property(Component.THERMAL_CONDUCTIVITY, [6.286452e-02, 4.312905e-04, -3.483333e-08], MaterialProperty.POLYNOMIAL)
+            H2.add_property(Component.DYNAMIC_VISCOSITY, [2.801093e-06, 2.172896e-08, -3.832798e-12], MaterialProperty.POLYNOMIAL)
+        else:
+            H2.add_property(Component.HEAT_CAPACITY, 14483.213)
+            H2.add_property(Component.THERMAL_CONDUCTIVITY, 0.2698014375)
+            H2.add_property(Component.DYNAMIC_VISCOSITY, 1.27073735)
 
         H2.add_property(Component.MOLECULAR_WEIGHT, 0.002016)
         H2.add_property(Component.COLLISION_AREA, 0.27e-18)
@@ -128,6 +137,8 @@ class Parameters:
 
         self.components = [CH4, H2O, CO2, H2]
 
+
+    # CAT
         # Catalyst Properties
         cat = Component("cat")
         cat.add_property(Component.DENSITY, 2355.2)

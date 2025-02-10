@@ -50,12 +50,12 @@ class EnergyConservation(Kinetics):
         return radial_heat_conduction
 
 
-    def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
+    def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centroids_in, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
-        alpha_wall = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
+        alpha_wall = self.calc_heatTransferCoefficient_contact(T, p, w_i)
         T_inner_wall = self.calc_innerWallTemperature(T, p, w_i)
 
-        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centeroids_out
+        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centroids_in
         q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?
 
         radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
@@ -81,7 +81,7 @@ class EnergyConservation(Kinetics):
 
         thermalConductivity_bed = (((1 - CasADi.sqrt(1 - self.eps)) * self.eps * (1/(self.eps - 1 + 1/k_G) + k_rad)
                                     + CasADi.sqrt(1 - self.eps) * (self.cat_flatteningCoefficient * k_cat + (1 - self.cat_flatteningCoefficient) * k_c)
-                                    ) * self.__calc_fluid_conductivity(T, w_i))
+                                    ) * self.calc_fluid_conductivity(T, w_i))
         return thermalConductivity_bed
 
     def calc_k_c(self, T, p, w_i):
@@ -127,7 +127,7 @@ class EnergyConservation(Kinetics):
         return meanFreePath
 
     def calc_k_cat(self, T, w_i):
-        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.__calc_fluid_conductivity(T, w_i)
+        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.calc_fluid_conductivity(T, w_i)
 
     def __calc_deformationParameter(self):
         return self.cat_shapeFactor * ((1 - self.eps)/self.eps) ** (10/9) * self.cat_distributionFunction
@@ -138,10 +138,10 @@ class EnergyConservation(Kinetics):
         emissionCoefficient = self.cat_emissionCoefficient
         particleDiameter = self.cat_diameter
 
-        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.__calc_fluid_conductivity(T, w_i)
+        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.calc_fluid_conductivity(T, w_i)
         return k_rad
 
-    def __calc_fluid_conductivity(self, T, w_i):
+    def calc_fluid_conductivity(self, T, w_i):
         # Get component properties
         viscosity = []
         thermal_conductivity = []
@@ -176,7 +176,7 @@ class EnergyConservation(Kinetics):
 
     def __calc_heatTransferCoefficient_cond(self, T, p, w_i):
         particleDiameter = self.cat_diameter
-        conductivity_fluid = self.__calc_fluid_conductivity(T, w_i)
+        conductivity_fluid = self.calc_fluid_conductivity(T, w_i)
         meanFreePath = self.__calc_meanFreePath(T, p, w_i)
         reactor_wallThickness = self.reactor_wallThickness
 
@@ -185,7 +185,7 @@ class EnergyConservation(Kinetics):
                     CasADi.log(1 + particleDiameter / (2 * (meanFreePath + reactor_wallThickness))) - 1)
         return alpha_cond
 
-    def __calc_heatTransferCoefficient_contact(self, T, p, w_i):
+    def calc_heatTransferCoefficient_contact(self, T, p, w_i):
         return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
 
     def __calc_resistanceWall(self):
@@ -193,8 +193,9 @@ class EnergyConservation(Kinetics):
         return k_wall
 
     def calc_innerWallTemperature(self, T, p, w_i):
-        alpha_bed = self.__calc_heatTransferCoefficient_contact(T, p, w_i)
+        alpha_bed = self.calc_heatTransferCoefficient_contact(T, p, w_i)
         alpha_wall = self.__calc_resistanceWall() / self.reactor_wallThickness
         T_wall = self.T_wall
         #return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)    #TODO stimmt nicht!
-        return 500
+        return self.T_wall
+

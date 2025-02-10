@@ -87,13 +87,15 @@ class Postprocessor:
         ax.plot(z_pos, check, color=colors[0], linestyle="--")
 
 
+
     def plot2D_Temperature(self, name, result, timestep):
+
         fig, axs = plt.subplots(4, 1, figsize=(7, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
 
         z_pos = result.get_z_pos() / self.reactor.reactorLength
-        r_pos = result.get_r_pos() / self.reactor.reactorDiameter
+        r_pos = 2*result.get_r_pos() / self.reactor.reactorDiameter
 
         # Using meshgrid to create coordinate matrices
         z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
@@ -102,22 +104,75 @@ class Postprocessor:
         tol_cmap = TOLcmaps()
         cmp = tol_cmap.get('sunset')
 
-        # Color map normalization to specific temperature range #TODO hardcoded
-        T_min = 300
-        T_max = 900
-        #norm_cmp = clr.Normalize(vmin=T_min, vmax=T_max)
+        # Dynamically determine min/max for colormaps with rounding
+        u_min, u_max = self.get_min_max(u)
+        p_min, p_max = self.get_min_max(p * 1e-5)  # Convert to bar before min/max
+        T_min, T_max = self.get_min_max(T)
+        w_i0_min, w_i0_max = self.get_min_max(w_i[0])
+
+        def plot_variable(ax, data, cmap, min_val, max_val, label, fmt_color='black'):
+            """Helper function to create plots with colormap, contours, and grid."""
+            plot = ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
+            levels = self.get_contour_levels(min_val, max_val, data)
+            c_lines = ax.contour(z_mesh, r_mesh, data, levels=levels, colors=fmt_color, linewidths=0.8)
+            ax.clabel(c_lines, fmt=self.get_contour_label_format(levels), fontsize=8)
+
+            # Draw grid lines at dataset points
+            for z in z_pos:
+                ax.axvline(z, color="white", linestyle="--", linewidth=0.5, alpha=0.5)
+            for r in r_pos:
+                ax.axhline(r, color="white", linestyle="--", linewidth=0.5, alpha=0.5)
+
+            fig.colorbar(plot, label=label, ax=ax)
 
 
-        plot = axs[0].pcolormesh(z_mesh, r_mesh, u, cmap=cmp, vmin=1, vmax=3)
-        fig.colorbar(plot, label='velocity / m/s', ax=axs[0])
+        # Plot velocity
+        plot_variable(axs[0], u, cmp, u_min, u_max, 'Velocity / m/s')
 
-        plot = axs[1].pcolormesh(z_mesh, r_mesh, p*1e-5, cmap=cmp, vmin=4, vmax=5)
-        fig.colorbar(plot, label='pressure / bar', ax=axs[1])
+        # Plot pressure
+        plot_variable(axs[1], p * 1e-5, cmp, p_min, p_max, 'Pressure / bar')
 
-        plot2 = axs[2].pcolormesh(z_mesh, r_mesh, T, cmap='inferno')
-        fig.colorbar(plot2, label='Temperature / K', ax=axs[2])
+        # Plot temperature (use white contour lines for better visibility)
+        plot_variable(axs[2], T, 'inferno', T_min, T_max, 'Temperature / K', fmt_color='white')
 
-        plot2 = axs[3].pcolormesh(z_mesh, r_mesh, w_i[0], cmap='Oranges')
-        fig.colorbar(plot2, label='MassFraction CH4 / -', ax=axs[3])
+        # Plot CH4 Mass Fraction
+        plot_variable(axs[3], w_i[0], 'Oranges', w_i0_min, w_i0_max, 'MassFraction CH4 / -')
+
+
         plt.show()
+
+    def get_min_max(self, data):
+        raw_min, raw_max = np.nanmin(data), np.nanmax(data)  # Ignore NaNs
+        rounded_min = self.round_sensefully(raw_min, 'down')
+        rounded_max = self.round_sensefully(raw_max, 'up')
+        return rounded_min, rounded_max
+
+    def round_sensefully(self,value, round_type='down'):
+        if value == 0:
+            return 0  # Avoid log(0) errors
+
+        magnitude = 10 ** np.floor(np.log10(abs(value)))  # Get order of magnitude
+        if round_type == 'down':
+            return np.floor(value / magnitude) * magnitude
+        else:
+            return np.ceil(value / magnitude) * magnitude
+
+    def get_contour_levels(self, min_val, max_val, data):
+        percentiles = np.percentile(data, [10, 25, 50, 75, 90])
+        levels = np.unique(np.concatenate(([min_val], percentiles, [max_val])))
+        return levels
+
+    def get_contour_label_format(self, levels):
+        max_val = max(abs(levels.min()), abs(levels.max()))
+
+        if max_val >= 100:  # Large values
+            return "%.0f"
+        elif max_val >= 10:
+            return "%.1f"
+        elif max_val >= 1:  # Normal values
+            return "%.2f"
+        else:  # Small values
+            return "%.3f"
+
+
 

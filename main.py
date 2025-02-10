@@ -13,6 +13,7 @@ results = integrator.integrate()
 
 postprocessor = Postprocessor(reactor, "../results/02")
 postprocessor.plot2D_Temperature("test2", results,10)
+postprocessor.plot2D_Temperature("test2", results,100)
 
 
 # Questions
@@ -23,21 +24,15 @@ postprocessor.plot2D_Temperature("test2", results,10)
 
 #TODO V2
 # add collision area for H2O
-# ADD INPUT / OUTPUT UNITS FOR ALL FUNCTIONS as comments
-# .
-# Postprocessing                WORK IN PROGRESS
-# .     Add Plotting variable Reactor method as Casadi function
-# .     Add 1D plot without Validation, add 1D plot with 2 sim results, add difference plot for 2 sim
-# .     Extinction / Ignition ARC Plots
-# .
-# Validate 1D Model             WORK IN PROGRESS
-# .     Check Reaction Rate and Eff Factor etc.
 # .
 # .
-# Create ULM diagram           TBD
+# Create ULM diagram             TBD
 # add Log?
 # .
 # Conservations: Implement physics as CasADi functions (2D)
-#       Species Conservation     TBD
-#       Energy Conservation      TBD
-# Postprocessing (2D)
+#       Species Conservation     WORK IN PROGRESS
+#       Energy Conservation      WORK IN PROGRESS
+# .
+# Postprocessing (2D)            WORK IN PROGRESS
+# .     2D Plots -> plot for constant value curves (?)
+# .     Extinction / Ignition ARC Plots

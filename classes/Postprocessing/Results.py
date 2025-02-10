@@ -11,7 +11,7 @@ class Results:
         self.p = None
         self.u = None
 
-    def add_values(self, w_i, T, p, u):
+    def add_values(self, w_i, T, u, p):
         self.w_i = w_i
         self.T = T
         self.p = p
@@ -46,6 +46,7 @@ class Results:
         for r in range(n_radial_volumes):
             for z in range(n_axial_volumes):
                 current = z + r * n_axial_volumes
+
                 w_i_2D[:,z,r] = self.w_i[current,t_step,:]
                 T_2D[z,r] = self.T[current,t_step]
                 p_2D[z,r] = self.p[current,t_step]

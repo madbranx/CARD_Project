@@ -88,7 +88,7 @@ class Postprocessor:
 
 
     def plot2D_Temperature(self, name, result, timestep):
-        fig, axs = plt.subplots(2, 1, figsize=(7, 7), constrained_layout=True)
+        fig, axs = plt.subplots(4, 1, figsize=(7, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
 
@@ -108,10 +108,16 @@ class Postprocessor:
         #norm_cmp = clr.Normalize(vmin=T_min, vmax=T_max)
 
 
-        plot = axs[0].pcolormesh(z_mesh, r_mesh, T, cmap=cmp, vmin=T_min, vmax=T_max)
-        fig.colorbar(plot, label='Temperature / K', ax=axs[0])
+        plot = axs[0].pcolormesh(z_mesh, r_mesh, u, cmap=cmp, vmin=1, vmax=3)
+        fig.colorbar(plot, label='velocity / m/s', ax=axs[0])
 
-        plot2 = axs[1].pcolormesh(z_mesh, r_mesh, T, cmap='inferno')
-        fig.colorbar(plot2, label='Temperature / K', ax=axs[1])
+        plot = axs[1].pcolormesh(z_mesh, r_mesh, p*1e-5, cmap=cmp, vmin=4, vmax=5)
+        fig.colorbar(plot, label='pressure / bar', ax=axs[1])
+
+        plot2 = axs[2].pcolormesh(z_mesh, r_mesh, T, cmap='inferno')
+        fig.colorbar(plot2, label='Temperature / K', ax=axs[2])
+
+        plot2 = axs[3].pcolormesh(z_mesh, r_mesh, w_i[0], cmap='Oranges')
+        fig.colorbar(plot2, label='MassFraction CH4 / -', ax=axs[3])
         plt.show()
 

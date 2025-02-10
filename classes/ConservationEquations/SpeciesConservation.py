@@ -16,16 +16,19 @@ class SpeciesConservation(Kinetics):
         return j_i_ax
 
     ## RADIAL MASS FLOW
-    def radialMassFlow(self, T, p, u, comp, w_i, w_i_in, w_i_out, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
+    def radialMassFlow(self, T, p, u, comp, w_i, w_i_in, w_i_out, delta_r_centroids_in, delta_r_centroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         # Only Diffusion and Crossmixing
         cat_diameter = self.cat_diameter
         void_fraction = self.eps
 
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
-        eff_DiffCoff = (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
+        eff_DispCoff = (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
 
-        j_r_in = -eff_DiffCoff * (w_i[comp] - w_i_in[comp]) / delta_r_centeroids_in
-        j_r_out = -eff_DiffCoff * (w_i_out[comp] - w_i[comp]) / delta_r_centeroids_out
+        rho_gas_in = self.rho_fl(w_i_in, T, p)
+        rho_gas_out = self.rho_fl(w_i_out, T, p)
+
+        j_r_in = -eff_DispCoff * rho_gas_in * (w_i[comp] - w_i_in[comp]) / delta_r_centroids_in
+        j_r_out = -eff_DispCoff * rho_gas_out * (w_i_out[comp] - w_i[comp]) / delta_r_centroids_out
 
         radial_mass_flow = 1 / r_centeroid * (j_r_out * r_face_out - j_r_in * r_face_in) / delta_r_faces
         return radial_mass_flow

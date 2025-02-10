@@ -81,7 +81,7 @@ class EnergyConservation(Kinetics):
 
         thermalConductivity_bed = (((1 - CasADi.sqrt(1 - self.eps)) * self.eps * (1/(self.eps - 1 + 1/k_G) + k_rad)
                                     + CasADi.sqrt(1 - self.eps) * (self.cat_flatteningCoefficient * k_cat + (1 - self.cat_flatteningCoefficient) * k_c)
-                                    ) / self.__calc_fluid_conductivity(T, w_i))
+                                    ) * self.__calc_fluid_conductivity(T, w_i))
         return thermalConductivity_bed
 
     def calc_k_c(self, T, p, w_i):

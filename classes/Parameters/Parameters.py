@@ -120,11 +120,11 @@ class Parameters:
         H2.add_property(Component.COLLISION_AREA, 0.27e-18)
         H2.add_property(Component.DIFFUSION_VOLUME, 6.12)
 
-        check_temperature = 500
-        self.checkPropertyValues(CH4, check_temperature)
-        self.checkPropertyValues(H2O, check_temperature)
-        self.checkPropertyValues(CO2, check_temperature)
-        self.checkPropertyValues(H2, check_temperature)
+        # check_temperature = 500
+        # self.checkPropertyValues(CH4, check_temperature)
+        # self.checkPropertyValues(H2O, check_temperature)
+        # self.checkPropertyValues(CO2, check_temperature)
+        # self.checkPropertyValues(H2, check_temperature)
 
         self.components = [CH4, H2O, CO2, H2]
 

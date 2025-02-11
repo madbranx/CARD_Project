@@ -3,7 +3,6 @@ from classes.Postprocessing.Results import Results
 
 import casadi as CasADi
 import numpy as np
-import copy
 
 
 class Integrator:
@@ -15,8 +14,6 @@ class Integrator:
         self.radial_discretization = reactor.radial_discretization
 
         self.integrator = None
-        self.options = None
-
         self.x_0 = None
         self.z_0 = None
         self.results = None
@@ -26,77 +23,15 @@ class Integrator:
         self.u_res = None
         self.p_res = None
 
-    def setup(self, t_start, t_stop, t_steps, **kwargs):
-        if kwargs.get('t_equi', False) is True:
-            self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
-        else:
-            if kwargs.get('time_ranges', None) is not None: # when explicit array of time ranges are given
-                ranges_t = kwargs['time_ranges']
-            else: # otherwise determine ranges:
-                if t_stop < 100: # equidistant for <100 s simulation time
-                    ranges_t = [[t_start, t_stop, 1]]
-                elif t_stop < 1000:
-                    ranges_t = [[t_start, 90, 6], [90, t_stop, 3]]
-                else: # non-equidistant with higher resolutions at the beginning of the simulation
-                    ranges_t = [[t_start, 90, 6], [90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
+    def setup(self, abstol, reltol, t_start, t_stop, t_steps):
 
-            self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
-
-        self.refresh()
-
-
-    def refresh(self):
-
-        # setting standard options if none were explicitly given before
-        if self.options is None:
-            self.set_options()
-
+        self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
+        options = {'abstol': abstol, 'reltol': reltol}
         dae = self.reactor.DAE
         timepoints = self.time_discretization.get_faces()
 
-        self.integrator = CasADi.integrator('I', 'idas', dae, timepoints[0], timepoints, self.options)
+        self.integrator = CasADi.integrator('I', 'idas', dae, timepoints[0], timepoints, options)
         self.__setInitialValues()
-
-    def set_options(self, **kwargs):
-        [abstol, reltol] = kwargs.get('tols', [1e-8, 1e-8])
-        if kwargs.get('log', False) is True:
-            verbose = True
-            disable_internal_warnings = False
-        else:
-            verbose = False
-            disable_internal_warnings = True
-
-        self.options = {
-            'abstol': abstol,
-            "scale_abstol": kwargs.get('scale_tol', False),
-            'reltol': reltol,
-            "step0": kwargs.get('init_step', 0.01),
-            "max_step_size": kwargs.get('max_step_size', 1),
-            "max_num_steps": kwargs.get('max_num_steps', 10000),
-            "newton_scheme": kwargs.get('newton_scheme', 'direct'),
-            "print_time": kwargs.get('get_runtime', False),
-            "verbose": verbose,
-            "disable_internal_warnings": disable_internal_warnings,
-        }
-
-    def set_specific_InitialValues(self, w_i, T, p, u ):
-        n_axial = self.axial_discretization.num_volumes
-        n_radial = self.radial_discretization.num_volumes
-        n_components = self.reactor.n_components
-
-        x_0 = np.zeros(n_axial * n_radial * (n_components + 1))
-        for comp in range(n_components):
-            if comp == 0:
-                x_0[0: n_axial * n_radial] = w_i[:, 0]
-            else:
-                x_0[n_axial * n_radial * comp: n_axial * n_radial * (comp + 1)] = w_i[:, comp]
-        x_0[n_components * n_axial * n_radial:] = T[:]
-        self.x_0 = x_0
-
-        z_0 = np.zeros(n_axial * n_radial * 2)
-        z_0[0:n_axial * n_radial] = u[:]
-        z_0[n_axial * n_radial:] = p[:]
-        self.z_0 = z_0
 
     def __setInitialValues(self):
         w_i_in = self.reactor.w_i_in
@@ -127,13 +62,15 @@ class Integrator:
         self.z_0 = z_0
 
     def integrate(self):
+        print("starting integration ...")
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
-        #self.__printMassDeviation()
+        self.__printMassDeviation()
 
         results = Results(self.axial_discretization, self.radial_discretization, self.time_discretization)
         results.set_reactor(self.reactor)
-        results.add_values(copy.deepcopy(self.w_i_res), copy.deepcopy(self.T_res), copy.deepcopy(self.u_res), copy.deepcopy(self.p_res))
+        results.add_values(self.w_i_res, self.T_res, self.u_res, self.p_res)
+
         return results
 
     def __extractResults(self):
@@ -168,4 +105,4 @@ class Integrator:
             for z in range(n_spatial):
                 MassFluxDev[z, t] = abs(mdot_0 - (self.u_res[z, t] * self.reactor.rho_fl(self.w_i_res[z, t, :].T, self.T_res[z, t],
                                                                                     self.p_res[z, t]).__float__())) / mdot_0 * 100
-        #print("Maximal mass flux deviation: ", np.max(MassFluxDev), "\n")
+        print("Maximal mass flux deviation: ", np.max(MassFluxDev))

@@ -1,124 +1,64 @@
-"""
-    Project of the Course Computer Aided Reactor Design (CARD) of the
-    Institute of Chemical Process Engineering (CVT) at
-    Karlsruhe Institute of Technology (KIT)
+from classes.Parameters.Component import Component
+from classes.Postprocessing.Postprocessor import Postprocessor
+from classes.FixedBedReactor import FixedBedReactor
+from classes.Integrator import Integrator
 
-    Project Timespan 12/2024 - 02/2025
+reactor = FixedBedReactor(2, 30, 15)
 
-    Authors: Till Kasselmann, Maximilian Brand (Group 1)
-    till.kasselmann@student.kit.edu
-    maximilian.brand@student.kit.edu
-"""
-###########################################################################################
-import numpy as np
-from classes.Postprocessing.Studies import Studies
+integrator = Integrator(reactor)
+integrator.setup(1e-8, 1e-8, 0, 2000, 250)
+results = integrator.integrate()
 
-studies = Studies()
+#postprocessor = Postprocessor(reactor, "../results/01")
+#postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 
+postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot2D_Temperature("test2", results,10)
+postprocessor.plot2D_Temperature("test2", results,100)
+postprocessor.plot2D_Temperature("test2", results,250)
 
-""" 1) Discretization  - DONE"""
-# studies.discretization_study(
-#     "discretization",
-#     60,
-#     500,
-#     1000,
-#     [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
-#     3000,
-#     250,
-#     30,
-#     [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
-#     False
-# )
+postprocessor.plot_Twall_vs_validation("test2", results, 100)
 
-# studies.messure_time_discretization(120, 12, 10000, 3000)
+# # TESTING FUNCTION
+import casadi as CasADi
+T = 500
+p = 5e5
+u = 1
 
+w1 = CasADi.SX([0.25, 0.25, 0.25, 0.25])
+w2 = CasADi.SX([0, 0, 0.800001, 0.199999])
 
-# """ 2) Validation - DONE """
-# studies.validation(
-#     "validation",
-#     120,
-#     12,
-#     3000,
-#     300,
-#     3000
-# )
+wTpu1 = [w1, T, p, u]
+wTpu2 = [w2, T, p, u]
+
+print("j dispersion = ", reactor.calc_j_dispersion(0.1, 0.1, 0.1, wTpu1, wTpu2, 2))
+
+print("lambda mass avg = ",reactor.massFraction_weighted_average(w1, Component.THERMAL_CONDUCTIVITY, T))
+print("lambda mixture rule = ",reactor.calc_fluid_conductivity(T, w1))
+
+print("wall contact HT coeff = ", reactor.calc_heatTransferCoefficient_contact(T, p , w1))
+print("k reactor wall / R = ", reactor.calc_resistanceWall()/(reactor.reactorDiameter/2))
+print(reactor.calc_eff_disp_coeff(wTpu1, 3))
 
 
-""" 3) Base Case - DONE """
-# studies.base_case_2D(
-#     "base_case_2D",
-#     120,
-#     12,
-#     3000,
-#     10000
-# )
+# Create Ignition/Extinction Arcs:
+#   calc till steady state, plot X over T wall
+#   extinction, last steady state x=1 as starting values
 
 
-""" 4) Ignition and Extinction Arcs - DONE """
-# studies.arcs(
-#     "arcs_1D",
-#     1,
-#     3000,
-#     300,
-#     np.linspace(300, 550, 25),
-#     150,
-#     log=False
-# )
-
-# studies.arcs(
-#     "arcs_2D",
-#     2,
-#     3000,
-#     10000,
-#     np.linspace(300, 550, 25),
-#     120,
-#     12,
-#     log=True
-# )
-
-# studies.combinedArcs(
-#     "arcs_2D_1D",
-#     3000,
-#     10000,
-#     np.linspace(300, 550, 25),
-#     120,
-#     12,
-#     log=False
-# )
-
-
-""" 5) Catalyst Parameter Variations - DONE """
-# studies.cat_variation_diameter("cat_variation_diameter",
-#                       120,
-#                       12,
-#                       500,
-#                       10000,
-#                       np.linspace(0.0014, 0.004, 20), # d_cat
-#                       log = False
-# )
-
-# studies.cat_variation_pore("cat_variation_pore",
-#                       120,
-#                       12,
-#                       500,
-#                       10000,
-#                       np.linspace(1e-9, 50e-9, 20),  # d_pores
-#                       log = False
-# )
-
-
-""" 6) Ignition Behavior - DONE """
-# studies.ignition_behavior(
-#     "ignition behaviour",
-#     120,
-#     12,
-#     3000,
-#     1000,
-#     [25, 150, 200, 250, 325, 450, 750, 3000],
-#     0.90,
-#     0.70,
-#     log=False
-# )
-
-
-###########################################################################################
+#TODO
+# check alpha contact wall -> mean free path?
+# fix radial mass flow
+# add collision area for H2O
+# lambda fl mixture vs. lambda mass frac
+# .
+# .
+# Create ULM diagram             TBD
+# Diskretisierungsformeln in PDF
+# .
+# Postprocessing (2D)            WORK IN PROGRESS
+# .     Extinction / Ignition ARC Plots
+# .     Effectiveness etc. Plot
+# .     RMSE/MAPE for one Value
+# .     Center 2D vs 1D calc / vs 1D validation data
+# .

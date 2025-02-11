@@ -33,10 +33,6 @@ class Results:
         r_pos = self.radialDiscretization.get_centroids()
         return r_pos
 
-    def get_z_faces(self):
-        z_faces = self.axialDiscretization.get_faces()
-        return z_faces
-
     def get_r_faces(self):
         r_faces = self.radialDiscretization.get_faces()
         return r_faces
@@ -70,11 +66,14 @@ class Results:
         i = comp
         w_i_in = self.reactor.w_i_in
         w_M = self.reactor.getMolarWeights()
+
         tot_moles = 0
         for i, mw in enumerate(w_M):
-            tot_moles += w_i_in[i]/mw
+            tot_moles += mw*w_i_in[i]
 
-        n_i_in = w_i_in[i]/w_M[i]/tot_moles
+        print(tot_moles)
+        print(w_M[i]*w_i_in[i])
+        n_i_in = w_M[i]*w_i_in[i] / tot_moles
 
         X_2D = np.zeros((n_axial_volumes, n_radial_volumes))
 
@@ -83,48 +82,21 @@ class Results:
                 current = z + r * n_axial_volumes
                 w_i =  self.w_i[current, t_step, :]
                 n_i = self.reactor.moleFractions(w_i)
-                X_2D[z, r] = (n_i_in-n_i[i])/n_i_in
+                X_2D[z, r] = n_i_in-n_i[i]/n_i_in
 
         return X_2D
 
-    def average_trapezoidal(self, f_values):
-        r_faces = self.radialDiscretization.get_faces()
-        R = r_faces[-1]  # Maximum radius
-        N = len(f_values)  # Number of cells
+    def integrate_X(self, x_i):
 
-        integral = 0.0
-        for i in range(N):
-            r_mid = (r_faces[i] + r_faces[i + 1]) / 2  # Midpoint radius
-            dr = r_faces[i + 1] - r_faces[i]  # Cell width
-            integral += f_values[i] * r_mid * dr  # Trapezoidal rule
+        r_pos = self.radialDiscretization.get_centroids()
+        r_pos_diff = self.radialDiscretization.get_differences_faces()
+        # Calculate the integral at the last z coordinate
 
-        avg_f = (2 * np.pi * integral) / (np.pi * R ** 2)  # Normalize by cross-section area
-        return avg_f
+        x_i_last_z = x_i[-1, :]  # Get x_i values at the last z
 
-
-    def get_rawValues(self, timestep):
-        return self.w_i[:, timestep, :], self.T[:, timestep], self.p[:, timestep], self.u[:, timestep]
-
-
-    def getConversion_1D(self, t_step, comp):
-        n_axial_volumes = self.axialDiscretization.num_volumes
-
-        i = comp
-        w_i_in = self.reactor.w_i_in
-        w_M = self.reactor.getMolarWeights()
-        tot_moles = 0
-        for i, mw in enumerate(w_M):
-            tot_moles += w_i_in[i]/mw
-
-        n_i_in = w_i_in[i]/w_M[i]/tot_moles
-
-        X = np.zeros(n_axial_volumes)
-
-        for z in range(n_axial_volumes):
-            w_i =  self.w_i[z, t_step, :]
-            n_i = self.reactor.moleFractions(w_i)
-            X[z] = (n_i_in-n_i[i])/n_i_in
-
-        return X
+        integral_x = np.sum(r_pos * x_i_last_z * r_pos_diff)  # Approximate integral
+        A = np.pi * (self.reactor.reactorDiameter/2) ** 2  # Reactor cross-sectional area
+        I = integral_x / A  # Normalized integral value
+        return I
 
 

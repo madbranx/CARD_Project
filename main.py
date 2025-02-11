@@ -3,52 +3,42 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(2, 20, 9)
+reactor = FixedBedReactor(2, 30, 15)
 
 integrator = Integrator(reactor)
-integrator.setup(1e-10, 1e-10, 0, 3000, 1000)
+integrator.setup(1e-8, 1e-8, 0, 2000, 250)
 results = integrator.integrate()
+
+#postprocessor = Postprocessor(reactor, "../results/01")
+#postprocessor.plot_1D_vs_ValidationData("test", results, 100)
 
 postprocessor = Postprocessor(reactor, "../results/02")
 postprocessor.plot2D_Temperature("test2", results,10)
-postprocessor.plot2D_Temperature("test2", results,500)
-postprocessor.plot2D_Temperature("test2", results,1000)
+postprocessor.plot2D_Temperature("test2", results,100)
+postprocessor.plot2D_Temperature("test2", results,250)
 
-postprocessor.plot_Twall_vs_validation("test2", results, 1000)
+postprocessor.plot_Twall_vs_validation("test2", results, 100)
 
+# # TESTING FUNCTION
+import casadi as CasADi
+T = 500
+p = 5e5
+u = 1
 
+w1 = CasADi.SX([0.25, 0.25, 0.25, 0.25])
+w2 = CasADi.SX([0, 0, 0.800001, 0.199999])
 
-# reactor = FixedBedReactor(1, 150)
-#
-# integrator = Integrator(reactor)
-# integrator.setup(1e-8, 1e-8, 0, 5000, 250)
-# results = integrator.integrate()
-#
-# postprocessor = Postprocessor(reactor, "../results/01")
-# postprocessor.plot_1D_vs_ValidationData("test", results, 250)
+wTpu1 = [w1, T, p, u]
+wTpu2 = [w2, T, p, u]
 
+print("j dispersion = ", reactor.calc_j_dispersion(0.1, 0.1, 0.1, wTpu1, wTpu2, 2))
 
+print("lambda mass avg = ",reactor.massFraction_weighted_average(w1, Component.THERMAL_CONDUCTIVITY, T))
+print("lambda mixture rule = ",reactor.calc_fluid_conductivity(T, w1))
 
-#  TESTING FUNCTION
-# import casadi as CasADi
-# T = 500
-# p = 5e5
-# u = 1
-#
-# w1 = CasADi.SX([0.25, 0.25, 0.25, 0.25])
-# w2 = CasADi.SX([0, 0, 0.800001, 0.199999])
-#
-# wTpu1 = [w1, T, p, u]
-# wTpu2 = [w2, T, p, u]
-#
-# print("j dispersion = ", reactor.calc_j_dispersion(0.1, 0.1, 0.1, wTpu1, wTpu2, 2))
-#
-# print("lambda mass avg = ",reactor.massFraction_weighted_average(w1, Component.THERMAL_CONDUCTIVITY, T))
-# print("lambda mixture rule = ",reactor.calc_fluid_conductivity(T, w1))
-#
-# print("wall contact HT coeff = ", reactor.calc_heatTransferCoefficient_contact(T, p , w1))
-# print("k reactor wall / R = ", reactor.calc_resistanceWall()/(reactor.reactorDiameter/2))
-# print(reactor.calc_eff_disp_coeff(wTpu1, 3))
+print("wall contact HT coeff = ", reactor.calc_heatTransferCoefficient_contact(T, p , w1))
+print("k reactor wall / R = ", reactor.calc_resistanceWall()/(reactor.reactorDiameter/2))
+print(reactor.calc_eff_disp_coeff(wTpu1, 3))
 
 
 # Create Ignition/Extinction Arcs:

@@ -68,6 +68,7 @@ class Integrator:
         self.__printMassDeviation()
 
         results = Results(self.axial_discretization, self.radial_discretization, self.time_discretization)
+        results.set_reactor(self.reactor)
         results.add_values(self.w_i_res, self.T_res, self.u_res, self.p_res)
 
         return results

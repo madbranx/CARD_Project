@@ -156,7 +156,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     elif r == self.radial_discretization.num_volumes - 1:  # Reactor Wall Boundary condition
                         radial_heatConduction = self.wallRadialThermalConductivity(T[current], T[before_r],
-                                                                                   p[current], w_i[current, :].T,
+                                                                                   p[current], u[current], w_i[current, :].T,
                                                                                    d_r_centroids_in,
                                                                                    d_r_faces, r_face_in, r_face_out, r_centroid)
                     else:

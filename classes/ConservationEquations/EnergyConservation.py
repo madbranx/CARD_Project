@@ -50,9 +50,9 @@ class EnergyConservation(Kinetics):
         return radial_heat_conduction
 
 
-    def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centroids_in, delta_r_faces, r_face_in, r_face_out, r_centeroid):
+    def wallRadialThermalConductivity(self, T, T_in, p, u, w_i, delta_r_centroids_in, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
-        alpha_wall = self.calc_heatTransferCoefficient_contact(T, p, w_i)
+        alpha_wall = self.calc_heatTransferCoefficient_wall(T, p, u, w_i)
         T_inner_wall = self.calc_innerWallTemperature(T, p, w_i)
 
         q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centroids_in
@@ -74,7 +74,7 @@ class EnergyConservation(Kinetics):
     ## Methodes for calculating radial heat conduction
 
     def calc_thermalConductivity_bed(self, T, w_i, p):
-        k_G = self.calc_k_g(T, p, w_i)
+        k_G = self.calc_k_g(T, w_i)
         k_cat = self.calc_k_cat(T, w_i)
         k_rad = self.calc_k_rad(T, w_i)
         k_c = self.calc_k_c(T, p, w_i)
@@ -89,7 +89,7 @@ class EnergyConservation(Kinetics):
         B = self.__calc_deformationParameter()
         k_cat = self.calc_k_cat(T, w_i)
         k_rad = self.calc_k_rad(T, w_i)
-        k_G = self.calc_k_g(T, p, w_i)
+        k_G = self.calc_k_g(T, w_i)
 
         term1 = ((2/N) * (
                 (B * (k_cat + k_rad - 1)) / (N**2 * k_G * k_cat)
@@ -102,9 +102,9 @@ class EnergyConservation(Kinetics):
         return term1 + term2 - term3
 
     def __calc_N(self, T, p, w_i):
-        N = (1 / self.calc_k_g(T, p, w_i) *
-             (1 + (self.calc_k_rad(T, w_i) - self.__calc_deformationParameter() * self.calc_k_g(T, p, w_i)) / self.calc_k_cat(T, w_i))
-             - self.__calc_deformationParameter() * (1 / self.calc_k_g(T, p, w_i) - 1) * (1 + self.calc_k_rad(T, w_i) / self.calc_k_cat(T, w_i)))
+        N = (1 / self.calc_k_g(T, w_i) *
+             (1 + (self.calc_k_rad(T, w_i) - self.__calc_deformationParameter() * self.calc_k_g(T, w_i)) / self.calc_k_cat(T, w_i))
+             - self.__calc_deformationParameter() * (1 / self.calc_k_g(T, w_i) - 1) * (1 + self.calc_k_rad(T, w_i) / self.calc_k_cat(T, w_i)))
         return N
 
     def calc_k_g(self, T, w_i):

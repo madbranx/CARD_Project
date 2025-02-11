@@ -81,7 +81,7 @@ class EnergyConservation(Kinetics):
 
         thermalConductivity_bed = (((1 - CasADi.sqrt(1 - self.eps)) * self.eps * (1/(self.eps - 1 + 1/k_G) + k_rad)
                                     + CasADi.sqrt(1 - self.eps) * (self.cat_flatteningCoefficient * k_cat + (1 - self.cat_flatteningCoefficient) * k_c)
-                                    ) * self.calc_fluid_conductivity(T, w_i))
+                                    ) * self.calc_fluidThermalConductivity(T, w_i))
         return thermalConductivity_bed
 
     def calc_k_c(self, T, p, w_i):
@@ -107,10 +107,8 @@ class EnergyConservation(Kinetics):
              - self.__calc_deformationParameter() * (1 / self.calc_k_g(T, p, w_i) - 1) * (1 + self.calc_k_rad(T, w_i) / self.calc_k_cat(T, w_i)))
         return N
 
-    def calc_k_g(self, T, p, w_i):
-        particleDiameter = self.cat_diameter
-        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
-        return 1 / (1 + meanFreePath/particleDiameter)
+    def calc_k_g(self, T, w_i):
+        return 1 / self.calc_fluidThermalConductivity(T, w_i)
 
     def __calc_meanFreePath(self, T, p, w_i):
         # Gas kinetics to calculate mean free path of gas mixture
@@ -127,7 +125,7 @@ class EnergyConservation(Kinetics):
         return meanFreePath
 
     def calc_k_cat(self, T, w_i):
-        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.calc_fluid_conductivity(T, w_i)
+        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.calc_fluidThermalConductivity(T, w_i)
 
     def __calc_deformationParameter(self):
         return self.cat_shapeFactor * ((1 - self.eps)/self.eps) ** (10/9) * self.cat_distributionFunction
@@ -138,56 +136,23 @@ class EnergyConservation(Kinetics):
         emissionCoefficient = self.cat_emissionCoefficient
         particleDiameter = self.cat_diameter
 
-        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.calc_fluid_conductivity(T, w_i)
+        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.calc_fluidThermalConductivity(T, w_i)
         return k_rad
 
-    def calc_fluid_conductivity(self, T, w_i):
-        # Get component properties
-        viscosity = []
-        thermal_conductivity = []
-        molar_weight = []
-        for component in self.components:
-            viscosity.append(component.get_property(Component.DYNAMIC_VISCOSITY, T))
-            thermal_conductivity.append(component.get_property(Component.THERMAL_CONDUCTIVITY, T))
-            molar_weight.append(component.get_property(Component.MOLECULAR_WEIGHT))
-        moleFraction = self.moleFractions(w_i)
+    ### Methodes for calculating wall heat transfer coefficient with Nusselt correlation
 
-        # Calculate the gas mixture thermal conductivity employing viscosity mixing rule
-        fluid_conductivity = (sum(moleFraction[comp_i] * thermal_conductivity[comp_i] / (
-            sum(moleFraction[comp_j] *
-            self.__calc_compActivity(molar_weight[comp_i], molar_weight[comp_j], viscosity[comp_i], viscosity[comp_j])
-            for comp_j in range(len(self.components))))
-        for comp_i in range(len(self.components))))
-        return fluid_conductivity
+    def calc_heatTransferCoefficient_wall(self, T, p, u, w_i):
+        reactorDiameter = self.reactorDiameter
+        catDiameter = self.cat_diameter
+        lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
+        lambda_bed = self.calc_thermalConductivity_bed(T, w_i, p)
+        Reynold = self.Re(w_i, T, u, p)
+        Prandtl = self.Pr(w_i, T)
 
+        Nusselt = (1.3 + 5 * reactorDiameter / catDiameter) * lambda_bed/lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
 
-    def __calc_compActivity(self, molar_weight_i, molar_weight_j, viscosity_i, viscosity_j):
-        compActivity = ((1 + CasADi.sqrt(viscosity_i/viscosity_j) * (molar_weight_j/molar_weight_i)**(1/4))**2 /
-                        (CasADi.sqrt(8 * (1 + molar_weight_i/molar_weight_j))))
-        return compActivity
-
-
-    ### Methodes for calculating wall heat transfer coefficient
-
-    def __calc_heatTransferCoefficient_rad(self, T):
-        C_w = self.radiation_blackBody / (1/self.reactor_emissionCoefficient + 1/self.cat_emissionCoefficient -1)
-        alpha_rad = 4 * C_w * T**3
-        return alpha_rad
-
-    def __calc_heatTransferCoefficient_cond(self, T, p, w_i):
-        particleDiameter = self.cat_diameter
-        conductivity_fluid = self.calc_fluid_conductivity(T, w_i)
-        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
-        reactor_wallThickness = self.reactor_wallThickness
-
-        alpha_cond = 4 * conductivity_fluid / particleDiameter * (
-                    (1 + 2 * (meanFreePath + reactor_wallThickness) / particleDiameter) *
-                    CasADi.log(1 + particleDiameter / (2 * (meanFreePath + reactor_wallThickness))) - 1)
-        return alpha_cond
-
-    def calc_heatTransferCoefficient_contact(self, T, p, w_i):
-        return 500 # TODO test
-        #return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
+        alpha_wall = Nusselt * lambda_fl / lambda_bed
+        return alpha_wall
 
     def calc_resistanceWall(self):
         k_jacket = 1 / (1 / self.reactor_thermalConductivity * CasADi.log(((self.reactorDiameter/2) + self.reactor_wallThickness) / (self.reactorDiameter/2)))

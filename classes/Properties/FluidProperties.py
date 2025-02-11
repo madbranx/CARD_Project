@@ -79,7 +79,37 @@ class FluidProperties(Parameters):
     def Pr(self, w_i, T):
         eta_fl = self.massFraction_weighted_average(w_i, Component.DYNAMIC_VISCOSITY, T)
         cp_fl = self.massFraction_weighted_average(w_i, Component.HEAT_CAPACITY, T)
-        lambda_fl = self.massFraction_weighted_average(w_i, Component.THERMAL_CONDUCTIVITY, T)
+        lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
 
         Pr = eta_fl * cp_fl / lambda_fl
         return Pr
+
+    def calc_fluidThermalConductivity(self, T, w_i):
+        # Get component properties
+        viscosity = []
+        thermal_conductivity = []
+        molar_weight = []
+        for component in self.components:
+            viscosity.append(component.get_property(Component.DYNAMIC_VISCOSITY, T))
+            thermal_conductivity.append(component.get_property(Component.THERMAL_CONDUCTIVITY, T))
+            molar_weight.append(component.get_property(Component.MOLECULAR_WEIGHT))
+        moleFraction = self.moleFractions(w_i)
+
+        # Calculate the gas mixture thermal conductivity employing viscosity mixing rule
+        fluid_thermal_conductivity = (sum(moleFraction[comp_i] * thermal_conductivity[comp_i] / (
+            sum(moleFraction[comp_j] *
+                self.__calc_compActivity(molar_weight[comp_i], molar_weight[comp_j], viscosity[comp_i],
+                                         viscosity[comp_j])
+                for comp_j in range(len(self.components))))
+                                  for comp_i in range(len(self.components))))
+        return fluid_thermal_conductivity
+
+    def __calc_compActivity(self, molar_weight_i, molar_weight_j, viscosity_i, viscosity_j):
+        # Component activity for viscos mixing rule utilized in calculating thermal conductivity of a fluid mixture
+        compActivity = (
+                (1 + CasADi.sqrt(viscosity_i / viscosity_j) * (molar_weight_j / molar_weight_i) ** (1 / 4)) ** 2 /
+                (CasADi.sqrt(8 * (1 + molar_weight_i / molar_weight_j))))
+        return compActivity
+
+
+

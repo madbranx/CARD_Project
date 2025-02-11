@@ -12,7 +12,7 @@ class SpeciesConservation(Kinetics):
         # Only convection
         rho_fl = self.rho_fl(w_i, T, p)
 
-        j_i_ax = u*rho_fl*(w_i[comp]-w_i_in[comp])
+        j_i_ax = -u*rho_fl*(w_i_in[comp]-w_i[comp])
         return j_i_ax
 
     ## RADIAL MASS FLOW
@@ -45,7 +45,7 @@ class SpeciesConservation(Kinetics):
         radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces
         return radial_mass_flow
 
-    def __calc_j_dispersion(self, diff_centroids, wTpu_left, wTpu_right, comp):
+    def __calc_j_dispersion(self, diff_centroids, diff_faces_l, diff_faces_r, wTpu_left, wTpu_right, comp):
         # get variables
         [w_i_l, T_l, p_l, u_l] = wTpu_left
         [w_i_r, T_r, p_r, u_r] = wTpu_right
@@ -53,7 +53,10 @@ class SpeciesConservation(Kinetics):
         # Calculate j_out
         rho_gas_l = self.rho_fl(w_i_l, T_l, p_l)
         rho_gas_r = self.rho_fl(w_i_r, T_r, p_r)
-        eff_DispCoff = self.__calc_eff_disp_coeff(wTpu_left, comp) # TODO which one to use? mean value?
+        # calculating cell width weighted Disp Coeff of left & right cell # TODO OK?
+        eff_DispCoff_l = self.__calc_eff_disp_coeff(wTpu_left, comp)
+        eff_DispCoff_r = self.__calc_eff_disp_coeff(wTpu_right, comp)
+        eff_DispCoff = (eff_DispCoff_l*diff_faces_l + eff_DispCoff_r*diff_faces_r)/(diff_faces_l+diff_faces_r)
 
         return -eff_DispCoff * (rho_gas_l * w_i_l[comp] - rho_gas_r * w_i_r[comp]) / diff_centroids
 

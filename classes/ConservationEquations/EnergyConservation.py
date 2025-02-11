@@ -186,7 +186,7 @@ class EnergyConservation(Kinetics):
         return alpha_cond
 
     def calc_heatTransferCoefficient_contact(self, T, p, w_i):
-        return 500 # TODO test
+        return 600 # TODO test
         #return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
 
     def calc_resistanceWall(self):

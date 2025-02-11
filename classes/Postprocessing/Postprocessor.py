@@ -94,10 +94,23 @@ class Postprocessor:
 
 
     def plot2D_Temperature(self, name, result, timestep):
+        # SIZES
+        SMALL_SIZE = 18
+        MEDIUM_SIZE = 22
+        BIGGER_SIZE = 24
+
+        plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
+        plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+        plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+        plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
+        plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
         fig, axs = plt.subplots(4, 1, figsize=(7*1.5, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
+        x_i = result.getConversion_2D(timestep, 2) # 0 = CO2
 
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = 2*result.get_r_pos() / self.reactor.reactorDiameter
@@ -113,9 +126,10 @@ class Postprocessor:
         p_min, p_max = self.get_min_max(p * 1e-5)  # Convert to bar before min/max
         T_min, T_max = self.get_min_max(T)
         w_i0_min, w_i0_max = self.get_min_max(w_i[0])
+        x_i_min, x_i_max = self.get_min_max(x_i)
 
         def plot_variable(ax, data, cmap, min_val, max_val, label, fmt_color='black'):
-            plot = ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
+            ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
             plot = ax.pcolormesh(z_mesh, -r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
             levels = self.get_contour_levels(min_val, max_val, data)
             c_lines = ax.contour(z_mesh, r_mesh, data, levels=levels, colors=fmt_color, linewidths=0.8)
@@ -141,11 +155,13 @@ class Postprocessor:
         # Plot temperature (use white contour lines for better visibility)
         plot_variable(axs[2], T, 'inferno', T_min, T_max, 'Temperature / K', fmt_color='white')
 
-        # Plot CH4 Mass Fraction
-        plot_variable(axs[3], w_i[0], 'Oranges', w_i0_min, w_i0_max, 'MassFraction CH4 / -')
-
+        # Plot Conversion
+        plot_variable(axs[3], x_i, 'Oranges', x_i_min, x_i_max, 'Conversion CO2 / -')
 
         plt.show()
+
+        X_i = result.integrate_X(x_i)
+        print(f"X CO2 end = {X_i}")
 
     def get_min_max(self, data):
         raw_min, raw_max = np.nanmin(data), np.nanmax(data)  # Ignore NaNs

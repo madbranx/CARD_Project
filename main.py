@@ -6,7 +6,7 @@ from classes.Integrator import Integrator
 reactor = FixedBedReactor(2, 30, 15)
 
 integrator = Integrator(reactor)
-integrator.setup(1e-8, 1e-8, 0, 5000, 250)
+integrator.setup(1e-8, 1e-8, 0, 2000, 250)
 results = integrator.integrate()
 
 #postprocessor = Postprocessor(reactor, "../results/01")

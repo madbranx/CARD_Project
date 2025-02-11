@@ -16,22 +16,55 @@ class SpeciesConservation(Kinetics):
         return j_i_ax
 
     ## RADIAL MASS FLOW
-    def radialMassFlow(self, T, p, u, comp, w_i, w_i_in, w_i_out, delta_r_centroids_in, delta_r_centroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
-        # Only Diffusion and Crossmixing
+    # Only Diffusion and Crossmixing
+
+    def radialMassFlow(self, radial_discretization, r, comp, wTpu, wTpu_in=None, wTpu_out=None):
+        radial_centroids = radial_discretization.get_centroids()
+        radial_faces = radial_discretization.get_faces()
+        radial_faces_diff = radial_discretization.get_differences_faces()
+        radial_centroids_diff = radial_discretization.get_differences_centroids()
+
+        r_centroid = radial_centroids[r]
+        r_face_in = radial_faces[r]
+        r_face_out = radial_faces[r + 1]
+        diff_faces = radial_faces_diff[r]
+
+        if wTpu_in is None: # Symmetry Boundary Condition
+            j_r_in = 0
+        else:
+            diff_centroids_in = radial_centroids_diff[r - 1]
+            j_r_in = self.__calc_j_dispersion(diff_centroids_in, wTpu_in, wTpu, comp)
+
+        if wTpu_out is None: # Wall Boundary Condition
+            j_r_out = 0
+        else:
+            diff_centroids_out = radial_centroids_diff[r]
+            j_r_out = self.__calc_j_dispersion(diff_centroids_out, wTpu, wTpu_out, comp)
+
+        # Calculate radial mass flow
+        radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces
+        return radial_mass_flow
+
+    def __calc_j_dispersion(self, diff_centroids, wTpu_left, wTpu_right, comp):
+        # get variables
+        [w_i_l, T_l, p_l, u_l] = wTpu_left
+        [w_i_r, T_r, p_r, u_r] = wTpu_right
+
+        # Calculate j_out
+        rho_gas_l = self.rho_fl(w_i_l, T_l, p_l)
+        rho_gas_r = self.rho_fl(w_i_r, T_r, p_r)
+        eff_DispCoff = self.__calc_eff_disp_coeff(wTpu_left, comp) # TODO which one to use? mean value?
+
+        return -eff_DispCoff * (rho_gas_l * w_i_l[comp] - rho_gas_r * w_i_r[comp]) / diff_centroids
+
+
+    def __calc_eff_disp_coeff(self, wTpu, comp):
+        [w_i, T, p, u] = wTpu
         cat_diameter = self.cat_diameter
         void_fraction = self.eps
-
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
-        eff_DispCoff = (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
+        return (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
 
-        rho_gas_in = self.rho_fl(w_i_in, T, p)
-        rho_gas_out = self.rho_fl(w_i_out, T, p)
-
-        j_r_in = -eff_DispCoff * rho_gas_in * (w_i[comp] - w_i_in[comp]) / delta_r_centroids_in
-        j_r_out = -eff_DispCoff * rho_gas_out * (w_i_out[comp] - w_i[comp]) / delta_r_centroids_out
-
-        radial_mass_flow = 1 / r_centeroid * (j_r_out * r_face_out - j_r_in * r_face_in) / delta_r_faces
-        return radial_mass_flow
 
     ## CHANGE BY REACTION
     def changeByReaction(self, T, w_i, p, comp):

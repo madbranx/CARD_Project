@@ -90,7 +90,7 @@ class Postprocessor:
 
     def plot2D_Temperature(self, name, result, timestep):
 
-        fig, axs = plt.subplots(4, 1, figsize=(7, 14), constrained_layout=True)
+        fig, axs = plt.subplots(4, 1, figsize=(7*1.5, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
 

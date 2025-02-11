@@ -2,7 +2,7 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 
-reactor = FixedBedReactor(2, 30, 40)
+reactor = FixedBedReactor(2, 15, 10)
 
 integrator = Integrator(reactor)
 integrator.setup(1e-8, 1e-8, 0, 100, 100)
@@ -20,7 +20,6 @@ postprocessor.plot2D_Temperature("test2", results,100)
 # from classes.Parameters.Component import Component
 # w = CasADi.SX([0, 0, 0.8, 0.2])
 #
-# print(reactor.calc_thermalConductivity_bed(500, w, 5e5))
 # print(reactor.calc_heatTransferCoefficient_contact(500, 5e5, w))
 
 

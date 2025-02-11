@@ -20,7 +20,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
         #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 2]]
+        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
         self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
         # self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
@@ -166,29 +166,21 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
+                        wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
 
-                        if r == 0: # Middle Symmetry Boundary Condition
-                            # Boundary condition: d(w_i_in)/dr = 0
-                            # -> w_i_in = w_i to achieve j_i_in = 0
-                            d_r_centroids_in = 1       # Set to 1 for numerical reason
-
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
-                                                                 w_i[current, :].T, w_i[current, :].T, w_i[after_r, :].T,
-                                                                 d_r_centroids_in, d_r_centroids_out, d_r_faces, r_face_in, r_face_out, r_centroid)
-
-                        elif r == self.radial_discretization.num_volumes - 1:  # Reactor Wall Boundary condition
-                            # Boundary condition: d(w_i_out)/dr = 0
-                            # -> w_i_out = w_i to achieve j_i_out
-                            d_r_centroids_out = 1      # Set to 1 for numerical reason
-
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
-                                                                 w_i[current, :].T, w_i[before_r, :].T, w_i[current, :].T,
-                                                                 d_r_centroids_in, d_r_centroids_out, d_r_faces, r_face_in, r_face_out, r_centroid)
-
+                        # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
+                        if r == 0:
+                            wTpu_in = None
                         else:
-                            radialMassFlow = self.radialMassFlow(T[current], p[current], u[current], comp,
-                                                                 w_i[current, :].T, w_i[before_r, :].T, w_i[after_r, :].T,
-                                                                 d_r_centroids_in, d_r_centroids_out, d_r_faces, r_face_in, r_face_out, r_centroid)
+                            wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+
+                        if r == self.radial_discretization.num_volumes - 1:
+                            wTpu_out = None
+                        else:
+                            wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
+
+                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, wTpu, wTpu_in, wTpu_out)
+
                     else:  # 1D
                         radialMassFlow = 0
 

@@ -13,6 +13,7 @@ class Discretization:
         self.faces = None
         self.centroids = None
         self.differences_faces = None
+
         self.__create()
 
     def __create(self):

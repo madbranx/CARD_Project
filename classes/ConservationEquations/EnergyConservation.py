@@ -53,7 +53,7 @@ class EnergyConservation(Kinetics):
     def wallRadialThermalConductivity(self, T, T_in, p, u, w_i, delta_r_centroids_in, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
         alpha_wall = self.calc_heatTransferCoefficient_wall(T, p, u, w_i)
-        T_inner_wall = self.calc_innerWallTemperature(T, p, w_i)
+        T_inner_wall = self.calc_innerWallTemperature(T, p, u, w_i)
 
         q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centroids_in
         q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?
@@ -108,7 +108,8 @@ class EnergyConservation(Kinetics):
         return N
 
     def calc_k_g(self, T, w_i):
-        return 1 / self.calc_fluidThermalConductivity(T, w_i)
+        #return 1 / self.calc_fluidThermalConductivity(T, w_i)      #TODO
+        return 0.5
 
     def __calc_meanFreePath(self, T, p, w_i):
         # Gas kinetics to calculate mean free path of gas mixture
@@ -149,7 +150,7 @@ class EnergyConservation(Kinetics):
         Reynold = self.Re(w_i, T, u, p)
         Prandtl = self.Pr(w_i, T)
 
-        Nusselt = (1.3 + 5 * reactorDiameter / catDiameter) * lambda_bed/lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
+        Nusselt = (1.3 + 5 * reactorDiameter / catDiameter) * lambda_bed / lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
 
         alpha_wall = Nusselt * lambda_fl / lambda_bed
         return alpha_wall
@@ -158,8 +159,8 @@ class EnergyConservation(Kinetics):
         k_jacket = 1 / (1 / self.reactor_thermalConductivity * CasADi.log(((self.reactorDiameter/2) + self.reactor_wallThickness) / (self.reactorDiameter/2)))
         return k_jacket
 
-    def calc_innerWallTemperature(self, T, p, w_i):
-        alpha_bed = self.calc_heatTransferCoefficient_contact(T, p, w_i)
+    def calc_innerWallTemperature(self, T, p, u, w_i):
+        alpha_bed = self.calc_heatTransferCoefficient_wall(T, p, u, w_i)
         alpha_wall = self.calc_resistanceWall() / self.reactor_wallThickness
         T_wall = self.T_wall
         #return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)    #TODO stimmt nicht!

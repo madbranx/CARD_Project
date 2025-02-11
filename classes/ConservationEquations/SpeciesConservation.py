@@ -35,7 +35,7 @@ class SpeciesConservation(Kinetics):
             diff_centroids_in = radial_centroids_diff[r - 1]
             diff_faces_l = radial_faces_diff[r-1]
             diff_faces_r = radial_faces_diff[r]
-            j_r_in = self.__calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
+            j_r_in = self.calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
 
         if wTpu_out is None: # Wall Boundary Condition
             j_r_out = 0
@@ -43,13 +43,13 @@ class SpeciesConservation(Kinetics):
             diff_centroids_out = radial_centroids_diff[r]
             diff_faces_l = radial_faces_diff[r]
             diff_faces_r = radial_faces_diff[r+1]
-            j_r_out = self.__calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
+            j_r_out = self.calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
 
         # Calculate radial mass flow
         radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces
         return radial_mass_flow
 
-    def __calc_j_dispersion(self, diff_centroids, diff_faces_l, diff_faces_r, wTpu_left, wTpu_right, comp):
+    def calc_j_dispersion(self, diff_centroids, diff_faces_l, diff_faces_r, wTpu_left, wTpu_right, comp):
         # get variables
         [w_i_l, T_l, p_l, u_l] = wTpu_left
         [w_i_r, T_r, p_r, u_r] = wTpu_right
@@ -58,20 +58,44 @@ class SpeciesConservation(Kinetics):
         rho_gas_l = self.rho_fl(w_i_l, T_l, p_l)
         rho_gas_r = self.rho_fl(w_i_r, T_r, p_r)
         # calculating cell width weighted Disp Coeff of left & right cell # TODO OK?
-        eff_DispCoff_l = self.__calc_eff_disp_coeff(wTpu_left, comp)
-        eff_DispCoff_r = self.__calc_eff_disp_coeff(wTpu_right, comp)
+        eff_DispCoff_l = self.calc_eff_disp_coeff(wTpu_left, comp)
+        eff_DispCoff_r = self.calc_eff_disp_coeff(wTpu_right, comp)
         eff_DispCoff = (eff_DispCoff_l*diff_faces_l + eff_DispCoff_r*diff_faces_r)/(diff_faces_l+diff_faces_r)
+        j = -eff_DispCoff * (rho_gas_l * w_i_l[comp] - rho_gas_r * w_i_r[comp]) / diff_centroids
+        return j
 
-        return -eff_DispCoff * (rho_gas_l * w_i_l[comp] - rho_gas_r * w_i_r[comp]) / diff_centroids
-
-
-    def __calc_eff_disp_coeff(self, wTpu, comp):
+    def calc_eff_disp_coeff(self, wTpu, comp):
         [w_i, T, p, u] = wTpu
         cat_diameter = self.cat_diameter
         void_fraction = self.eps
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
-        return (1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8
+        return 0.0001*((1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8)
 
+    # def calc_sum_j(self, radial_discretization, r, wTpu, wTpu_in=None, wTpu_out=None):
+    #     radial_faces_diff = radial_discretization.get_differences_faces()
+    #     radial_centroids_diff = radial_discretization.get_differences_centroids()
+    #
+    #     sum_j = 0
+    #
+    #     for comp in range(len(self.components)):
+    #         if wTpu_in is None:  # Symmetry Boundary Condition
+    #             j_r_in = 0
+    #         else:
+    #             diff_centroids_in = radial_centroids_diff[r - 1]
+    #             diff_faces_l = radial_faces_diff[r - 1]
+    #             diff_faces_r = radial_faces_diff[r]
+    #             j_r_in = self.calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
+    #
+    #         if wTpu_out is None:  # Wall Boundary Condition
+    #             j_r_out = 0
+    #         else:
+    #             diff_centroids_out = radial_centroids_diff[r]
+    #             diff_faces_l = radial_faces_diff[r]
+    #             diff_faces_r = radial_faces_diff[r + 1]
+    #             j_r_out = self.calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
+    #
+    #         sum_j += j_r_out-j_r_in
+    #     return sum_j
 
     ## CHANGE BY REACTION
     def changeByReaction(self, T, w_i, p, comp):

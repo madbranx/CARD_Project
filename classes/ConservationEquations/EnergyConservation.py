@@ -186,15 +186,16 @@ class EnergyConservation(Kinetics):
         return alpha_cond
 
     def calc_heatTransferCoefficient_contact(self, T, p, w_i):
-        return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
+        return 500 # TODO test
+        #return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
 
-    def __calc_resistanceWall(self):
-        k_wall = 1 / (1 / self.reactor_thermalConductivity * CasADi.log((self.reactorDiameter + self.reactor_wallThickness) / self.reactorDiameter))
-        return k_wall
+    def calc_resistanceWall(self):
+        k_jacket = 1 / (1 / self.reactor_thermalConductivity * CasADi.log(((self.reactorDiameter/2) + self.reactor_wallThickness) / (self.reactorDiameter/2)))
+        return k_jacket
 
     def calc_innerWallTemperature(self, T, p, w_i):
         alpha_bed = self.calc_heatTransferCoefficient_contact(T, p, w_i)
-        alpha_wall = self.__calc_resistanceWall() / self.reactor_wallThickness
+        alpha_wall = self.calc_resistanceWall() / self.reactor_wallThickness
         T_wall = self.T_wall
         #return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)    #TODO stimmt nicht!
         return self.T_wall

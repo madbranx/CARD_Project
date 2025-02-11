@@ -16,13 +16,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         if dimension == 1:
             n_radial = 1
 
-        ranges_z = [[0, self.reactorLength*0.2, 1], [self.reactorLength*0.2, self.reactorLength*0.5, 3], [self.reactorLength*0.5, self.reactorLength, 1]]
-        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
-        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        # ranges_z = [[0, self.reactorLength*0.2, 1], [self.reactorLength*0.2, self.reactorLength*0.5, 3], [self.reactorLength*0.5, self.reactorLength, 1]]
+        # self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
-        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
-        # self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
+        # ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
+        # self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
             self.n_spatial = self.axial_discretization.num_volumes
@@ -92,7 +92,26 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
 
             ## 1) MASS CONSERVATION
-                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
+
+                # if self.dimension == 2:
+                #     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+                #
+                #     # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
+                #     if r == 0:
+                #         wTpu_in = None
+                #     else:
+                #         wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+                #
+                #     if r == self.radial_discretization.num_volumes - 1:
+                #         wTpu_out = None
+                #     else:
+                #         wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
+                #
+                #     dispersion_correction = self.calc_sum_j(self.radial_discretization, r, wTpu, wTpu_in, wTpu_out)
+                # else:
+                #     dispersion_correction = 0
+
+                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current]) # - (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
 
             ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
@@ -103,6 +122,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
             ## 3) ENERGY CONSERVATION
                 # 3.1) Axial Energy Conversation
+                wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+
                 if z == 0:  # Inlet Boundary Condition
                     delta_T =  (T[current] - self.T_in)
                 else:
@@ -184,12 +205,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     else:  # 1D
                         radialMassFlow = 0
 
+
                     # 4.3) Combined Species Conversation
                     changeByReaction = self.changeByReaction(T[current], w_i[current, :].T, p[current], comp)
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  - radialMassFlow
+                                                  - radialMassFlow #TODO
                                                   - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 

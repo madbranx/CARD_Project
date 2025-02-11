@@ -27,6 +27,11 @@ class Postprocessor:
 
         return w_i, T, u, p
 
+    def __getValidationData_T_wall(self, filename):
+        data = pd.read_csv(filename, sep="\t", decimal=",")
+        T = [data['z T_wall'], data['T_wall [K]']]
+        return T
+
 
     def plot_1D_vs_ValidationData(self, name, result, timestep):
         fig, axs = plt.subplots(4, 1, figsize=(4.2, 5.7), constrained_layout=True, sharex=True)
@@ -96,7 +101,6 @@ class Postprocessor:
 
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = 2*result.get_r_pos() / self.reactor.reactorDiameter
-
         # Using meshgrid to create coordinate matrices
         z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
 
@@ -111,10 +115,11 @@ class Postprocessor:
         w_i0_min, w_i0_max = self.get_min_max(w_i[0])
 
         def plot_variable(ax, data, cmap, min_val, max_val, label, fmt_color='black'):
-            """Helper function to create plots with colormap, contours, and grid."""
             plot = ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
+            plot = ax.pcolormesh(z_mesh, -r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
             levels = self.get_contour_levels(min_val, max_val, data)
             c_lines = ax.contour(z_mesh, r_mesh, data, levels=levels, colors=fmt_color, linewidths=0.8)
+            c_lines = ax.contour(z_mesh, -r_mesh, data, levels=levels, colors=fmt_color, linewidths=0.8)
             ax.clabel(c_lines, fmt=self.get_contour_label_format(levels), fontsize=8)
 
             # Draw grid lines at dataset points
@@ -122,6 +127,7 @@ class Postprocessor:
                 ax.axvline(z, color="white", linestyle="--", linewidth=0.5, alpha=0.5)
             for r in r_pos:
                 ax.axhline(r, color="white", linestyle="--", linewidth=0.5, alpha=0.5)
+                ax.axhline(-r, color="white", linestyle="--", linewidth=0.5, alpha=0.5)
 
             fig.colorbar(plot, label=label, ax=ax)
 
@@ -174,5 +180,28 @@ class Postprocessor:
         else:  # Small values
             return "%.3f"
 
+    def plot_Twall_vs_validation(self, name, result, timestep):
+        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        # Plot Simulation Data
+        w_i, T, p, u = result.get_2D_values(timestep)
+        z_pos = result.get_z_pos() / self.reactor.reactorLength
+
+        axs.plot(z_pos, T[:, -1], color=colors[0], linestyle="--", label="simulation")
+
+        # Plot Validation Data
+        T_wall_val = self.__getValidationData_T_wall("debugging/Val_data_with_Twall.txt")
+
+        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label="validation")
+
+
+        # Axis
+        axs.set_ylabel(r'$T_{\mathregular{wall}} / K$')
+        axs.set_xlabel(r'$z/L$')
+
+        axs.legend()
+
+        plt.show()
 
 

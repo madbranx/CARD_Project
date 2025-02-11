@@ -179,7 +179,12 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                         else:
                             wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
 
-                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, wTpu, wTpu_in, wTpu_out)
+                        if r == 0:
+                            radialMassFlow = 0
+                        elif r == self.radial_discretization.num_volumes - 1:
+                            radialMassFlow = 0
+                        else:
+                            radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, wTpu, wTpu_in, wTpu_out)
 
                     else:  # 1D
                         radialMassFlow = 0

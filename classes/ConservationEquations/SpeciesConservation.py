@@ -33,13 +33,17 @@ class SpeciesConservation(Kinetics):
             j_r_in = 0
         else:
             diff_centroids_in = radial_centroids_diff[r - 1]
-            j_r_in = self.__calc_j_dispersion(diff_centroids_in, wTpu_in, wTpu, comp)
+            diff_faces_l = radial_faces_diff[r-1]
+            diff_faces_r = radial_faces_diff[r]
+            j_r_in = self.__calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
 
         if wTpu_out is None: # Wall Boundary Condition
             j_r_out = 0
         else:
             diff_centroids_out = radial_centroids_diff[r]
-            j_r_out = self.__calc_j_dispersion(diff_centroids_out, wTpu, wTpu_out, comp)
+            diff_faces_l = radial_faces_diff[r]
+            diff_faces_r = radial_faces_diff[r+1]
+            j_r_out = self.__calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
 
         # Calculate radial mass flow
         radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces

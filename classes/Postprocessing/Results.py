@@ -66,14 +66,11 @@ class Results:
         i = comp
         w_i_in = self.reactor.w_i_in
         w_M = self.reactor.getMolarWeights()
-
         tot_moles = 0
         for i, mw in enumerate(w_M):
-            tot_moles += mw*w_i_in[i]
+            tot_moles += w_i_in[i]/mw
 
-        print(tot_moles)
-        print(w_M[i]*w_i_in[i])
-        n_i_in = w_M[i]*w_i_in[i] / tot_moles
+        n_i_in = w_i_in[i]/w_M[i]/tot_moles
 
         X_2D = np.zeros((n_axial_volumes, n_radial_volumes))
 
@@ -82,21 +79,25 @@ class Results:
                 current = z + r * n_axial_volumes
                 w_i =  self.w_i[current, t_step, :]
                 n_i = self.reactor.moleFractions(w_i)
-                X_2D[z, r] = n_i_in-n_i[i]/n_i_in
+                X_2D[z, r] = (n_i_in-n_i[i])/n_i_in
 
         return X_2D
 
-    def integrate_X(self, x_i):
+    def average_trapezoidal(self, f_values):
+        r_faces = self.radialDiscretization.get_faces()
+        R = r_faces[-1]  # Maximum radius
+        N = len(f_values)  # Number of cells
 
-        r_pos = self.radialDiscretization.get_centroids()
-        r_pos_diff = self.radialDiscretization.get_differences_faces()
-        # Calculate the integral at the last z coordinate
+        integral = 0.0
+        for i in range(N):
+            r_mid = (r_faces[i] + r_faces[i + 1]) / 2  # Midpoint radius
+            dr = r_faces[i + 1] - r_faces[i]  # Cell width
+            integral += f_values[i] * r_mid * dr  # Trapezoidal rule
 
-        x_i_last_z = x_i[-1, :]  # Get x_i values at the last z
+        avg_f = (2 * np.pi * integral) / (np.pi * R ** 2)  # Normalize by cross-section area
+        return avg_f
 
-        integral_x = np.sum(r_pos * x_i_last_z * r_pos_diff)  # Approximate integral
-        A = np.pi * (self.reactor.reactorDiameter/2) ** 2  # Reactor cross-sectional area
-        I = integral_x / A  # Normalized integral value
-        return I
+    def get_rawValues(self):
+        return self.w_i, self.T, self.p, self.u
 
 

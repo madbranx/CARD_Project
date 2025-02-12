@@ -16,13 +16,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         if dimension == 1:
             n_radial = 1
 
-        # ranges_z = [[0, self.reactorLength*0.2, 1], [self.reactorLength*0.2, self.reactorLength*0.5, 3], [self.reactorLength*0.5, self.reactorLength, 1]]
-        # self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
-        self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        ranges_z = [[0, self.reactorLength*0.1, 1], [self.reactorLength*0.1, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
+        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        # ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
-        # self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
-        self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
+        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
+        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
             self.n_spatial = self.axial_discretization.num_volumes
@@ -45,11 +45,11 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         # CasADi DAE
         self.DAE = None
 
+    def setup(self):
         # SETUP
         self.__initializeCasADiStructure()
         self.__fillCasADiStructure()
         self.__reshapeCasADi_createODE()
-
 
     def __initializeCasADiStructure(self):
         # create CasADi Variables
@@ -211,7 +211,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  - radialMassFlow #TODO
+                                                  #- radialMassFlow #TODO
                                                   - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 

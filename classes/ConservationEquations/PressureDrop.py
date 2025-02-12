@@ -1,5 +1,6 @@
 from classes.Parameters.Component import Component
 from classes.Properties.Kinetics import Kinetics
+import casadi as CasADi
 
 class PressureDrop(Kinetics):
     def __init__(self):

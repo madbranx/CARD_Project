@@ -49,10 +49,11 @@ class FluidProperties(Parameters):
         Mw_i = self.getMolarWeights()
         moles = w_i / Mw_i
         tot_moles = CasADi.sum1(moles)
-        return moles/tot_moles
+        mole_fractions = moles/tot_moles
+        return mole_fractions
 
     def partial_pressures(self, w_i, p):
-        return self.moleFractions(w_i)*p
+        return CasADi.SX(self.moleFractions(w_i)*p)
 
     def concentrations(self, w_i, T, p):
         p_i = self.partial_pressures(w_i, p)

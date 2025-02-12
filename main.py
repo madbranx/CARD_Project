@@ -6,11 +6,11 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 20
-n_radial = 10
+n_axial = 40
+n_radial = 4
 time_end = 3000
-time_steps = 150
-precision = 1e-6
+time_steps = 400
+precision = 1e-8
 
 
 ## 1D CASE WITH VALIDATION PLOT
@@ -21,39 +21,40 @@ precision = 1e-6
 # integrator.setup(precision, precision, 0, time_end, time_steps)
 # results = integrator.integrate()
 #postprocessor = Postprocessor(reactor, "../results/01")
-#postprocessor.plot_1D_vs_ValidationData("test", results, time_steps)
+#postprocessor.plot_1D_vs_ValidationData("test", results, time_end)
 
 
 ## 2D CASE WITH RESULT PLOTS FOR T, P, U AND CONVERSION X_CO2
 ## WITH VALIDATION OF WALL TEMPERATURE
 ## WITH COMPARISION OF CENTER VALUES 1D VS 2D #TODO (TBD!)
 
-# reactor = FixedBedReactor(2, n_axial, n_radial)
-# reactor.setup()
-# integrator = Integrator(reactor)
-# integrator.setup(precision, precision, 0, time_end, time_steps)
-# results = integrator.integrate()
-# postprocessor = Postprocessor(reactor, "../results/02")
-# postprocessor.plot2D_Temperature("test2", results,time_steps)
-# postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
+reactor = FixedBedReactor(2, n_axial, n_radial)
+reactor.setup()
+integrator = Integrator(reactor)
+integrator.setup(precision, precision, 0, time_end, time_steps)
+results = integrator.integrate()
+postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot2D_Temperature("test2", results,time_steps)
+postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 
 ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
+
 # setting up reactor and integrator
 reactor = FixedBedReactor(2, n_axial, n_radial)
+reactor.T_wall = 550 # Temperature for ignited reactor
 reactor.setup()
 integrator = Integrator(reactor)
 integrator.setup(precision, precision, 0, time_end, time_steps)
 
 # get results of ignited reactor
-reactor.T_wall = 550
 result_ignited = integrator.integrate()
 w_i, T, p, u = result_ignited.get_rawValues()
 
 # calculating arcs
 results_ignition = []
 results_extinction = []
-T_walls = np.linspace(400, 550, 25)
+T_walls = np.linspace(400, 550, 3)
 for T_wall in T_walls:
     print("T_wall = ", T_wall)
     # calculating ignition arcs
@@ -70,8 +71,6 @@ for T_wall in T_walls:
 
 postprocessor = Postprocessor(reactor, "../results/02")
 postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
-
-
 
 
 # # TESTING FUNCTION

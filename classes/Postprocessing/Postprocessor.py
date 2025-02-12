@@ -206,12 +206,12 @@ class Postprocessor:
         w_i, T, p, u = result.get_2D_values(timestep)
         z_pos = result.get_z_pos() / self.reactor.reactorLength
 
-        axs.plot(z_pos, T[:, -1], color=colors[0], linestyle="--", label="simulation")
+        axs.plot(z_pos, T[:, 0], color=colors[0], linestyle="--", label="simulation")
 
         # Plot Validation Data
         T_wall_val = self.__getValidationData_T_wall("debugging/Val_data_with_Twall.txt")
 
-        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="ignition arc")
+        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="validation values")
 
 
         # Axis

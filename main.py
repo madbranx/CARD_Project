@@ -7,10 +7,10 @@ import numpy as np
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
 n_axial = 40
-n_radial = 4
+n_radial = 6
 time_end = 3000
-time_steps = 400
-precision = 1e-8
+time_steps = 600
+precision = 1e-10
 
 
 ## 1D CASE WITH VALIDATION PLOT
@@ -40,37 +40,37 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
 
-# setting up reactor and integrator
-reactor = FixedBedReactor(2, n_axial, n_radial)
-reactor.T_wall = 550 # Temperature for ignited reactor
-reactor.setup()
-integrator = Integrator(reactor)
-integrator.setup(precision, precision, 0, time_end, time_steps)
-
-# get results of ignited reactor
-result_ignited = integrator.integrate()
-w_i, T, p, u = result_ignited.get_rawValues()
-
-# calculating arcs
-results_ignition = []
-results_extinction = []
-T_walls = np.linspace(400, 550, 3)
-for T_wall in T_walls:
-    print("T_wall = ", T_wall)
-    # calculating ignition arcs
-    reactor.T_wall = T_wall
-    reactor.setup()
-    integrator.refresh()
-    result_ignition = integrator.integrate()
-    results_ignition.append(result_ignition)
-    # calculating extinction arcs
-    integrator.refresh()
-    integrator.set_specific_InitialValues(w_i, T, p, u)
-    result_extinction = integrator.integrate()
-    results_extinction.append(result_extinction)
-
-postprocessor = Postprocessor(reactor, "../results/02")
-postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
+# # setting up reactor and integrator
+# reactor = FixedBedReactor(2, n_axial, n_radial)
+# reactor.T_wall = 550 # Temperature for ignited reactor
+# reactor.setup()
+# integrator = Integrator(reactor)
+# integrator.setup(precision, precision, 0, time_end, time_steps)
+#
+# # get results of ignited reactor
+# result_ignited = integrator.integrate()
+# w_i, T, p, u = result_ignited.get_rawValues()
+#
+# # calculating arcs
+# results_ignition = []
+# results_extinction = []
+# T_walls = np.linspace(400, 550, 25)
+# for T_wall in T_walls:
+#     print("T_wall = ", T_wall)
+#     # calculating ignition arcs
+#     reactor.T_wall = T_wall
+#     reactor.setup()
+#     integrator.refresh()
+#     result_ignition = integrator.integrate()
+#     results_ignition.append(result_ignition)
+#     # calculating extinction arcs
+#     integrator.refresh()
+#     integrator.set_specific_InitialValues(w_i, T, p, u)
+#     result_extinction = integrator.integrate()
+#     results_extinction.append(result_extinction)
+#
+# postprocessor = Postprocessor(reactor, "../results/02")
+# postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
 
 
 # # TESTING FUNCTION
@@ -101,14 +101,11 @@ postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, ti
 
 
 #TODO
-# check alpha contact wall -> mean free path?
-# fix radial mass flow
-# add collision area for H2O
-# lambda fl mixture vs. lambda mass frac
+# Fix numerical issues & radial dispersion
 # .
 # .
 # Create ULM diagram             TBD
-# Diskretisierungsformeln in PDF
+# add Diskretisierungsformeln in PDF
 # .
 # Postprocessing (2D)            WORK IN PROGRESS
 # .     Extinction / Ignition ARC Plots

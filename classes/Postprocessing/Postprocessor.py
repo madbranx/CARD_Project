@@ -91,13 +91,28 @@ class Postprocessor:
 
         ax.plot(z_pos, check, color=colors[0], linestyle="--")
 
+    def setSizes(self):
+        # SIZES
+        SMALL_SIZE = 18
+        MEDIUM_SIZE = 22
+        BIGGER_SIZE = 24
+
+        plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
+        plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+        plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+        plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
+        plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
 
 
     def plot2D_Temperature(self, name, result, timestep):
-
+        self.setSizes()
         fig, axs = plt.subplots(4, 1, figsize=(7*1.5, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
+        x_i = result.getConversion_2D(timestep, 2) # 2 = CO2
 
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = 2*result.get_r_pos() / self.reactor.reactorDiameter
@@ -113,9 +128,10 @@ class Postprocessor:
         p_min, p_max = self.get_min_max(p * 1e-5)  # Convert to bar before min/max
         T_min, T_max = self.get_min_max(T)
         w_i0_min, w_i0_max = self.get_min_max(w_i[0])
+        x_i_min, x_i_max = self.get_min_max(x_i)
 
         def plot_variable(ax, data, cmap, min_val, max_val, label, fmt_color='black'):
-            plot = ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
+            ax.pcolormesh(z_mesh, r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
             plot = ax.pcolormesh(z_mesh, -r_mesh, data, cmap=cmap, vmin=min_val, vmax=max_val)
             levels = self.get_contour_levels(min_val, max_val, data)
             c_lines = ax.contour(z_mesh, r_mesh, data, levels=levels, colors=fmt_color, linewidths=0.8)
@@ -141,11 +157,13 @@ class Postprocessor:
         # Plot temperature (use white contour lines for better visibility)
         plot_variable(axs[2], T, 'inferno', T_min, T_max, 'Temperature / K', fmt_color='white')
 
-        # Plot CH4 Mass Fraction
-        plot_variable(axs[3], w_i[0], 'Oranges', w_i0_min, w_i0_max, 'MassFraction CH4 / -')
-
+        # Plot Conversion
+        plot_variable(axs[3], x_i, 'Oranges', x_i_min, x_i_max, 'Conversion CO2 / -')
 
         plt.show()
+
+        X_i = result.average_trapezoidal(x_i[-1, :])
+        print(f"X CO2 (integrated) = {X_i}")
 
     def get_min_max(self, data):
         raw_min, raw_max = np.nanmin(data), np.nanmax(data)  # Ignore NaNs
@@ -193,7 +211,7 @@ class Postprocessor:
         # Plot Validation Data
         T_wall_val = self.__getValidationData_T_wall("debugging/Val_data_with_Twall.txt")
 
-        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label="validation")
+        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="ignition arc")
 
 
         # Axis
@@ -203,5 +221,35 @@ class Postprocessor:
         axs.legend()
 
         plt.show()
+
+    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls, timestep):
+        self.setSizes()
+
+        X_CO2_ign = []
+        for result in results_ignition:
+            x_CO2_ign = result.getConversion_2D(timestep, 2)
+            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+
+        X_CO2_ext = []
+        for result in results_extinction:
+            x_CO2_ext = result.getConversion_2D(timestep, 2)
+            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
+
+        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="-", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+        axs.plot(T_walls, X_CO2_ext, color=colors[1], linestyle="-", linewidth=2, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
+
+        # Axis
+        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
+        axs.set_ylabel(r'$Conversion CO2 / -$')
+
+        axs.set_xlim(300, 700)
+
+        axs.legend()
+        plt.show()
+
 
 

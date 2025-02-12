@@ -69,7 +69,7 @@ class SpeciesConservation(Kinetics):
         cat_diameter = self.cat_diameter
         void_fraction = self.eps
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
-        return 0.0001*((1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8)
+        return ((1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8)
 
     # def calc_sum_j(self, radial_discretization, r, wTpu, wTpu_in=None, wTpu_out=None):
     #     radial_faces_diff = radial_discretization.get_differences_faces()

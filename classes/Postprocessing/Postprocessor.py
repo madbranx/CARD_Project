@@ -91,9 +91,7 @@ class Postprocessor:
 
         ax.plot(z_pos, check, color=colors[0], linestyle="--")
 
-
-
-    def plot2D_Temperature(self, name, result, timestep):
+    def setSizes(self):
         # SIZES
         SMALL_SIZE = 18
         MEDIUM_SIZE = 22
@@ -107,10 +105,14 @@ class Postprocessor:
         plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
         plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
+
+
+    def plot2D_Temperature(self, name, result, timestep):
+        self.setSizes()
         fig, axs = plt.subplots(4, 1, figsize=(7*1.5, 14), constrained_layout=True)
 
         w_i, T, p, u = result.get_2D_values(timestep)
-        x_i = result.getConversion_2D(timestep, 2) # 0 = CO2
+        x_i = result.getConversion_2D(timestep, 2) # 2 = CO2
 
         z_pos = result.get_z_pos() / self.reactor.reactorLength
         r_pos = 2*result.get_r_pos() / self.reactor.reactorDiameter
@@ -160,8 +162,8 @@ class Postprocessor:
 
         plt.show()
 
-        X_i = result.integrate_X(x_i)
-        print(f"X CO2 end = {X_i}")
+        X_i = result.average_trapezoidal(x_i[-1, :])
+        print(f"X CO2 (integrated) = {X_i}")
 
     def get_min_max(self, data):
         raw_min, raw_max = np.nanmin(data), np.nanmax(data)  # Ignore NaNs
@@ -209,7 +211,7 @@ class Postprocessor:
         # Plot Validation Data
         T_wall_val = self.__getValidationData_T_wall("debugging/Val_data_with_Twall.txt")
 
-        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label="validation")
+        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="ignition arc")
 
 
         # Axis
@@ -219,5 +221,35 @@ class Postprocessor:
         axs.legend()
 
         plt.show()
+
+    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls, timestep):
+        self.setSizes()
+
+        X_CO2_ign = []
+        for result in results_ignition:
+            x_CO2_ign = result.getConversion_2D(timestep, 2)
+            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+
+        X_CO2_ext = []
+        for result in results_extinction:
+            x_CO2_ext = result.getConversion_2D(timestep, 2)
+            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
+
+        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="-", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+        axs.plot(T_walls, X_CO2_ext, color=colors[1], linestyle="-", linewidth=2, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
+
+        # Axis
+        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
+        axs.set_ylabel(r'$Conversion CO2 / -$')
+
+        axs.set_xlim(300, 700)
+
+        axs.legend()
+        plt.show()
+
 
 

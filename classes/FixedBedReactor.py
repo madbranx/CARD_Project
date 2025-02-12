@@ -8,37 +8,23 @@ from classes.ConservationEquations.SpeciesConservation import SpeciesConservatio
 
 
 class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, SpeciesConservation):
-    def __init__(self, dimension, n_axial, n_radial=1, **kwargs):
+    def __init__(self, dimension, n_axial, n_radial=1):
         super().__init__()
         self.dimension = dimension
 
+        # Discretizations
+        if dimension == 1:
+            n_radial = 1
 
-        # Discretization setup
+        ranges_z = [[0, self.reactorLength*0.1, 1], [self.reactorLength*0.1, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
+        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        # axial discretization
-        if kwargs.get("z_equi", False) is True:
-            self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
-        else:
-            if kwargs.get('z_ranges', None) is not None:
-                ranges_z = kwargs['z_ranges']
-            else:
-                ranges_z = [[0, self.reactorLength*0.05, 3], [self.reactorLength*0.05, self.reactorLength*0.4, 2], [self.reactorLength*0.4, self.reactorLength, 1]]
-            self.axial_discretization = Discretization(n_axial, Discretization.RELATIVE_ARRAY, ranges= ranges_z)
+        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
+        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
-        # radial discretization
-        if kwargs.get("r_equi", False) is True:
-            self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter / 2)
-        else:
-            if kwargs.get('r_ranges', None) is not None:
-                ranges_r = kwargs['r_ranges']
-            else:
-                ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2 * 7/8, 2], [self.reactorDiameter/2 *7/8, self.reactorDiameter/2, 3]]
-            self.radial_discretization = Discretization(n_radial, Discretization.RELATIVE_ARRAY, ranges=ranges_r)
-
-
-        # get spacial size, check for pseudo 1D (1 radial element)
         if self.dimension == 1:
-            self.radial_discretization = Discretization(1, start=0, end=self.reactorDiameter / 2)
             self.n_spatial = self.axial_discretization.num_volumes
         else:
             self.n_spatial = self.axial_discretization.num_volumes * self.radial_discretization.num_volumes
@@ -83,105 +69,106 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         self.AE_p = CasADi.SX.sym("ae_pressure_drop", self.n_spatial)
 
     def __fillCasADiStructure(self):
-
         w_i = self.w_i
         T = self.T
         p = self.p
         u = self.u
 
-        radial_faces_deltas = self.radial_discretization.get_differences_faces()
-        axial_faces_deltas = self.axial_discretization.get_differences_faces()
-        axial_centroids_deltas = self.axial_discretization.get_centroids()
+        radial_deltas = self.radial_discretization.get_differences_faces()
+        axial_deltas = self.axial_discretization.get_differences_faces()
 
-        for r, delta_faces_r in enumerate(radial_faces_deltas):
-            for z, delta_faces_z in enumerate(axial_faces_deltas):
+        radial_centroids = self.radial_discretization.get_centroids()
+        radial_centroids_diff = self.radial_discretization.get_differences_centroids()
 
-            ## Setting Radial and Axial Indexes
+        radial_faces = self.radial_discretization.get_faces()
+        radial_faces_diff = self.radial_discretization.get_differences_faces()
 
-                current = z + r * len(axial_faces_deltas)
-                before_z = current - 1
-                after_z = current + 1
-                before_r = current - len(axial_faces_deltas)
-                after_r = current + len(axial_faces_deltas)
+        for r, delta_r in enumerate(radial_deltas):
+            for z, delta_z in enumerate(axial_deltas):
+                current = z + r*len(axial_deltas)
+                before_z = current -1
+                before_r = current-len(axial_deltas)
+                after_r = current+len(axial_deltas)
 
-                ## 1) MASS CONSERVATION
 
-                # Dispersion correction
-                if self.dimension == 2:
-                    u_center = u[current - r * len(axial_faces_deltas)]
-                    wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+            ## 1) MASS CONSERVATION
 
-                    # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
-                    if r == 0:
-                        wTpu_in = None
-                    else:
-                        wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+                # if self.dimension == 2:
+                #     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+                #
+                #     # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
+                #     if r == 0:
+                #         wTpu_in = None
+                #     else:
+                #         wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+                #
+                #     if r == self.radial_discretization.num_volumes - 1:
+                #         wTpu_out = None
+                #     else:
+                #         wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
+                #
+                #     dispersion_correction = self.calc_sum_j(self.radial_discretization, r, wTpu, wTpu_in, wTpu_out)
+                # else:
+                #     dispersion_correction = 0
 
-                    if r == self.radial_discretization.num_volumes - 1:
-                        wTpu_out = None
-                    else:
-                        wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
-
-                    dispersion_correction = self.calc_sum_j(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
-                else:
-                    dispersion_correction = 0
-                self.AE_m[current] = (u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
-                                      #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
-                                      )
+                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current]) # - (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
 
             ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
                     delta_p =  p[current] - self.p_in
-                    #delta_p = 0
                 else:
                     delta_p =  p[current] - p[before_z]
-                    #delta_p = 0
-
-                self.AE_p[current] = delta_p / delta_faces_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
+                self.AE_p[current] = delta_p / delta_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
 
             ## 3) ENERGY CONSERVATION
-
                 # 3.1) Axial Energy Conversation
+                wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+
                 if z == 0:  # Inlet Boundary Condition
-                    delta_T_in =  (T[current] - self.T_in)
+                    delta_T =  (T[current] - self.T_in)
                 else:
-                    delta_T_in =  (T[current] - T[before_z])
+                    delta_T =  (T[current] - T[before_z])
 
+                axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T / delta_z
 
-                # 3.1.1) Axial Convective Heat Flux
-                axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T_in / delta_faces_z
-
-                # 3.1.2) Axial Heat Conduction
                 lambda_eff_axial = self.effAxialThermalConductivity(T[current], w_i[current, :].T, u[current], p[current])
-                if z == 0:  # Inlet Boundary Condition
-                    delta_T_in = (self.T_in - T[current])
-                else:
-                    delta_T_in = (T[before_z] - T[current])
-                q_z_in = (-lambda_eff_axial) * delta_T_in / axial_centroids_deltas[z - 1]
-
-                if z == len(axial_faces_deltas) - 1:
-                    q_z_out = 0
-                else:
-                    delta_T_out = (T[current] - T[after_z])
-                    q_z_out = (-lambda_eff_axial) * delta_T_out / axial_centroids_deltas[z]
-
-                axial_heatConduction = (q_z_in - q_z_out)/delta_faces_z
+                axial_heatConduction = (-lambda_eff_axial) * delta_T / (delta_z ** 2)
 
                 ## 3.2) Radial Energy Conversation
                 if self.dimension == 2:
-                    wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
-                    u_center = u[current-r*len(axial_faces_deltas)]
-                    radial_heatConduction = self.radial_heatConduction(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
+                    r_centroid = radial_centroids[r]
+                    r_face_in = radial_faces[r]
+                    r_face_out = radial_faces[r+1]
+                    d_r_faces = radial_faces_diff[r]
+                    d_r_centroids_in = radial_centroids_diff[r - 1]
+                    if r < len(radial_centroids)-1:
+                        d_r_centroids_out = radial_centroids_diff[r]
 
+                    if r == 0:  # Middle Symmetry Boundary Condition
+                        # Boundary condition: d(q_in)/dr = 0
+                        # -> T_in = T to achieve q_in = 0
+                        d_r_centroids_in = 1  # Set to 1 for numerical reason value has no influence
+
+                        radial_heatConduction = self.effRadialThermalConductivity(T[current], T[current], T[after_r],
+                                                                                  p[current], w_i[current, :].T,
+                                                                                  d_r_centroids_in, d_r_centroids_out,
+                                                                                  d_r_faces, r_face_in, r_face_out, r_centroid)
+
+                    elif r == self.radial_discretization.num_volumes - 1:  # Reactor Wall Boundary condition
+                        radial_heatConduction = self.wallRadialThermalConductivity(T[current], T[before_r],
+                                                                                   p[current], w_i[current, :].T,
+                                                                                   d_r_centroids_in,
+                                                                                   d_r_faces, r_face_in, r_face_out, r_centroid)
+                    else:
+                        radial_heatConduction = self.effRadialThermalConductivity(T[current], T[before_r], T[after_r],
+                                                                                  p[current], w_i[current, :].T,
+                                                                                  d_r_centroids_in, d_r_centroids_out,
+                                                                                  d_r_faces, r_face_in, r_face_out, r_centroid)
                 else: # 1D radial thermal conduction with U_radial = const.
-                    wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
-                    T_inner_wall = self.calc_innerWallTemperature(wTpu)
-                    radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - T_inner_wall)
+                    radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
 
-                # 3.3) Reaction Heat
+                # 3.3) Combined Energy Conversation
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])
-
-                # 3.4) Setting Energy Conservation ODE
                 self.ODE_T[current] = ((
                                        - axial_convectiveHeatFlux
                                        - axial_heatConduction
@@ -194,45 +181,39 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     # 4.1) Axial Species Conversation
                     if z == 0:  # Inlet Boundary Condition
-                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, self.w_i_in, u[current], p[current], comp) / delta_faces_z
+                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, self.w_i_in, u[current], p[current], comp) / delta_z
                     else:
-                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, w_i[before_z, :].T, u[current], p[current], comp) / delta_faces_z
+                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, w_i[before_z, :].T, u[current], p[current], comp) / delta_z
 
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
-                            wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
-                            u_center = u[current - r * len(axial_faces_deltas)]
-                            radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, u_center, wTpu, wTpu_in, wTpu_out)
+                        wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+
+                        # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
+                        if r == 0:
+                            wTpu_in = None
+                        else:
+                            wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+
+                        if r == self.radial_discretization.num_volumes - 1:
+                            wTpu_out = None
+                        else:
+                            wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
+
+                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, wTpu, wTpu_in, wTpu_out)
 
                     else:  # 1D
                         radialMassFlow = 0
 
-                    # 4.3) Change by Reaction
+
+                    # 4.3) Combined Species Conversation
                     changeByReaction = self.changeByReaction(T[current], w_i[current, :].T, p[current], comp)
 
-                    # 4.3) Setting Species Conservation ODE
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  #- radialMassFlow     # Radial Mass Flow turned off due to numerical instability
+                                                  #- radialMassFlow #TODO
                                                   - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
-
-
-    # Method to get w, T, p, u for three cells for the radial implementations
-    def get_wTpus(self, w_i, T, p, u, before_r, r, after_r, current):
-        if r == 0:  # Symmetry Boundary Condition
-            wTpu_in = None
-        else:
-            wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
-
-        if r == self.radial_discretization.num_volumes - 1:  # Wall Boundary Condition
-            wTpu_out = None
-        else:
-            wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
-
-        wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
-
-        return wTpu_in, wTpu, wTpu_out
 
 
     def __reshapeCasADi_createODE(self):
@@ -256,5 +237,3 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
         # create DAE
         self.DAE = {'x': x, 'z': z, 'ode': ode, 'alg': ae}
-
-

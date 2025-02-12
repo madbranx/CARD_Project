@@ -21,12 +21,7 @@ class Parameters:
         self.cat_tortuosity = 2  # -
         self.cat_porosity = 0.6  # -
         self.cat_emissionCoefficient = 0.9  # TODO Quelle, temporärer Wert der an sich stimmt
-        self.cat_shapeFactor = 1.25         # For spheres, relevant in radial heat conduction
-        self.cat_distributionFunction = 1   # Relevant in radial heat conduction
-        self.cat_flatteningCoefficient = 0.0077  # Relevant in radial heat conduction, VDI
 
-        self.reactor_emissionCoefficient = 0.9  # TODO Quelle, temporärer Wert
-        self.reactor_areaCoverage = 0.8
         self.reactor_thermalConductivity = 20   # W/(m K)    # Bremer
         self.reactor_wallThickness = 0.002       # m   # Bremer
 

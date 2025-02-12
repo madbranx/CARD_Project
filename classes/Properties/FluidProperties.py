@@ -76,6 +76,31 @@ class FluidProperties(Parameters):
         Re = u * d_p * rho_fl / eta_fl
         return Re
 
+    def Re_0 (self, T, p, u, w_i):
+        # Reynolds number with velocity corrected for emtpy space velocity
+        eps = self.eps
+        eta_fl = self.massFraction_weighted_average(w_i, Component.DYNAMIC_VISCOSITY, T)
+        d_p = self.cat_diameter
+        rho_fl = self.rho_fl(w_i, T, p)
+
+        u_0 = u * eps
+
+        Re_0 = u_0 * d_p * rho_fl / eta_fl
+        return Re_0
+
+    def Pe_0 (self, T, p, u, w_i):
+        # Peclet number with velocity corrected for empty space velocity
+        eps = self.eps
+        cp_fl = self.massFraction_weighted_average(w_i, Component.HEAT_CAPACITY, T)
+        lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
+        d_p = self.cat_diameter
+        rho_fl = self.rho_fl(w_i, T, p)
+
+        u_0 = u * eps
+
+        Pe_0 = u_0 * rho_fl * cp_fl * d_p / lambda_fl
+        return Pe_0
+
     def Pr(self, w_i, T):
         eta_fl = self.massFraction_weighted_average(w_i, Component.DYNAMIC_VISCOSITY, T)
         cp_fl = self.massFraction_weighted_average(w_i, Component.HEAT_CAPACITY, T)

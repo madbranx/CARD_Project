@@ -1,4 +1,5 @@
 from classes.Properties.Kinetics import Kinetics
+import casadi as CasADi
 
 class MassConservation(Kinetics):
     def __init__(self):

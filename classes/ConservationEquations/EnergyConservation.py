@@ -43,6 +43,8 @@ class EnergyConservation(Kinetics):
     def effRadialThermalConductivity(self, T, T_in, T_out, p, w_i, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
         thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
 
+        #thermalConductivity_radial = 50 # TODO test
+
         q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centeroids_in
         q_r_out = -thermalConductivity_radial * (T_out - T) / delta_r_centeroids_out
 
@@ -54,6 +56,8 @@ class EnergyConservation(Kinetics):
         thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
         alpha_wall = self.calc_heatTransferCoefficient_contact(T, p, w_i)
         T_inner_wall = self.calc_innerWallTemperature(T, p, w_i)
+
+        #thermalConductivity_radial = 50 # TODO test
 
         q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centroids_in
         q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?

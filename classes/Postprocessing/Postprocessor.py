@@ -32,6 +32,11 @@ class Postprocessor:
         T = [data['z T_wall'], data['T_wall [K]']]
         return T
 
+    def __getValidationData_T_center(self, filename):
+        data = pd.read_csv(filename, sep="\t", decimal=",")
+        T = [data['z T_center'], data['T_center [K]']]
+        return T
+
 
     def plot_1D_vs_ValidationData(self, name, result, timestep):
         fig, axs = plt.subplots(4, 1, figsize=(4.2, 5.7), constrained_layout=True, sharex=True)
@@ -202,17 +207,23 @@ class Postprocessor:
         fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
-        # Plot Simulation Data
+        # Plot Simulation Data Wall & Center
         w_i, T, p, u = result.get_2D_values(timestep)
         z_pos = result.get_z_pos() / self.reactor.reactorLength
 
-        axs.plot(z_pos, T[:, 0], color=colors[0], linestyle="--", label="simulation")
+        axs.plot(z_pos, T[:, 0], color=colors[1], linestyle="--", label="simulation center")
+        axs.plot(z_pos, T[:, -1], color=colors[0], linestyle="--", label="simulation wall")
 
-        # Plot Validation Data
+        # Plot Validation Data Wall
         T_wall_val = self.__getValidationData_T_wall("debugging/Val_data_with_Twall.txt")
 
-        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="validation values")
+        axs.plot(T_wall_val[0], T_wall_val[1], color=colors[0], linestyle="-", label ="validation wall")
 
+        # Plot Validation Data Center
+
+        T_center_val = self.__getValidationData_T_center("debugging/Val_data_with_Twall.txt")
+
+        axs.plot(T_center_val[0], T_center_val[1], color=colors[1], linestyle="-", label ="validation center")
 
         # Axis
         axs.set_ylabel(r'$T_{\mathregular{wall}} / K$')

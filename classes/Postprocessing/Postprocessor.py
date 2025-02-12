@@ -38,7 +38,7 @@ class Postprocessor:
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
         # Plot Simulation Data
-        w_i, T, u, p = result.get_values(timestep)
+        w_i, T, p, u = result.get_values(timestep)
         z_pos = result.get_z_pos()/self.reactor.reactorLength
 
         axs[0].plot(z_pos, w_i[:, 0], color=colors[0], linestyle="--", label="CH4")

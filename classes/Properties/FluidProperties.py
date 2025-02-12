@@ -130,7 +130,7 @@ class FluidProperties(Parameters):
         return fluid_thermal_conductivity
 
     def __calc_compActivity(self, molar_weight_i, molar_weight_j, viscosity_i, viscosity_j):
-        # Component activity for viscos mixing rule utilized in calculating thermal conductivity of a fluid mixture
+        # Component activity for viscous mixing rule utilized in calculating thermal conductivity of a fluid mixture
         compActivity = (
                 (1 + CasADi.sqrt(viscosity_i / viscosity_j) * (molar_weight_j / molar_weight_i) ** (1 / 4)) ** 2 /
                 (CasADi.sqrt(8 * (1 + molar_weight_i / molar_weight_j))))

@@ -6,10 +6,10 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 40
-n_radial = 6
+n_axial = 20
+n_radial = 3
 time_end = 3000
-time_steps = 600
+time_steps = 400
 precision = 1e-10
 
 
@@ -20,8 +20,8 @@ precision = 1e-10
 # integrator = Integrator(reactor)
 # integrator.setup(precision, precision, 0, time_end, time_steps)
 # results = integrator.integrate()
-#postprocessor = Postprocessor(reactor, "../results/01")
-#postprocessor.plot_1D_vs_ValidationData("test", results, time_end)
+# postprocessor = Postprocessor(reactor, "../results/01")
+# postprocessor.plot_1D_vs_ValidationData("test", results, time_steps)
 
 
 ## 2D CASE WITH RESULT PLOTS FOR T, P, U AND CONVERSION X_CO2
@@ -34,6 +34,9 @@ integrator = Integrator(reactor)
 integrator.setup(precision, precision, 0, time_end, time_steps)
 results = integrator.integrate()
 postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot2D_Temperature("test2", results,10)
+postprocessor.plot2D_Temperature("test2", results, 20)
+postprocessor.plot2D_Temperature("test2", results,50)
 postprocessor.plot2D_Temperature("test2", results,time_steps)
 postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 

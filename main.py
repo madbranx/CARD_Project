@@ -6,11 +6,11 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 5
-n_radial = 60
-time_end = 3000
-time_steps = 400
-precision = 1e-4
+n_axial = 60
+n_radial = 25
+time_end = 16
+time_steps = time_end*5
+precision = 1e-10
 
 
 ## 1D CASE WITH VALIDATION PLOT
@@ -25,8 +25,7 @@ precision = 1e-4
 
 
 ## 2D CASE WITH RESULT PLOTS FOR T, P, U AND CONVERSION X_CO2
-## WITH VALIDATION OF WALL TEMPERATURE
-## WITH COMPARISION OF CENTER VALUES 1D VS 2D #TODO (TBD!)
+## WITH VALIDATION OF TEMPERATURE at outermost and innermost cell
 
 reactor = FixedBedReactor(2, n_axial, n_radial)
 reactor.setup()
@@ -34,15 +33,36 @@ integrator = Integrator(reactor)
 integrator.setup(precision, precision, 0, time_end, time_steps)
 results = integrator.integrate()
 postprocessor = Postprocessor(reactor, "../results/02")
-postprocessor.plot2D_Temperature("test2", results,10)
+postprocessor.plot2D_Temperature("test2", results,2)
 postprocessor.plot2D_Temperature("test2", results, 20)
 postprocessor.plot2D_Temperature("test2", results,50)
 postprocessor.plot2D_Temperature("test2", results,time_steps)
 postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 
-## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
+## 2D Case with 1 radial Element, Plot together with 1D and Validation Date
 
+# # 2D with 1 axial element
+# reactor_2D = FixedBedReactor(2, 100, 1)
+# reactor_2D.setup()
+# integrator = Integrator(reactor_2D)
+# integrator.setup(precision, precision, 0, time_end, time_steps)
+# results_2D = integrator.integrate()
+#
+# # 1D
+# reactor_1D = FixedBedReactor(1, 100)
+# reactor_1D.setup()
+# integrator = Integrator(reactor_1D)
+# integrator.setup(precision, precision, 0, time_end, time_steps)
+# results_1D = integrator.integrate()
+#
+# # Plotting
+# postprocessor = Postprocessor(reactor_2D, "../results/02")
+# postprocessor.plot1D_vsPseudo1D_vs_val("test2", results_1D, results_2D, time_steps)
+#
+
+## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
+#
 # # setting up reactor and integrator
 # reactor = FixedBedReactor(2, n_axial, n_radial)
 # reactor.T_wall = 550 # Temperature for ignited reactor
@@ -57,7 +77,7 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 # # calculating arcs
 # results_ignition = []
 # results_extinction = []
-# T_walls = np.linspace(400, 550, 25)
+# T_walls = np.linspace(200, 650, 25)
 # for T_wall in T_walls:
 #     print("T_wall = ", T_wall)
 #     # calculating ignition arcs

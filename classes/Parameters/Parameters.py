@@ -20,7 +20,7 @@ class Parameters:
         self.cat_diameter = 0.002  # m
         self.cat_tortuosity = 2  # -
         self.cat_porosity = 0.6  # -
-        self.cat_emissionCoefficient = 0.9  # -
+        self.cat_emissionCoefficient = 0.9  # TODO Quelle, temporärer Wert der an sich stimmt
 
         self.reactor_thermalConductivity = 20   # W/(m K)    # Bremer
         self.reactor_wallThickness = 0.002       # m   # Bremer
@@ -28,7 +28,7 @@ class Parameters:
 
         self.diameter_pore=10e-9
 
-        self.eps = self.calculate_void_fraction() # = 0.409 for 0.002 cat diameter
+        self.eps = self.__calculate_void_fraction() # = 0.409
         #self.eps = 0.4 # given by task
 
         self.T_in = 300  # K
@@ -138,7 +138,7 @@ class Parameters:
 
         self.cat = cat
 
-    def calculate_void_fraction(self):
+    def __calculate_void_fraction(self):
         ratio = self.cat_diameter / self.reactorDiameter
 
         if ratio <= 0.5:

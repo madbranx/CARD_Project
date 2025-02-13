@@ -181,7 +181,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 # 3.4) Setting Energy Conservation ODE
                 self.ODE_T[current] = ((
                                        - axial_convectiveHeatFlux
-                                       - axial_heatConduction
+                                       #- axial_heatConduction
                                        - radial_heatConduction #TODO
                                        + reactionHeat
                                        ) / (self.rho_cp_eff(w_i[current, :].T, T[current], p[current])))

@@ -257,10 +257,61 @@ class Postprocessor:
         axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
         axs.set_ylabel(r'$Conversion CO2 / -$')
 
-        axs.set_xlim(300, 700)
+        #axs.set_xlim(300, 700)
 
         axs.legend()
         plt.show()
 
+
+    def plot1D_vsPseudo1D_vs_val(self, name, result1D, resultP1D, timestep):
+        fig, axs = plt.subplots(4, 1, figsize=(4.2, 5.7), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        # Plot Simulation Data 1D
+        w_i, T, p, u = result1D.get_values(timestep)
+        z_pos = result1D.get_z_pos() / self.reactor.reactorLength
+
+        axs[0].plot(z_pos, w_i[:, 0], color=colors[0], linestyle="--", label="CH4")
+        axs[0].plot(z_pos, w_i[:, 1], color=colors[1], linestyle="--", label="H2O")
+        axs[0].plot(z_pos, w_i[:, 2], color=colors[2], linestyle="--", label="CO2")
+        axs[0].plot(z_pos, w_i[:, 3], color=colors[3], linestyle="--", label="H2")
+        axs[1].plot(z_pos, T, color=colors[0], linestyle="--")
+        axs[2].plot(z_pos, u, color=colors[0], linestyle="--")
+        axs[3].plot(z_pos, p * 1e-5, color=colors[0], linestyle="--", label="1D")
+
+        # Plot Simulation Data P1D
+        w_i_2D, T_2D, p_2D, u_2D = resultP1D.get_values(timestep)
+        z_pos_2D = resultP1D.get_z_pos() / self.reactor.reactorLength
+
+        axs[0].plot(z_pos_2D, w_i_2D[:, 0], color=colors[0], linestyle=":")
+        axs[0].plot(z_pos_2D, w_i_2D[:, 1], color=colors[1], linestyle=":")
+        axs[0].plot(z_pos_2D, w_i_2D[:, 2], color=colors[2], linestyle=":")
+        axs[0].plot(z_pos_2D, w_i_2D[:, 3], color=colors[3], linestyle=":")
+        axs[1].plot(z_pos_2D, T_2D, color=colors[0], linestyle=":")
+        axs[2].plot(z_pos_2D, u_2D, color=colors[0], linestyle=":")
+        axs[3].plot(z_pos_2D, p_2D * 1e-5, color=colors[0], linestyle=":", label = "P1D")
+
+        # Plot Validation Data
+        w_i_val, T_val, u_val, p_val = self.__getValidationData("debugging/Validation_Data.txt")
+
+        axs[0].plot(w_i_val[0][0], w_i_val[0][1], color=colors[0], linestyle="-")
+        axs[0].plot(w_i_val[1][0], w_i_val[1][1], color=colors[1], linestyle="-")
+        axs[0].plot(w_i_val[2][0], w_i_val[2][1], color=colors[2], linestyle="-")
+        axs[0].plot(w_i_val[3][0], w_i_val[3][1], color=colors[3], linestyle="-")
+        axs[1].plot(T_val[0], T_val[1], color=colors[0], linestyle="-")
+        axs[2].plot(u_val[0], u_val[1], color=colors[0], linestyle="-")
+        axs[3].plot(p_val[0], p_val[1], color=colors[0], linestyle="-", label="val")
+
+        axs[3].legend()
+        # Axis
+        axs[0].set_ylabel(r'$w_{\mathregular{A}}$')
+        axs[1].set_ylabel(r'$T \; \mathregular{/K}$')
+        axs[2].set_ylabel(r'$u \; \mathregular{/ms^{-1}}$')
+        axs[3].set_ylabel(r'$p / bar$')
+        axs[3].set_xlabel(r'$z/L$')
+
+        axs[0].legend()
+
+        plt.show()
 
 

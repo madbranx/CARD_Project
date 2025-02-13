@@ -85,7 +85,7 @@ class EnergyConservation(Kinetics):
 
         if wTpu_out is None: # Wall Boundary Condition
             alpha_wall = self.calc_heatTransferCoefficient_wall(wTpu)
-            T_inner_wall = self.calc_innerWallTemperature()
+            T_inner_wall = self.calc_innerWallTemperature(wTpu)
             q_r_out = -alpha_wall * (T - T_inner_wall)
         else:
             T_out = wTpu_out[1]
@@ -162,7 +162,7 @@ class EnergyConservation(Kinetics):
         Reynold = self.Re_0(T, p, u, w_i)
         Prandtl = self.Pr(w_i, T)
 
-        Nusselt = (1.3 + 5 * reactorDiameter / catDiameter) * lambda_bed / lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
+        Nusselt = (1.3 + 5 * catDiameter/ reactorDiameter) * lambda_bed / lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
 
         alpha_wall = Nusselt * lambda_fl / catDiameter
         return alpha_wall
@@ -171,6 +171,10 @@ class EnergyConservation(Kinetics):
         k_jacket = 1 / (1 / self.reactor_thermalConductivity * CasADi.log(((self.reactorDiameter/2) + self.reactor_wallThickness) / (self.reactorDiameter/2)))
         return k_jacket
 
-    def calc_innerWallTemperature(self):
-        #TODO
-        return self.T_wall
+    def calc_innerWallTemperature(self, wTpu):
+        T = wTpu[1]
+        k_jac = self.calc_resistanceWall()
+        alpha = self.calc_heatTransferCoefficient_wall(wTpu)
+        T_wall_out = self.T_wall
+        T_wall_in = (alpha*T+k_jac*T_wall_out)/(alpha+k_jac)
+        return T_wall_in

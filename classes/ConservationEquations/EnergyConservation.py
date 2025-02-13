@@ -30,7 +30,7 @@ class EnergyConservation(Kinetics):
 
     def __Pe_eff(self, T, w_i, u, p):
         Pe_z_fl = 2
-        lambda_fl = self.massFraction_weighted_average(w_i, Component.THERMAL_CONDUCTIVITY, T)
+        lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
         lambda_cat = self.cat.get_property(Component.THERMAL_CONDUCTIVITY, T)
 
         Re = self.Re(w_i, T, u, p)
@@ -38,34 +38,6 @@ class EnergyConservation(Kinetics):
 
         Pe_eff = 1/((1/Pe_z_fl)+((lambda_cat/lambda_fl)/(Re/Pr)))
         return Pe_eff
-
-    ## RADIAL HEAT CONDUCTION
-    def effRadialThermalConductivity(self, T, T_in, T_out, p, w_i, delta_r_centeroids_in, delta_r_centeroids_out, delta_r_faces, r_face_in, r_face_out, r_centeroid):
-        thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
-
-        #thermalConductivity_radial = 50 # TODO test
-
-        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centeroids_in
-        q_r_out = -thermalConductivity_radial * (T_out - T) / delta_r_centeroids_out
-
-        radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
-        return radial_heat_conduction
-
-
-    def wallRadialThermalConductivity(self, T, T_in, p, w_i, delta_r_centroids_in, delta_r_faces, r_face_in, r_face_out, r_centeroid):
-        thermalConductivity_radial = self.calc_thermalConductivity_bed(T, w_i, p)
-        alpha_wall = self.calc_heatTransferCoefficient_contact(T, p, w_i)
-        T_inner_wall = self.calc_innerWallTemperature(T, p, w_i)
-
-        #thermalConductivity_radial = 50 # TODO test
-
-        q_r_in = -thermalConductivity_radial * (T - T_in) / delta_r_centroids_in
-        q_r_out = -alpha_wall * (T_inner_wall - T)                   # TODO stimmt das so?
-
-        radial_heat_conduction = 1 / r_centeroid * (q_r_out * r_face_out - q_r_in * r_face_in) / delta_r_faces
-        return radial_heat_conduction
-
-
 
 
     ## REACTION HEAT
@@ -75,132 +47,134 @@ class EnergyConservation(Kinetics):
 
         return -(1-self.eps) * eff_factor * reaction_rate * self.reactionEnthalpy
 
-    ## Methodes for calculating radial heat conduction
 
-    def calc_thermalConductivity_bed(self, T, w_i, p):
-        k_G = self.calc_k_g(T, p, w_i)
-        k_cat = self.calc_k_cat(T, w_i)
-        k_rad = self.calc_k_rad(T, w_i)
-        k_c = self.calc_k_c(T, p, w_i)
+    ## RADIAL HEAT CONDUCTION
+    def radial_heatConduction(self, radial_discretization, r, u_center, wTpu, wTpu_in=None, wTpu_out=None):
+        T = wTpu[1]
 
-        thermalConductivity_bed = (((1 - CasADi.sqrt(1 - self.eps)) * self.eps * (1/(self.eps - 1 + 1/k_G) + k_rad)
-                                    + CasADi.sqrt(1 - self.eps) * (self.cat_flatteningCoefficient * k_cat + (1 - self.cat_flatteningCoefficient) * k_c)
-                                    ) * self.calc_fluid_conductivity(T, w_i))
+        # Get Radial Discretization Values
+        radial_centroids = radial_discretization.get_centroids()
+        radial_faces = radial_discretization.get_faces()
+        radial_faces_diff = radial_discretization.get_differences_faces()
+        radial_centroids_diff = radial_discretization.get_differences_centroids()
+
+        r_centroid = radial_centroids[r]
+        r_face_in = radial_faces[r]
+        r_face_out = radial_faces[r + 1]
+        diff_faces = radial_faces_diff[r]
+
+        # Calculate Thermal Conductivity of the current cell
+        lambda_radial_center = self.calc_effective_radial_thermal_conductivity(wTpu, u_center, r_centroid)
+
+        if wTpu_in is None: # Symmetry Boundary Condition
+            q_r_in = 0
+        else:
+            T_in = wTpu_in[1]
+            # Calculate Thermal Conductivity of the inlet cell
+            lambda_radial_inlet = self.calc_effective_radial_thermal_conductivity(wTpu_in, u_center, radial_centroids[r - 1])
+
+            # Calculate the mean of the lambda inlet and current
+            diff_faces_inlet = radial_faces_diff[r-1]
+            diff_faces_center = radial_faces_diff[r]
+            lambda_radial_in = (lambda_radial_inlet*diff_faces_inlet + lambda_radial_center*diff_faces_center) / (
+                    diff_faces_inlet + diff_faces_center)
+
+            # calculating heat flux over inlet face
+            diff_centroids_in = radial_centroids_diff[r - 1]
+            q_r_in = -lambda_radial_in * (T_in - T) / diff_centroids_in
+
+        if wTpu_out is None: # Wall Boundary Condition
+            alpha_wall = self.calc_heatTransferCoefficient_wall(wTpu)
+            T_inner_wall = self.calc_innerWallTemperature(wTpu)
+            q_r_out = -alpha_wall * (T - T_inner_wall)
+        else:
+            T_out = wTpu_out[1]
+            # Calculate Thermal Conductivity of the outlet cell
+            lambda_radial_outlet = self.calc_effective_radial_thermal_conductivity(wTpu_out, u_center, radial_centroids[r + 1])
+
+            # Calculate the mean of the lambda outlet and current
+            diff_faces_center = radial_faces_diff[r]
+            diff_faces_outlet = radial_faces_diff[r+1]
+            lambda_radial_out = (lambda_radial_outlet * diff_faces_outlet + lambda_radial_center * diff_faces_center) / (
+                        diff_faces_outlet + diff_faces_center)
+
+            # calculating heat flux over outlet face
+            diff_centroids_out = radial_centroids_diff[r]
+            q_r_out = -lambda_radial_out * (T - T_out)  / diff_centroids_out
+
+        # calculating total heat conduction
+        radial_heat_conduction = 1 / r_centroid * (q_r_in * r_face_in - q_r_out * r_face_out) / diff_faces
+        return radial_heat_conduction
+
+
+    ## Methods for calculating radial heat conduction
+
+    def calc_effective_radial_thermal_conductivity (self, wTpu, u_center, r_centroid):
+        [w_i, T, p, u] = wTpu
+        reactor_radius = self.reactorDiameter/2
+        cat_diameter = self.cat_diameter
+
+        thermalConductivity_fluid = self.calc_fluidThermalConductivity(T, w_i)
+        thermalConductivity_bed = self.calc_thermalConductivity_bed(T, w_i)
+
+
+        Reynold = self.Re_0(T, p, u, w_i)
+        Peclet = self.Pe_0(T, p, u, w_i)
+
+        K2 = 0.44 + 4 * CasADi.exp(-Reynold/70)
+
+        f =  CasADi.if_else((reactor_radius - r_centroid) <= K2 * cat_diameter,         # Condition
+                                ((reactor_radius - r_centroid) / K2 * cat_diameter) ** 2,     # if True
+                                1                                                             # if False
+                            )
+
+        rad_eff_thermal_conductivity = thermalConductivity_bed + 1/8 * Peclet * u/u_center * f * thermalConductivity_fluid
+        return rad_eff_thermal_conductivity
+
+
+    def calc_thermalConductivity_bed (self, T, w_i):
+        cat_diameter = self.cat_diameter
+        eps = self.eps
+
+        thermalConductivity_fluid = self.calc_fluidThermalConductivity(T, w_i)
+        thermalConductivity_cat = self.cat.get_property(Component.THERMAL_CONDUCTIVITY, T)
+
+        k_rad = 4 * self.radiation_blackBody / (2/self.cat_emissionCoefficient -1) * T**3 * cat_diameter / thermalConductivity_fluid
+        k_p = thermalConductivity_cat / thermalConductivity_fluid
+        B = 1.25 * ((1-eps) / eps) ** (10/9)
+        N = 1 - B/k_p
+        k_c = 2/N * (B/(N**2) * (k_p - 1)/k_p * CasADi.log(k_p/B) - (B + 1)/2 - (B - 1)/N )
+
+        k_bed_stationary = 1 - CasADi.sqrt(1 - eps) + CasADi.sqrt(1 - eps) * k_c
+
+        thermalConductivity_bed = (k_bed_stationary + (1 - CasADi.sqrt(1 - eps)) * k_rad + CasADi.sqrt(1 - eps) * 1 / (1/k_rad + 1/k_p)) * thermalConductivity_fluid
         return thermalConductivity_bed
 
-    def calc_k_c(self, T, p, w_i):
-        N = self.__calc_N(T, p, w_i)
-        B = self.__calc_deformationParameter()
-        k_cat = self.calc_k_cat(T, w_i)
-        k_rad = self.calc_k_rad(T, w_i)
-        k_G = self.calc_k_g(T, p, w_i)
 
-        term1 = ((2/N) * (
-                (B * (k_cat + k_rad - 1)) / (N**2 * k_G * k_cat)
-                * CasADi.log((k_cat + k_rad) / (B * (k_G + (1 - k_G) * (k_cat + k_rad))))
-                ))
-        term2 = (((B + 1) / (2 * B)) * (
-                (k_rad / k_G) - B * (1 + ((1 - k_G) / k_G) * k_rad)
-                ))
-        term3 = (B - 1) / (N * k_G)
-        return term1 + term2 - term3
+    ## Methodes for calculating wall heat transfer coefficient with Nusselt correlation
 
-    def __calc_N(self, T, p, w_i):
-        N = (1 / self.calc_k_g(T, p, w_i) *
-             (1 + (self.calc_k_rad(T, w_i) - self.__calc_deformationParameter() * self.calc_k_g(T, p, w_i)) / self.calc_k_cat(T, w_i))
-             - self.__calc_deformationParameter() * (1 / self.calc_k_g(T, p, w_i) - 1) * (1 + self.calc_k_rad(T, w_i) / self.calc_k_cat(T, w_i)))
-        return N
+    def calc_heatTransferCoefficient_wall(self, wTpu):
+        [w_i, T, p, u] = wTpu
+        reactorDiameter = self.reactorDiameter
+        catDiameter = self.cat_diameter
+        lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
+        lambda_bed = self.calc_thermalConductivity_bed(T, w_i)
+        Reynold = self.Re_0(T, p, u, w_i)
+        Prandtl = self.Pr(w_i, T)
 
-    def calc_k_g(self, T, p, w_i):
-        particleDiameter = self.cat_diameter
-        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
-        return 1 / (1 + meanFreePath/particleDiameter)
+        Nusselt = (1.3 + 5 * catDiameter/ reactorDiameter) * lambda_bed / lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
 
-    def __calc_meanFreePath(self, T, p, w_i):
-        # Gas kinetics to calculate mean free path of gas mixture
-        # effective collision area weighted by molar fraction
-        collisionAreas = []
-        moleFractions = self.moleFractions(w_i)
-
-        for component in self.components:
-            collisionAreas.append(component.get_property(Component.COLLISION_AREA))
-        # mole fraction weighted effective collision area
-        eff_collisionArea = sum(moleFractions[component] * collisionAreas[component] for component in range(len(self.components)))
-
-        meanFreePath = 1 / CasADi.sqrt(2) * self.boltzmann * T / (p * eff_collisionArea)
-        return meanFreePath
-
-    def calc_k_cat(self, T, w_i):
-        return self.cat.get_property(Component.THERMAL_CONDUCTIVITY) / self.calc_fluid_conductivity(T, w_i)
-
-    def __calc_deformationParameter(self):
-        return self.cat_shapeFactor * ((1 - self.eps)/self.eps) ** (10/9) * self.cat_distributionFunction
-
-    def calc_k_rad(self, T, w_i):
-        # Heat conduction parameter for radiation
-        radiationCoefficient = self.radiation_blackBody
-        emissionCoefficient = self.cat_emissionCoefficient
-        particleDiameter = self.cat_diameter
-
-        k_rad = 4 * radiationCoefficient / (2/emissionCoefficient - 1) * T**3 * particleDiameter / self.calc_fluid_conductivity(T, w_i)
-        return k_rad
-
-    def calc_fluid_conductivity(self, T, w_i):
-        # Get component properties
-        viscosity = []
-        thermal_conductivity = []
-        molar_weight = []
-        for component in self.components:
-            viscosity.append(component.get_property(Component.DYNAMIC_VISCOSITY, T))
-            thermal_conductivity.append(component.get_property(Component.THERMAL_CONDUCTIVITY, T))
-            molar_weight.append(component.get_property(Component.MOLECULAR_WEIGHT))
-        moleFraction = self.moleFractions(w_i)
-
-        # Calculate the gas mixture thermal conductivity employing viscosity mixing rule
-        fluid_conductivity = (sum(moleFraction[comp_i] * thermal_conductivity[comp_i] / (
-            sum(moleFraction[comp_j] *
-            self.__calc_compActivity(molar_weight[comp_i], molar_weight[comp_j], viscosity[comp_i], viscosity[comp_j])
-            for comp_j in range(len(self.components))))
-        for comp_i in range(len(self.components))))
-        return fluid_conductivity
-
-
-    def __calc_compActivity(self, molar_weight_i, molar_weight_j, viscosity_i, viscosity_j):
-        compActivity = ((1 + CasADi.sqrt(viscosity_i/viscosity_j) * (molar_weight_j/molar_weight_i)**(1/4))**2 /
-                        (CasADi.sqrt(8 * (1 + molar_weight_i/molar_weight_j))))
-        return compActivity
-
-
-    ### Methodes for calculating wall heat transfer coefficient
-
-    def __calc_heatTransferCoefficient_rad(self, T):
-        C_w = self.radiation_blackBody / (1/self.reactor_emissionCoefficient + 1/self.cat_emissionCoefficient -1)
-        alpha_rad = 4 * C_w * T**3
-        return alpha_rad
-
-    def __calc_heatTransferCoefficient_cond(self, T, p, w_i):
-        particleDiameter = self.cat_diameter
-        conductivity_fluid = self.calc_fluid_conductivity(T, w_i)
-        meanFreePath = self.__calc_meanFreePath(T, p, w_i)
-        reactor_wallThickness = self.reactor_wallThickness
-
-        alpha_cond = 4 * conductivity_fluid / particleDiameter * (
-                    (1 + 2 * (meanFreePath + reactor_wallThickness) / particleDiameter) *
-                    CasADi.log(1 + particleDiameter / (2 * (meanFreePath + reactor_wallThickness))) - 1)
-        return alpha_cond
-
-    def calc_heatTransferCoefficient_contact(self, T, p, w_i):
-        return 600 # TODO test
-        #return self.reactor_areaCoverage * self.__calc_heatTransferCoefficient_cond(T, p, w_i) + self.__calc_heatTransferCoefficient_rad(T)
+        alpha_wall = Nusselt * lambda_fl / catDiameter
+        return alpha_wall
 
     def calc_resistanceWall(self):
         k_jacket = 1 / (1 / self.reactor_thermalConductivity * CasADi.log(((self.reactorDiameter/2) + self.reactor_wallThickness) / (self.reactorDiameter/2)))
         return k_jacket
 
-    def calc_innerWallTemperature(self, T, p, w_i):
-        alpha_bed = self.calc_heatTransferCoefficient_contact(T, p, w_i)
-        alpha_wall = self.calc_resistanceWall() / self.reactor_wallThickness
-        T_wall = self.T_wall
-        #return (alpha_bed * T + alpha_wall * T_wall) / (alpha_bed + alpha_wall)    #TODO stimmt nicht!
-        return self.T_wall
-
+    def calc_innerWallTemperature(self, wTpu):
+        T = wTpu[1]
+        k_jac = self.calc_resistanceWall()
+        alpha = self.calc_heatTransferCoefficient_wall(wTpu)
+        T_wall_out = self.T_wall
+        T_wall_in = (alpha*T+k_jac*T_wall_out)/(alpha+k_jac)
+        return T_wall_in

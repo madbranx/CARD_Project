@@ -16,13 +16,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         if dimension == 1:
             n_radial = 1
 
-        ranges_z = [[0, self.reactorLength*0.1, 1], [self.reactorLength*0.1, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
-        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
-        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        # ranges_z = [[0, self.reactorLength*0.1, 1], [self.reactorLength*0.1, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
+        # self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
-        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
-        #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
+        # ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
+        # self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
             self.n_spatial = self.axial_discretization.num_volumes
@@ -75,17 +75,32 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         p = self.p
         u = self.u
 
-        radial_deltas = self.radial_discretization.get_differences_faces()
-        axial_deltas = self.axial_discretization.get_differences_faces()
+        radial_faces_deltas = self.radial_discretization.get_differences_faces()
+        axial_faces_deltas = self.axial_discretization.get_differences_faces()
+        axial_centroids_deltas = self.axial_discretization.get_centroids()
 
-        for r, delta_r in enumerate(radial_deltas):
-            for z, delta_z in enumerate(axial_deltas):
+        for r, delta_faces_r in enumerate(radial_faces_deltas):
+            for z, delta_faces_z in enumerate(axial_faces_deltas):
 
             ## Setting Radial and Axial Indexes
-                current = z + r * len(axial_deltas)
+                current = z + r * len(axial_faces_deltas)
                 before_z = current - 1
-                before_r = current - len(axial_deltas)
-                after_r = current + len(axial_deltas)
+                after_z = current + 1
+                before_r = current - len(axial_faces_deltas)
+                after_r = current + len(axial_faces_deltas)
+
+                # print("\npositions (z, r)", z, r)
+                # print("index (current, z-1, r-1, r+1)",current, before_z, before_r, after_r, "\n")
+                #
+                #
+                # test_radial_centroids = self.radial_discretization.get_centroids()
+                # print("radial centroids (r-1, r, r+1)", test_radial_centroids[r-1], test_radial_centroids[r], test_radial_centroids[r+1])
+                # test_radial_faces = self.radial_discretization.get_faces()
+                # print("radial faces (r-1, r, r+1)", test_radial_faces[r-1], test_radial_faces[r], test_radial_faces[r+1])
+                # test_axial_faces = self.axial_discretization.get_faces()
+                #
+                #
+                # print("axial faces (z-1, r, r+1)", test_axial_faces[z - 1], test_axial_faces[z])
 
 
             ## 1) MASS CONSERVATION
@@ -116,27 +131,45 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 else:
                     delta_p =  p[current] - p[before_z]
 
-                self.AE_p[current] = delta_p / delta_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
+                self.AE_p[current] = delta_p / delta_faces_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
 
             ## 3) ENERGY CONSERVATION
 
                 # 3.1) Axial Energy Conversation
                 if z == 0:  # Inlet Boundary Condition
-                    delta_T =  (T[current] - self.T_in)
+                    delta_T_in =  (T[current] - self.T_in)
                 else:
-                    delta_T =  (T[current] - T[before_z])
+                    delta_T_in =  (T[current] - T[before_z])
+
+                if z == len(axial_faces_deltas)-1:
+                    delta_T_out = 0
+                else:
+                    delta_T_out = (T[after_z]- T[current])
+
 
                 # 3.1.1) Axial Convective Heat Flux
-                axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T / delta_z
+                axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T_in / delta_faces_z
 
                 # 3.1.2) Axial Heat Conduction
                 lambda_eff_axial = self.effAxialThermalConductivity(T[current], w_i[current, :].T, u[current], p[current])
-                axial_heatConduction = (-lambda_eff_axial) * delta_T / (delta_z ** 2)
+                if z == 0:  # Inlet Boundary Condition
+                    delta_T_in = (self.T_in - T[current])
+                else:
+                    delta_T_in = (T[before_z] - T[current])
+                q_z_in = (-lambda_eff_axial) * delta_T_in / axial_centroids_deltas[z - 1]
+
+                if z == len(axial_faces_deltas) - 1:
+                    q_z_out = 0
+                else:
+                    delta_T_out = (T[current] - T[after_z])
+                    q_z_out = (-lambda_eff_axial) * delta_T_out / axial_centroids_deltas[z]
+
+                axial_heatConduction = (q_z_in - q_z_out)/delta_faces_z
 
                 ## 3.2) Radial Energy Conversation
                 if self.dimension == 2:
                     wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
-                    u_center = u[current-r*len(axial_deltas)]
+                    u_center = u[current-r*len(axial_faces_deltas)]
                     radial_heatConduction = self.radial_heatConduction(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
 
                 else: # 1D radial thermal conduction with U_radial = const.
@@ -158,9 +191,9 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     # 4.1) Axial Species Conversation
                     if z == 0:  # Inlet Boundary Condition
-                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, self.w_i_in, u[current], p[current], comp) / delta_z
+                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, self.w_i_in, u[current], p[current], comp) / delta_faces_z
                     else:
-                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, w_i[before_z, :].T, u[current], p[current], comp) / delta_z
+                        axialMassFlow = self.axialMassFlow(T[current], w_i[current, :].T, w_i[before_z, :].T, u[current], p[current], comp) / delta_faces_z
 
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:

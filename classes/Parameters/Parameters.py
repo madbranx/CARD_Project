@@ -28,8 +28,8 @@ class Parameters:
 
         self.diameter_pore=10e-9
 
-        #self.eps = self.__calculate_void_fraction()
-        self.eps = 0.4 # given by task
+        self.eps = self.__calculate_void_fraction() # = 0.409
+        #self.eps = 0.4 # given by task
 
         self.T_in = 300  # K
         self.u_in= 1  # m/s

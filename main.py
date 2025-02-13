@@ -6,11 +6,11 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 20
-n_radial = 3
+n_axial = 5
+n_radial = 60
 time_end = 3000
 time_steps = 400
-precision = 1e-10
+precision = 1e-4
 
 
 ## 1D CASE WITH VALIDATION PLOT

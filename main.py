@@ -6,11 +6,18 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 60
-n_radial = 25
-time_end = 16
-time_steps = time_end*5
-precision = 1e-10
+n_axial = 200
+n_radial = 75
+time_end = 3000
+time_steps = time_end*10
+precision = 1e-10 # aktuell direkt implementiert in Integrator, Wert hier keinen Einfluss
+
+#TODO: Konvergenzprobleme bei unterschiedlichen ... abhängig von der Diskretisierung.. warum?
+# bei größeren radialen Diskretisierungen fängt sich der Solver eher als bei kleinen
+# .
+# Anstieg Wall & Center zu weit im Reaktor und zu langsames Abkühlen -> Lambda Radial zu niedrig?
+# Nur berechenbar bei n_radial <5 -> könnte das den Fehler verursachen? -> quasi keinen unterschied zwischen n_rad = 3 und n_rad = 4 --> unwahrscheinlich
+# -> Lambda radial/Implementierung überprüfen
 
 
 ## 1D CASE WITH VALIDATION PLOT
@@ -32,11 +39,12 @@ reactor.setup()
 integrator = Integrator(reactor)
 integrator.setup(precision, precision, 0, time_end, time_steps)
 results = integrator.integrate()
+
 postprocessor = Postprocessor(reactor, "../results/02")
-postprocessor.plot2D_Temperature("test2", results,2)
-postprocessor.plot2D_Temperature("test2", results, 20)
-postprocessor.plot2D_Temperature("test2", results,50)
-postprocessor.plot2D_Temperature("test2", results,time_steps)
+plot_times = [1, 5, 10, 50, 100] # in %
+for plot_time in plot_times:
+    postprocessor.plot2D_Temperature("test2", results, int(plot_time/100*time_steps))
+
 postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 
@@ -61,7 +69,9 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 # postprocessor.plot1D_vsPseudo1D_vs_val("test2", results_1D, results_2D, time_steps)
 #
 
+
 ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
+#TODO ARCs for 1D
 #
 # # setting up reactor and integrator
 # reactor = FixedBedReactor(2, n_axial, n_radial)
@@ -77,23 +87,31 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 # # calculating arcs
 # results_ignition = []
 # results_extinction = []
-# T_walls = np.linspace(200, 650, 25)
-# for T_wall in T_walls:
+#
+# # calculating ignition arcs
+# T_walls_ign = np.linspace(250, 650, 15)
+# T_walls_ext = T_walls_ign
+# for T_wall in T_walls_ign:
 #     print("T_wall = ", T_wall)
-#     # calculating ignition arcs
 #     reactor.T_wall = T_wall
 #     reactor.setup()
 #     integrator.refresh()
 #     result_ignition = integrator.integrate()
 #     results_ignition.append(result_ignition)
-#     # calculating extinction arcs
 #     integrator.refresh()
 #     integrator.set_specific_InitialValues(w_i, T, p, u)
 #     result_extinction = integrator.integrate()
 #     results_extinction.append(result_extinction)
-#
-# postprocessor = Postprocessor(reactor, "../results/02")
-# postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
+
+# T_walls_ext = np.linspace(250, 650, 20)
+# calculating ignition arcs
+# for T_wall in T_walls_ext:
+#     reactor.T_wall = T_wall
+#     reactor.setup()
+
+
+postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
 
 
 # # TESTING FUNCTION

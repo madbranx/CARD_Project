@@ -28,7 +28,23 @@ class Integrator:
         self.p_res = None
 
     def refresh(self):
-        options = {'abstol': self.abstol, 'reltol': self.reltol}
+        options = {
+            #"calc_ic": True,
+            'abstol': 1e-8,
+            #"scale_abstol": True,
+            'reltol': 1e-6,
+            "step0": 0.001,
+            "max_step_size": 0.01,
+            "max_num_steps": 10000,
+            "newton_scheme": "direct",
+            # "newton_scheme": "bcgstab",
+            # "max_krylov": 100,
+            # "max_multistep_order": 4,
+             "print_time": True,
+             "verbose": True,
+             "disable_internal_warnings": False,
+        }
+
         dae = self.reactor.DAE
         timepoints = self.time_discretization.get_faces()
 

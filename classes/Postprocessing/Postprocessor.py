@@ -233,7 +233,7 @@ class Postprocessor:
 
         plt.show()
 
-    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls, timestep):
+    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls_ign, T_walls_ext, timestep):
         self.setSizes()
 
         X_CO2_ign = []
@@ -249,8 +249,8 @@ class Postprocessor:
         fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
-        axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="-", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(T_walls, X_CO2_ext, color=colors[1], linestyle="-", linewidth=2, marker='v',
+        axs.plot(T_walls_ign, X_CO2_ign, color=colors[0], linestyle="-", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+        axs.plot(T_walls_ext, X_CO2_ext, color=colors[1], linestyle="-", linewidth=2, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
 
         # Axis
@@ -313,5 +313,35 @@ class Postprocessor:
         axs[0].legend()
 
         plt.show()
+
+
+    def check_sum_wi(self, result, tol):
+        for timestep in result.timeDiscretization.get_faces():
+            w_i, T, p, u = result.get_2D_values(int(timestep))
+            for z in range(len(result.axialDiscretization.get_centroids())):
+                for r in range(len(result.radialDiscretization.get_centroids())):
+                    summ = 0
+                    for i in range(len(w_i)):
+                        summ += w_i[i][z][r]
+                    if abs(1-summ) >= tol:
+                        print("deviation in sum w_i at timestep " + str(timestep) + " at coordinate (" + str(z) + "," +str(r) + "): sum(w_i) = " + str(summ))
+
+        # import pandas as pd
+        # # Beispiel-Daten (ersetze dies mit deinen echten Arrays)
+        # w_values = np.array(w_i)  # Stoffmengen / Massenanteile
+        # T_values = np.array(T)  # Temperatur
+        # p_values = np.array(p)  # Druck
+        # u_values = np.array(u)  # Geschwindigkeit
+        #
+        # # Daten als Spalten zusammenfügen
+        # data = np.column_stack(T_values)
+        #
+        # # DataFrame erstellen
+        # df = pd.DataFrame(data)
+        #
+        # # Speichern als CSV
+        # df.to_csv("simulation_data.csv", index=False)
+        #
+
 
 

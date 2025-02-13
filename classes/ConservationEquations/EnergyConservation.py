@@ -162,7 +162,7 @@ class EnergyConservation(Kinetics):
         Reynold = self.Re_0(T, p, u, w_i)
         Prandtl = self.Pr(w_i, T)
 
-        Nusselt = (1.3 + 5 * reactorDiameter / catDiameter) * lambda_bed / lambda_fl + 0.19 * Reynold**0.75 * Prandtl**(1/3)
+        Nusselt = (1.3 + 5 * catDiameter / reactorDiameter) * lambda_bed / lambda_fl + 0.19 * (Reynold**0.75) * Prandtl**(1/3)
 
         alpha_wall = Nusselt * lambda_fl / catDiameter
         return alpha_wall

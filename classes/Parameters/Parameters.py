@@ -54,7 +54,6 @@ class Parameters:
         # Thermal Conductivity          W/(m K)
         # Dynamic Viscosity             Pa s
         # Molecular Weight              kg/mol
-        # Collision Area                m^2
         # Diffusion Volume              -
 
     # CH4
@@ -71,7 +70,6 @@ class Parameters:
             CH4.add_property(Component.DYNAMIC_VISCOSITY, 1.69511433e-05)
 
         CH4.add_property(Component.MOLECULAR_WEIGHT, 0.01604)
-        CH4.add_property(Component.COLLISION_AREA, 0.46e-18)
         CH4.add_property(Component.DIFFUSION_VOLUME, 25.14)
 
     # H2O
@@ -88,7 +86,6 @@ class Parameters:
             H2O.add_property(Component.DYNAMIC_VISCOSITY, 1.717939125e-05)
 
         H2O.add_property(Component.MOLECULAR_WEIGHT, 0.01802)
-        H2O.add_property(Component.COLLISION_AREA, 0.46e-18)
         H2O.add_property(Component.DIFFUSION_VOLUME, 13.1)
 
     # CO2
@@ -105,7 +102,6 @@ class Parameters:
             CO2.add_property(Component.DYNAMIC_VISCOSITY, 2.390242821e-05)
 
         CO2.add_property(Component.MOLECULAR_WEIGHT, 0.04401)
-        CO2.add_property(Component.COLLISION_AREA, 0.52e-18)
         CO2.add_property(Component.DIFFUSION_VOLUME, 26.9)
 
     # H2
@@ -122,7 +118,6 @@ class Parameters:
             H2.add_property(Component.DYNAMIC_VISCOSITY, 1.27073735)
 
         H2.add_property(Component.MOLECULAR_WEIGHT, 0.002016)
-        H2.add_property(Component.COLLISION_AREA, 0.27e-18)
         H2.add_property(Component.DIFFUSION_VOLUME, 6.12)
 
         # check_temperature = 500

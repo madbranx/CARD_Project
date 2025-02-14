@@ -42,8 +42,8 @@ class Integrator:
             # "max_krylov": 100,
             # "max_multistep_order": 4,
              "print_time": True,
-             "verbose": True,
-             "disable_internal_warnings": False,
+             # "verbose": True,
+             # "disable_internal_warnings": False,
         }
 
         dae = self.reactor.DAE
@@ -55,6 +55,7 @@ class Integrator:
     def setup(self, abstol, reltol, t_start, t_stop, t_steps):
         self.abstol = abstol
         self.reltol = reltol
+
         self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
 
         self.refresh()

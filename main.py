@@ -1,3 +1,4 @@
+from pandas.io.stata import precision_loss_doc
 
 from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
@@ -6,20 +7,12 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 50
-n_radial = 15
-time_end = 3000
+n_axial = 30
+n_radial = 12
+time_end = 2000
 # ACHTUNG FUMMELFAKTOR:
-time_steps = int(time_end*int((n_axial*n_radial)/100)/3)
+time_steps = int(time_end*int((n_axial*n_radial)/100))
 precision = 1e-10 # aktuell direkt implementiert in Integrator, Wert hier keinen Einfluss
-
-#TODO: Konvergenzprobleme bei unterschiedlichen ... abhängig von der Diskretisierung.. warum?
-# bei größeren radialen Diskretisierungen fängt sich der Solver eher als bei kleinen
-# .
-# Anstieg Wall & Center zu weit im Reaktor und zu langsames Abkühlen -> Lambda Radial zu niedrig?
-# Nur berechenbar bei n_radial <5 -> könnte das den Fehler verursachen? -> quasi keinen unterschied zwischen n_rad = 3 und n_rad = 4 --> unwahrscheinlich
-# -> Lambda radial/Implementierung überprüfen
-
 
 ## 1D CASE WITH VALIDATION PLOT
 
@@ -35,18 +28,18 @@ precision = 1e-10 # aktuell direkt implementiert in Integrator, Wert hier keinen
 ## 2D CASE WITH RESULT PLOTS FOR T, P, U AND CONVERSION X_CO2
 ## WITH VALIDATION OF TEMPERATURE at outermost and innermost cell
 
-reactor = FixedBedReactor(2, n_axial, n_radial)
-reactor.setup()
-integrator = Integrator(reactor)
-integrator.setup(precision, precision, 0, time_end, time_steps)
-results = integrator.integrate()
-
-postprocessor = Postprocessor(reactor, "../results/02")
-plot_times = [1, 5, 10, 50, 100] # in %
-for plot_time in plot_times:
-    postprocessor.plot2D_Temperature("test2", results, int(plot_time/100*time_steps))
-
-postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
+# reactor = FixedBedReactor(2, n_axial, n_radial)
+# reactor.setup()
+# integrator = Integrator(reactor)
+# integrator.setup(precision, precision, 0, time_end, time_steps)
+# results = integrator.integrate()
+#
+# postprocessor = Postprocessor(reactor, "../results/02")
+# plot_times = [1, 5, 10, 50, 100] # in %
+# for plot_time in plot_times:
+#     postprocessor.plot2D_Temperature("test2", results, int(plot_time/100*time_steps))
+#
+# postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 
 ## 2D Case with 1 radial Element, Plot together with 1D and Validation Date
@@ -73,45 +66,61 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 
 ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
 #TODO ARCs for 1D
-#
-# # setting up reactor and integrator
-# reactor = FixedBedReactor(2, n_axial, n_radial)
-# reactor.T_wall = 550 # Temperature for ignited reactor
-# reactor.setup()
-# integrator = Integrator(reactor)
-# integrator.setup(precision, precision, 0, time_end, time_steps)
-#
-# # get results of ignited reactor
-# result_ignited = integrator.integrate()
-# w_i, T, p, u = result_ignited.get_rawValues()
-#
-# # calculating arcs
-# results_ignition = []
-# results_extinction = []
-#
-# # calculating ignition arcs
-# T_walls_ign = np.linspace(250, 650, 15)
-# T_walls_ext = T_walls_ign
-# for T_wall in T_walls_ign:
-#     print("T_wall = ", T_wall)
-#     reactor.T_wall = T_wall
-#     reactor.setup()
-#     integrator.refresh()
-#     result_ignition = integrator.integrate()
-#     results_ignition.append(result_ignition)
-#     integrator.refresh()
-#     integrator.set_specific_InitialValues(w_i, T, p, u)
-#     result_extinction = integrator.integrate()
-#     results_extinction.append(result_extinction)
 
-# T_walls_ext = np.linspace(250, 650, 20)
-# calculating ignition arcs
+# setting up reactor and integrator
+n_axial = 30
+n_radial = 12
+precision = 1
+reactor = FixedBedReactor(2, n_axial, n_radial)
+reactor.T_wall = 550 # Temperature for ignited reactor
+reactor.setup()
+integrator = Integrator(reactor)
+
+time_end_ref = 3000
+time_steps_ref = int(time_end_ref * int((n_axial * n_radial) / 100))
+time_end_ign = 3000
+time_steps_ign = int(time_end_ign * int((n_axial * n_radial) / 100))
+time_end_ext = 3000
+time_steps_ext = int(time_end_ext * int((n_axial * n_radial) / 100))
+
+# get results of ignited reactor
+integrator.setup(precision, precision, 0, time_end_ref, time_steps_ref)
+result_ignited = integrator.integrate()
+postprocessor = Postprocessor(reactor, "../results/02")
+postprocessor.plot2D_Temperature("test2", result_ignited, time_steps_ref)
+w_i, T, p, u = result_ignited.get_rawValues()
+
+# calculating arcs
+results_ignition = []
+results_extinction = []
+
+#T_walls_ign = np.linspace(350, 550, 4)
+T_walls_ign = [300, 480, 550]
+#T_walls_ign = [300, 340, 360, 380, 400, 420, 440, 460, 480, 500, 525, 550, 600, 650]
+T_walls_ext = T_walls_ign
+for T_wall in T_walls_ign:
+    # calculating ignition arcs
+    print("T_wall = ", T_wall)
+    reactor.T_wall = T_wall
+    reactor.setup()
+    integrator.setup(precision, precision, 0, time_end_ign, time_steps_ref)
+    result_ignition = integrator.integrate()
+    results_ignition.append(result_ignition)
+    postprocessor.plot2D_Temperature("test2", result_ignition, time_steps_ign)
+    #extinction arcs
+    integrator.setup(precision, precision, 0, time_end_ext, time_steps_ref)
+    integrator.set_specific_InitialValues(w_i, T, p, u)
+    result_extinction = integrator.integrate()
+    results_extinction.append(result_extinction)
+    postprocessor.plot2D_Temperature("test2", result_extinction, time_steps_ext)
+
+# T_walls_ext = np.linspace(250, 550, 5)
+# #calculating ignition arcs
 # for T_wall in T_walls_ext:
 #     reactor.T_wall = T_wall
 #     reactor.setup()
 
-# postprocessor = Postprocessor(reactor, "../results/02")
-# postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
+postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps_ign, time_steps_ext)
 
 
 
@@ -137,10 +146,6 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 # print(reactor.calc_eff_disp_coeff(wTpu1, 3))
 
 
-# Create Ignition/Extinction Arcs:
-#   calc till steady state, plot X over T wall
-#   extinction, last steady state x=1 as starting values
-
 
 #TODO
 # Fix numerical issues & radial dispersion
@@ -153,5 +158,4 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 # .     Extinction / Ignition ARC Plots
 # .     Effectiveness etc. Plot
 # .     RMSE/MAPE for one Value
-# .     Center 2D vs 1D calc / vs 1D validation data
-# .
+

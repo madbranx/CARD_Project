@@ -16,13 +16,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         if dimension == 1:
             n_radial = 1
 
-        # ranges_z = [[0, self.reactorLength*0.1, 1], [self.reactorLength*0.1, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
-        # self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
-        self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        ranges_z = [[0, self.reactorLength*0.05, 1], [self.reactorLength*0.05, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
+        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        # ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
-        # self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
-        self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
+        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
+        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
             self.n_spatial = self.axial_discretization.num_volumes
@@ -89,22 +89,9 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 before_r = current - len(axial_faces_deltas)
                 after_r = current + len(axial_faces_deltas)
 
-                # print("\npositions (z, r)", z, r)
-                # print("index (current, z-1, r-1, r+1)",current, before_z, before_r, after_r, "\n")
-                #
-                #
-                # test_radial_centroids = self.radial_discretization.get_centroids()
-                # print("radial centroids (r-1, r, r+1)", test_radial_centroids[r-1], test_radial_centroids[r], test_radial_centroids[r+1])
-                # test_radial_faces = self.radial_discretization.get_faces()
-                # print("radial faces (r-1, r, r+1)", test_radial_faces[r-1], test_radial_faces[r], test_radial_faces[r+1])
-                # test_axial_faces = self.axial_discretization.get_faces()
-                #
-                #
-                # print("axial faces (z-1, r, r+1)", test_axial_faces[z - 1], test_axial_faces[z])
-
-
             ## 1) MASS CONSERVATION
 
+                # # Dispersion correction
                 # if self.dimension == 2:
                 #     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
                 #
@@ -123,7 +110,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 # else:
                 #     dispersion_correction = 0
 
-                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current]) # - (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
+                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current]) #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
 
             ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
@@ -181,8 +168,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 # 3.4) Setting Energy Conservation ODE
                 self.ODE_T[current] = ((
                                        - axial_convectiveHeatFlux
-                                       #- axial_heatConduction
-                                       - radial_heatConduction #TODO
+                                       - axial_heatConduction
+                                       - radial_heatConduction
                                        + reactionHeat
                                        ) / (self.rho_cp_eff(w_i[current, :].T, T[current], p[current])))
 

@@ -175,6 +175,7 @@ class EnergyConservation(Kinetics):
         T = wTpu[1]
         k_jac = self.calc_resistanceWall()
         alpha = self.calc_heatTransferCoefficient_wall(wTpu)
+        s_jac = self.reactor_wallThickness
         T_wall_out = self.T_wall
-        T_wall_in = (alpha*T+k_jac*T_wall_out)/(alpha+k_jac)
+        T_wall_in = (alpha * T + k_jac/s_jac * T_wall_out) / (alpha + k_jac/s_jac)
         return T_wall_in

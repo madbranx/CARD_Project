@@ -30,11 +30,12 @@ class Integrator:
     def refresh(self):
         options = {
             #"calc_ic": True,
-            'abstol': 1e-8,
+            'abstol': 1e-4,
+            #"abstolv": abstolv,
             #"scale_abstol": True,
-            'reltol': 1e-6,
+            'reltol': 1e-3,
             "step0": 0.001,
-            "max_step_size": 0.01,
+            "max_step_size": 0.1,
             "max_num_steps": 10000,
             "newton_scheme": "direct",
             # "newton_scheme": "bcgstab",

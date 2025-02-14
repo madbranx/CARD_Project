@@ -233,24 +233,39 @@ class Postprocessor:
 
         plt.show()
 
-    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls_ign, T_walls_ext, timestep):
+    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls_ign, T_walls_ext, timestep_ign, timestep_ext):
         self.setSizes()
-
-        X_CO2_ign = []
-        for result in results_ignition:
-            x_CO2_ign = result.getConversion_2D(timestep, 2)
-            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
-
-        X_CO2_ext = []
-        for result in results_extinction:
-            x_CO2_ext = result.getConversion_2D(timestep, 2)
-            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
 
         fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
         colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
-        axs.plot(T_walls_ign, X_CO2_ign, color=colors[0], linestyle="-", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(T_walls_ext, X_CO2_ext, color=colors[1], linestyle="-", linewidth=2, marker='v',
+
+        # Plot Bremer Data
+        T_bremer_ignition = np.array([311, 323, 342, 359, 377, 401, 424, 442, 454, 460, 465, 490, 512, 537, 561, 596])
+        X_bremer_ignition = np.array([0.00333, 0.00355, 0.00388, 0.00418, 0.00776, 0.00980, 0.0298, 0.0871, 0.201,
+                             0.392, 0.930, 0.965, 0.980, 0.985, 0.979, 0.970])
+
+        T_bremer_extinction = np.array([308, 322, 336, 348, 359, 365, 371, 377, 388, 407, 425, 449, 471, 491, 513, 531, 549, 573, 595])
+        X_bremer_extinction = np.array([0.00329, 0.00353, 0.00214, 0.00399, 0.00417, 0.686, 0.826, 0.845, 0.860,
+                     0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984, 0.978, 0.971])
+
+        axs.plot(T_bremer_ignition, X_bremer_ignition, color="black", linestyle="-")
+        axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
+
+
+        # Plot Simulation Data
+        X_CO2_ign = []
+        for result in results_ignition:
+            x_CO2_ign = result.getConversion_2D(timestep_ign, 2)
+            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+
+        X_CO2_ext = []
+        for result in results_extinction:
+            x_CO2_ext = result.getConversion_2D(timestep_ext, 2)
+            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
+
+        axs.plot(T_walls_ign, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+        axs.plot(T_walls_ext, X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
 
         # Axis

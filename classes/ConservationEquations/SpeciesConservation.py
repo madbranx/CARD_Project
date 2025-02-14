@@ -71,31 +71,31 @@ class SpeciesConservation(Kinetics):
         mix_DiffCoff = self.MixtureAveragedDiffusionCoefficient(w_i, T, p, comp)
         return ((1 - CasADi.sqrt(1 - void_fraction)) * mix_DiffCoff + u * cat_diameter / 8)
 
-    # def calc_sum_j(self, radial_discretization, r, wTpu, wTpu_in=None, wTpu_out=None):
-    #     radial_faces_diff = radial_discretization.get_differences_faces()
-    #     radial_centroids_diff = radial_discretization.get_differences_centroids()
-    #
-    #     sum_j = 0
-    #
-    #     for comp in range(len(self.components)):
-    #         if wTpu_in is None:  # Symmetry Boundary Condition
-    #             j_r_in = 0
-    #         else:
-    #             diff_centroids_in = radial_centroids_diff[r - 1]
-    #             diff_faces_l = radial_faces_diff[r - 1]
-    #             diff_faces_r = radial_faces_diff[r]
-    #             j_r_in = self.calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
-    #
-    #         if wTpu_out is None:  # Wall Boundary Condition
-    #             j_r_out = 0
-    #         else:
-    #             diff_centroids_out = radial_centroids_diff[r]
-    #             diff_faces_l = radial_faces_diff[r]
-    #             diff_faces_r = radial_faces_diff[r + 1]
-    #             j_r_out = self.calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
-    #
-    #         sum_j += j_r_out-j_r_in
-    #     return sum_j
+    def calc_sum_j(self, radial_discretization, r, wTpu, wTpu_in=None, wTpu_out=None):
+        radial_faces_diff = radial_discretization.get_differences_faces()
+        radial_centroids_diff = radial_discretization.get_differences_centroids()
+
+        sum_j = 0
+
+        for comp in range(len(self.components)):
+            if wTpu_in is None:  # Symmetry Boundary Condition
+                j_r_in = 0
+            else:
+                diff_centroids_in = radial_centroids_diff[r - 1]
+                diff_faces_l = radial_faces_diff[r - 1]
+                diff_faces_r = radial_faces_diff[r]
+                j_r_in = self.calc_j_dispersion(diff_centroids_in, diff_faces_l, diff_faces_r, wTpu_in, wTpu, comp)
+
+            if wTpu_out is None:  # Wall Boundary Condition
+                j_r_out = 0
+            else:
+                diff_centroids_out = radial_centroids_diff[r]
+                diff_faces_l = radial_faces_diff[r]
+                diff_faces_r = radial_faces_diff[r + 1]
+                j_r_out = self.calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp)
+
+            sum_j += j_r_out-j_r_in
+        return sum_j
 
     ## CHANGE BY REACTION
     def changeByReaction(self, T, w_i, p, comp):

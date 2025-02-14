@@ -23,7 +23,7 @@ class Discretization:
         elif self.kind == self.ARRAY:
             self.faces = self.__array()
         elif self.kind == self.RELATIVE_ARRAY:
-            self.faces = self.__relative_array()
+            self.faces = self.__relative_array()            #TODO
         else:
             self.faces = self.__equidistant()
 

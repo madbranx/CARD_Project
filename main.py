@@ -6,10 +6,11 @@ import numpy as np
 
 # DISCRETIZATION SETTINGS #TODO (TBD: DISCRETIZATION STUDY)
 
-n_axial = 200
-n_radial = 75
+n_axial = 50
+n_radial = 15
 time_end = 3000
-time_steps = time_end*10
+# ACHTUNG FUMMELFAKTOR:
+time_steps = int(time_end*int((n_axial*n_radial)/100)/3)
 precision = 1e-10 # aktuell direkt implementiert in Integrator, Wert hier keinen Einfluss
 
 #TODO: Konvergenzprobleme bei unterschiedlichen ... abhängig von der Diskretisierung.. warum?

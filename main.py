@@ -109,9 +109,9 @@ postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
 #     reactor.T_wall = T_wall
 #     reactor.setup()
 
+# postprocessor = Postprocessor(reactor, "../results/02")
+# postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
 
-postprocessor = Postprocessor(reactor, "../results/02")
-postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
 
 
 # # TESTING FUNCTION

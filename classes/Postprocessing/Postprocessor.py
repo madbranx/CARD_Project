@@ -233,7 +233,7 @@ class Postprocessor:
 
         plt.show()
 
-    def plot_ignitionArc(self, results_ignition, results_extinction, T_walls, timestep):
+    def plot_ignitionArc2D(self, results_ignition, results_extinction, T_wall_ign, T_wall_ext, timestep):
         self.setSizes()
 
         fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
@@ -264,8 +264,10 @@ class Postprocessor:
             x_CO2_ext = result.getConversion_2D(timestep, 2)
             X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
 
-        axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(T_walls, X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
+
+        axs.plot(T_wall_ign, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v',
+                 markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+        axs.plot(T_wall_ext, X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
 
         # Axis

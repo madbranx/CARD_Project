@@ -119,6 +119,7 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
     # calculating arcs
     results_ignition = []
     results_extinction = []
+    done_T_walls = []
     for T_wall in T_walls:
 
         # calculating ignition arcs
@@ -128,11 +129,8 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
         try:
             integrator.setup(0, time_end, time_steps)
             result_ignition = integrator.integrate()
-            results_ignition.append(result_ignition)
-            if plotting:
-                postprocessor.plot2D_Temperature("test2", result_ignition, time_steps)
         except:
-            pass
+            continue
 
         #extinction arcs
         try:
@@ -140,12 +138,16 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
             integrator.set_specific_InitialValues(w_i, T, p, u)
             result_extinction = integrator.integrate()
             results_extinction.append(result_extinction)
-            if plotting:
-                postprocessor.plot2D_Temperature("test2", result_extinction, time_steps)
+
+            results_ignition.append(result_ignition)
+            done_T_walls.append(T_wall)
+            if plotting: # Plot each succesfull T_wall step
+                postprocessor.plot_ignitionArc(results_ignition, results_extinction, done_T_walls, time_steps)
         except:
             pass
 
-        postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
+    # plot all T_wall steps at end
+    postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
 
 
 ###########################################################################################
@@ -158,13 +160,13 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
 
 #pseudo_2D_vs_1D(20, 5, 3000, 300)
 
-arcs_2d(150, 12, 3000, 6000, 550, np.linspace(300, 550, 25), False)
+arcs_2d(150, 12, 3000, 12000, 550, np.linspace(300, 550, 25), True)
 
 ###########################################################################################
 
 #TODO
 # Fix numerical issues & radial dispersion
-# .
+# . -> add Flux limiter?/if/else for differences?
 # .
 # Create ULM diagram             TBD
 # add Diskretisierungsformeln in PDF

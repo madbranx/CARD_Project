@@ -14,9 +14,6 @@ class Integrator:
         self.axial_discretization = reactor.axial_discretization
         self.radial_discretization = reactor.radial_discretization
 
-        self.abstol = 0
-        self.reltol = 0
-
         self.integrator = None
         self.x_0 = None
         self.z_0 = None
@@ -30,10 +27,10 @@ class Integrator:
     def refresh(self):
         options = {
             #"calc_ic": True,
-            'abstol': 1e-4,
+            'abstol': 1e-6,
             #"abstolv": abstolv,
             #"scale_abstol": True,
-            'reltol': 1e-3,
+            'reltol': 1e-6,
             "step0": 0.001,
             "max_step_size": 0.1,
             "max_num_steps": 10000,
@@ -41,9 +38,9 @@ class Integrator:
             # "newton_scheme": "bcgstab",
             # "max_krylov": 100,
             # "max_multistep_order": 4,
-             "print_time": True,
-             # "verbose": True,
-             # "disable_internal_warnings": False,
+            "print_time": True,
+            "verbose": True,
+            "disable_internal_warnings": False,
         }
 
         dae = self.reactor.DAE
@@ -52,9 +49,7 @@ class Integrator:
         self.integrator = CasADi.integrator('I', 'idas', dae, timepoints[0], timepoints, options)
         self.__setInitialValues()
 
-    def setup(self, abstol, reltol, t_start, t_stop, t_steps):
-        self.abstol = abstol
-        self.reltol = reltol
+    def setup(self, t_start, t_stop, t_steps):
 
         self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
 

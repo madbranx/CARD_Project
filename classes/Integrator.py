@@ -27,10 +27,10 @@ class Integrator:
     def refresh(self):
         options = {
             #"calc_ic": True,
-            'abstol': 1e-6,
+            'abstol': 1e-4,
             #"abstolv": abstolv,
             #"scale_abstol": True,
-            'reltol': 1e-6,
+            'reltol': 1e-4,
             "step0": 0.001,
             "max_step_size": 0.1,
             "max_num_steps": 10000,
@@ -51,7 +51,10 @@ class Integrator:
 
     def setup(self, t_start, t_stop, t_steps):
 
-        self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
+        ranges_t = [[t_start, 60, 6],[60, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 1]]
+        self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
+
+        #self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
 
         self.refresh()
 
@@ -107,7 +110,7 @@ class Integrator:
         print("starting integration ...")
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
-        self.__printMassDeviation()
+        #self.__printMassDeviation()
 
         results = Results(self.axial_discretization, self.radial_discretization, self.time_discretization)
         results.set_reactor(self.reactor)

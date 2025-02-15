@@ -32,14 +32,14 @@ class Integrator:
             #"scale_abstol": True,
             'reltol': 1e-4,
             "step0": 0.001,
-            "max_step_size": 0.1,
-            "max_num_steps": 10000,
+            "max_step_size": 1,
+            "max_num_steps": 100000,
             "newton_scheme": "direct",
             # "newton_scheme": "bcgstab",
             # "max_krylov": 100,
             # "max_multistep_order": 4,
             "print_time": True,
-            "verbose": True,
+            #"verbose": True,
             "disable_internal_warnings": False,
         }
 
@@ -51,7 +51,7 @@ class Integrator:
 
     def setup(self, t_start, t_stop, t_steps):
 
-        ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 1]]
+        ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
         self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
 
         #self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
@@ -107,7 +107,6 @@ class Integrator:
         self.z_0 = z_0
 
     def integrate(self):
-        print("starting integration ...")
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
         #self.__printMassDeviation()

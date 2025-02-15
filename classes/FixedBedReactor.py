@@ -16,12 +16,12 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         if dimension == 1:
             n_radial = 1
 
-        ranges_z = [[0, self.reactorLength*0.05, 1], [self.reactorLength*0.05, self.reactorLength*0.4, 3], [self.reactorLength*0.4, self.reactorLength, 1]]
-        self.axial_discretization = Discretization(n_axial, Discretization.ARRAY, ranges= ranges_z)
+        ranges_z = [[0, self.reactorLength*0.05, 3], [self.reactorLength*0.05, self.reactorLength*0.4, 2], [self.reactorLength*0.4, self.reactorLength, 1]]
+        self.axial_discretization = Discretization(n_axial, Discretization.RELATIVE_ARRAY, ranges= ranges_z)
         #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
 
-        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2, 1]]
-        self.radial_discretization = Discretization(n_radial, Discretization.ARRAY, ranges=ranges_r)
+        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2 * 7/8, 2], [self.reactorDiameter/2 *7/8, self.reactorDiameter/2, 3]]
+        self.radial_discretization = Discretization(n_radial, Discretization.RELATIVE_ARRAY, ranges=ranges_r)
         #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
@@ -160,7 +160,9 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     radial_heatConduction = self.radial_heatConduction(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
 
                 else: # 1D radial thermal conduction with U_radial = const.
-                    radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - self.T_wall)
+                    wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
+                    T_inner_wall = self.calc_innerWallTemperature(wTpu)
+                    radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - T_inner_wall)
 
                 # 3.3) Reaction Heat
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])

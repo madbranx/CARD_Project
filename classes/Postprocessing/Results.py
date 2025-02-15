@@ -97,7 +97,30 @@ class Results:
         avg_f = (2 * np.pi * integral) / (np.pi * R ** 2)  # Normalize by cross-section area
         return avg_f
 
+
     def get_rawValues(self):
         return self.w_i, self.T, self.p, self.u
+
+
+    def getConversion_1D(self, t_step, comp):
+        n_axial_volumes = self.axialDiscretization.num_volumes
+
+        i = comp
+        w_i_in = self.reactor.w_i_in
+        w_M = self.reactor.getMolarWeights()
+        tot_moles = 0
+        for i, mw in enumerate(w_M):
+            tot_moles += w_i_in[i]/mw
+
+        n_i_in = w_i_in[i]/w_M[i]/tot_moles
+
+        X = np.zeros(n_axial_volumes)
+
+        for z in range(n_axial_volumes):
+            w_i =  self.w_i[z, t_step, :]
+            n_i = self.reactor.moleFractions(w_i)
+            X[z] = (n_i_in-n_i[i])/n_i_in
+
+        return X
 
 

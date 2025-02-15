@@ -40,7 +40,7 @@ class Integrator:
             # "max_multistep_order": 4,
             "print_time": True,
             #"verbose": True,
-            "disable_internal_warnings": False,
+            #"disable_internal_warnings": False,
         }
 
         dae = self.reactor.DAE

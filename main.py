@@ -145,7 +145,7 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
         except:
             pass
 
-    postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
+        postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
 
 
 ###########################################################################################
@@ -154,11 +154,11 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
 
 #arcs_1d(60, 4000, 500, 550, np.linspace(350, 500, 5))
 
-plot_2D_with_TwallVal(150, 12, 3000, 30000)
+#plot_2D_with_TwallVal(150, 12, 3000, 6000)
 
 #pseudo_2D_vs_1D(20, 5, 3000, 300)
 
-#arcs_2d(20, 5, 3000, 300, 550, [400, 450, 500])
+arcs_2d(150, 12, 3000, 6000, 550, np.linspace(300, 550, 25), False)
 
 ###########################################################################################
 

@@ -51,7 +51,7 @@ class Integrator:
 
     def setup(self, t_start, t_stop, t_steps):
 
-        ranges_t = [[t_start, 60, 6],[60, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 1]]
+        ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 1]]
         self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
 
         #self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)

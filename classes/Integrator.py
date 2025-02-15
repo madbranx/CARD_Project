@@ -39,8 +39,8 @@ class Integrator:
             # "max_krylov": 100,
             # "max_multistep_order": 4,
             "print_time": True,
-            #"verbose": True,
-            #"disable_internal_warnings": False,
+            "verbose": True,
+            "disable_internal_warnings": False,
         }
 
         dae = self.reactor.DAE
@@ -52,8 +52,11 @@ class Integrator:
     def setup(self, t_start, t_stop, t_steps):
 
         # self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
+        if t_start < 90:
+            ranges_t = [[t_start, t_stop, 1]]
+        else:
+            ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
 
-        ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
         self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
 
         self.refresh()
@@ -67,15 +70,15 @@ class Integrator:
         x_0 = np.zeros(n_axial * n_radial * (n_components + 1))
         for comp in range(n_components):
             if comp == 0:
-                x_0[0: n_axial * n_radial] = w_i[:, -1, 0]
+                x_0[0: n_axial * n_radial] = w_i[:, 0]
             else:
-                x_0[n_axial * n_radial * comp: n_axial * n_radial * (comp + 1)] = w_i[:, -1, comp]
-        x_0[n_components * n_axial * n_radial:] = T[:, -1]
+                x_0[n_axial * n_radial * comp: n_axial * n_radial * (comp + 1)] = w_i[:, comp]
+        x_0[n_components * n_axial * n_radial:] = T[:]
         self.x_0 = x_0
 
         z_0 = np.zeros(n_axial * n_radial * 2)
-        z_0[0:n_axial * n_radial] = u[:, -1]
-        z_0[n_axial * n_radial:] = p[:, -1]
+        z_0[0:n_axial * n_radial] = u[:]
+        z_0[n_axial * n_radial:] = p[:]
         self.z_0 = z_0
 
     def __setInitialValues(self):

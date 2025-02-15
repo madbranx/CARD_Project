@@ -98,8 +98,8 @@ class Results:
         return avg_f
 
 
-    def get_rawValues(self):
-        return self.w_i, self.T, self.p, self.u
+    def get_rawValues(self, timestep):
+        return self.w_i[:, timestep, :], self.T[:, timestep], self.p[:, timestep], self.u[:, timestep]
 
 
     def getConversion_1D(self, t_step, comp):

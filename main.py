@@ -101,7 +101,7 @@ def arcs_1d(n_axial, time_end, time_steps, ignited_T, T_walls):
     postprocessor.plot_ignitionArc1D(results_ignition, results_extinction, T_walls, time_steps)
 
 
-def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plotting=False):
+def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls):
     ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
 
     # setting up reactor and integrator
@@ -109,28 +109,34 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
     reactor.T_wall = ignited_T # Temperature for ignited reactor
     reactor.setup()
     integrator = Integrator(reactor)
+    postprocessor = Postprocessor(reactor, "../results/arcs_2d")
 
     # get results of ignited reactor
     integrator.setup(0, time_end, time_steps)
     result_ignited = integrator.integrate()
-    postprocessor = Postprocessor(reactor, "../results/arcs_2d")
-    w_i, T, p, u = result_ignited.get_rawValues()
+    w_i, T, p, u = result_ignited.get_rawValues(time_steps)
 
     # calculating arcs
     results_ignition = []
     results_extinction = []
-    done_T_walls = []
+    T_walls_ign = []
+    T_walls_ext = []
     for T_wall in T_walls:
 
-        # calculating ignition arcs
+        # setting wall temperature and defining dae
         print("T_wall = ", T_wall)
         reactor.T_wall = T_wall
         reactor.setup()
+
+        # ignition arcs
         try:
             integrator.setup(0, time_end, time_steps)
             result_ignition = integrator.integrate()
+            results_ignition.append(result_ignition)
+            T_walls_ign.append(T_wall)
         except:
-            continue
+            print("ignition arc failed @ T_wall = ", T_wall)
+            pass
 
         #extinction arcs
         try:
@@ -138,16 +144,38 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
             integrator.set_specific_InitialValues(w_i, T, p, u)
             result_extinction = integrator.integrate()
             results_extinction.append(result_extinction)
-
-            results_ignition.append(result_ignition)
-            done_T_walls.append(T_wall)
-            if plotting: # Plot each succesfull T_wall step
-                postprocessor.plot_ignitionArc(results_ignition, results_extinction, done_T_walls, time_steps)
+            T_walls_ext.append(T_wall)
         except:
+            print("extinction arc failed @ T_wall = ", T_wall)
             pass
 
     # plot all T_wall steps at end
-    postprocessor.plot_ignitionArc(results_ignition, results_extinction, T_walls, time_steps)
+    postprocessor.plot_ignitionArc2D(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
+
+def test_2D_extinction(n_axial, n_radial, time_end, time_steps, T_wall_ignited, T_wall_extinction):
+    # setting up reactor and integrator
+    reactor = FixedBedReactor(2, n_axial, n_radial)
+    reactor.T_wall = T_wall_ignited # Temperature for ignited reactor
+    reactor.setup()
+    integrator = Integrator(reactor)
+    postprocessor = Postprocessor(reactor, "../results/arcs_2d")
+
+    # get results of ignited reactor
+    integrator.setup(0, time_end, time_steps)
+    result_ignited = integrator.integrate()
+    w_i, T, p, u = result_ignited.get_rawValues(time_steps)
+
+    postprocessor.plot2D_Temperature("name", result_ignited, time_steps)
+
+    # simulating extinction
+    reactor.T_wall = T_wall_extinction
+    reactor.setup()
+    integrator.setup(0, time_end, time_steps)
+    integrator.set_specific_InitialValues(w_i, T, p, u)
+    result_extinction = integrator.integrate()
+
+    postprocessor.plot2D_Temperature("name", result_extinction, time_steps)
+
 
 
 ###########################################################################################
@@ -160,7 +188,9 @@ def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls, plottin
 
 #pseudo_2D_vs_1D(20, 5, 3000, 300)
 
-arcs_2d(150, 12, 3000, 12000, 550, np.linspace(300, 550, 25), True)
+#test_2D_extinction(20, 4, 3000, 8000, 550, 500)
+
+arcs_2d(20, 4, 3000, 8000, 550, np.linspace(300, 550, 10))
 
 ###########################################################################################
 

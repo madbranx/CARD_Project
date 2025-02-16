@@ -511,6 +511,7 @@ class Postprocessor:
         mean_nRMSEs = []
         max_nRMSEs = []
 
+
         # iterating through every timestep in every result
         for result in results:
             centroids_ref = result_ref.reactor.radial_discretization.get_centroids()
@@ -518,7 +519,7 @@ class Postprocessor:
 
             mean_nRMSEs_timesteps = []
             max_nRMSEs_timesteps = []
-            step = int(timesteps/100)
+            step = int(timesteps / 100)
             for timestep in range(0, timesteps, step):
                 mean_nRMSEs_axials = []
                 max_nRMSEs_axials = []

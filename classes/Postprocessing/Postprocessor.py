@@ -5,6 +5,8 @@ import pandas as pd
 import casadi as CasADi
 from matplotlib import pyplot as plt
 from matplotlib import colors as clr
+from scipy.interpolate import interp1d, CubicSpline
+from scipy.optimize import curve_fit
 
 class Postprocessor:
     def __init__(self, reactor, exportLocation):
@@ -361,7 +363,7 @@ class Postprocessor:
         #
 
 
-    def plot_ignitionArc1D(self, results_ignition, results_extinction, T_walls, time_steps):
+    def plot_ignitionArc1D(self, results_ignition, results_extinction, T_walls, time_steps, rev=False):
         self.setSizes()
 
         fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
@@ -378,6 +380,10 @@ class Postprocessor:
                      0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984, 0.978, 0.971])
 
         axs.plot(T_bremer_ignition, X_bremer_ignition, color="black", linestyle="-")
+
+        if rev:
+            axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
+
         axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
 
 
@@ -393,7 +399,7 @@ class Postprocessor:
             X_CO2_ext.append(x_CO2_ext[-1])
 
         axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(T_walls, X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
+        axs.plot(np.flip(T_walls), X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
 
         # Axis
@@ -406,3 +412,172 @@ class Postprocessor:
         plt.show()
 
 
+    def plot_discretizationStudy1D(self, results, result_ref, timesteps):
+
+        ## Calculating RMSEs for every Result
+        start, stop = 0, self.reactor.reactorLength
+        mean_nRMSEs = []
+        max_nRMSEs = []
+
+        # iterating through every timestep in every result
+        for result in results:
+            centroids_ref = result_ref.reactor.axial_discretization.get_centroids()
+            centroids = result.reactor.axial_discretization.get_centroids()
+
+            mean_nRMSEs_timesteps = []
+            max_nRMSEs_timesteps = []
+            step = int(timesteps / 100)
+            for timestep in range(0, timesteps, step):
+                mean_nRMSEs_variables = []
+                values = result.get_values(timestep)
+                ref_values = result_ref.get_values(timestep)
+                # Calculating nRMSEs for each Variable (4x w, T, p, u) for one timestep
+
+                ref_values = [ref_values[0][:, 0], ref_values[0][:, 1], ref_values[0][:, 2], ref_values[0][:, 3], ref_values[1][:], ref_values[2][:], ref_values[3][:] ]
+                values = [values[0][:, 0], values[0][:, 1], values[0][:, 2], values[0][:, 3], values[1][:], values[2][:], values[3][:] ]
+
+                for i in range(len(ref_values)):
+                    values_interp = self.__interpolate_arrays(ref_values[i], centroids_ref, start, stop)
+                    ref_values_interp = self.__interpolate_arrays(values[i], centroids, start, stop)
+                    mean_nRMSEs_variables.append(self.nRMSE(ref_values_interp,values_interp))
+
+
+                mean_nRMSEs_timesteps.append(np.mean(mean_nRMSEs_variables))
+                max_nRMSEs_timesteps.append(np.max(mean_nRMSEs_variables))
+            mean_nRMSEs.append(np.mean(mean_nRMSEs_timesteps))
+            max_nRMSEs.append(np.max(max_nRMSEs_timesteps))
+
+        # Plotting
+        self.setSizes()
+
+        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        n_axials = []
+        for i, result in enumerate(results):
+            n_axial = len(result.reactor.axial_discretization.get_centroids())
+            n_axials.append(n_axial)
+            if i == 0:
+                axs.plot(n_axial, mean_nRMSEs[i], marker='v', markersize=10, label='mean', color=colors[0])
+                axs.plot(n_axial, max_nRMSEs[i], marker='v', markersize=10, label='max', color=colors[1])
+
+            else:
+                axs.plot(n_axial, mean_nRMSEs[i], marker='v', markersize=10, color=colors[0])
+                axs.plot(n_axial, max_nRMSEs[i], marker='v', markersize=10, color=colors[1])
+
+
+        # Create spline fit
+        n_axials = np.flip(n_axials)
+        spline_mean = CubicSpline(n_axials, np.flip(mean_nRMSEs))
+        spline_max = CubicSpline(n_axials, np.flip(max_nRMSEs))
+
+        # Generate smooth x values and compute smooth y values
+        x_smooth = np.linspace(min(n_axials), max(n_axials), 100)
+        y_smooth_mean = spline_mean(x_smooth)
+        y_smooth_max = spline_max(x_smooth)
+
+        plt.plot(x_smooth, y_smooth_mean, linestyle = '--', linewidth = 2, color=colors[0])
+        plt.plot(x_smooth, y_smooth_max, linestyle = '--', linewidth = 2, color=colors[1])
+
+
+        plt.ylabel("normalized RMSE / -")
+        plt.xlabel("number of axial volumes/ -")
+        plt.legend(loc="upper right")
+        plt.title("nRMSE of each variable (4x w_i, T, p, u) \n simulating 500s with tol = 1e-8, reference n_axial = " + str(len(ref_values[0])), fontsize = 15)
+        plt.show()
+
+    def nRMSE(self,values_ref, values):
+        RMSE = self.RMSE(values_ref, values)
+        return RMSE/(np.mean(values))
+
+    def RMSE(self, values_ref, values):
+        RMSE = np.sqrt(1/len(values)* np.sum((values- values_ref)** 2))
+        return RMSE
+
+    def __interpolate_arrays(self, values, centroids, start, stop):
+        values = np.array(values)
+        centroids = np.array(centroids)
+        resolution = 100
+        common_orts = np.linspace(start, stop, resolution)
+
+        interp1 = interp1d(centroids, values, kind='linear', fill_value='extrapolate')
+
+        return np.column_stack((common_orts, interp1(common_orts)))
+
+    def plot_discretizationStudy_radial(self, results, result_ref, timesteps):
+
+        ## Calculating RMSEs for every Result
+        start, stop = 0, self.reactor.reactorDiameter/2
+        mean_nRMSEs = []
+        max_nRMSEs = []
+
+        # iterating through every timestep in every result
+        for result in results:
+            centroids_ref = result_ref.reactor.radial_discretization.get_centroids()
+            centroids = result.reactor.radial_discretization.get_centroids()
+
+            mean_nRMSEs_timesteps = []
+            max_nRMSEs_timesteps = []
+            step = int(timesteps/100)
+            for timestep in range(0, timesteps, step):
+                mean_nRMSEs_axials = []
+                max_nRMSEs_axials = []
+                for axial in range(len(result_ref.reactor.axial_discretization.get_centroids())):
+                    mean_nRMSEs_variables = []
+                    values = result.get_2D_values(timestep)
+                    ref_values = result_ref.get_2D_values(timestep)
+                    # Calculating nRMSEs for each Variable (4x w, T, p, u) for one timestep
+
+                    ref_values = [ref_values[0][0, axial, :], ref_values[0][1, axial, :], ref_values[0][2, axial, :], ref_values[0][3, axial, :], ref_values[1][axial, :], ref_values[2][axial, :], ref_values[3][axial, :] ]
+                    values = [values[0][0, axial, :], values[0][1, axial, :], values[0][2, axial, :], values[0][3, axial, :], values[1][axial, :], values[2][axial, :], values[3][axial, :] ]
+
+                    for i in range(len(ref_values)):
+                        values_interp = self.__interpolate_arrays(ref_values[i], centroids_ref, start, stop)
+                        ref_values_interp = self.__interpolate_arrays(values[i], centroids, start, stop)
+                        mean_nRMSEs_variables.append(self.nRMSE(ref_values_interp,values_interp))
+
+                    mean_nRMSEs_axials.append(np.mean(mean_nRMSEs_variables))
+                    max_nRMSEs_axials.append(np.max(mean_nRMSEs_variables))
+                mean_nRMSEs_timesteps.append(np.mean(mean_nRMSEs_axials))
+                max_nRMSEs_timesteps.append(np.max(max_nRMSEs_axials))
+            mean_nRMSEs.append(np.mean(mean_nRMSEs_timesteps))
+            max_nRMSEs.append(np.max(max_nRMSEs_timesteps))
+
+        # Plotting
+        self.setSizes()
+
+        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
+        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
+
+        n_radials = []
+        for i, result in enumerate(results):
+            n_radial = len(result.reactor.radial_discretization.get_centroids())
+            n_radials.append(n_radial)
+            if i == 0:
+                axs.plot(n_radial, mean_nRMSEs[i], marker='v', markersize=10, label='mean', color=colors[0])
+                axs.plot(n_radial, max_nRMSEs[i], marker='v', markersize=10, label='max', color=colors[1])
+
+            else:
+                axs.plot(n_radial, mean_nRMSEs[i], marker='v', markersize=10, color=colors[0])
+                axs.plot(n_radial, max_nRMSEs[i], marker='v', markersize=10, color=colors[1])
+
+
+        # Create spline fit
+        n_radials = np.flip(n_radials)
+        spline_mean = CubicSpline(n_radials, np.flip(mean_nRMSEs))
+        spline_max = CubicSpline(n_radials, np.flip(max_nRMSEs))
+
+        # Generate smooth x values and compute smooth y values
+        x_smooth = np.linspace(min(n_radials), max(n_radials), 100)
+        y_smooth_mean = spline_mean(x_smooth)
+        y_smooth_max = spline_max(x_smooth)
+
+        plt.plot(x_smooth, y_smooth_mean, linestyle = '--', linewidth = 2, color=colors[0])
+        plt.plot(x_smooth, y_smooth_max, linestyle = '--', linewidth = 2, color=colors[1])
+
+
+        plt.ylabel("normalized RMSE / -")
+        plt.xlabel("number of radial volumes/ -")
+        plt.legend(loc="upper right")
+        plt.title("nRMSE of each variable (4x w_i, T, p, u) of each axial row\n simulating 500s with tol = 1e-4, reference n_axial = " + str(len(ref_values[0])), fontsize = 15)
+        plt.show()

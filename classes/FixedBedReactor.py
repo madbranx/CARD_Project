@@ -25,6 +25,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
 
         if self.dimension == 1:
+            self.radial_discretization = Discretization(1, start=0, end=self.reactorDiameter / 2)
             self.n_spatial = self.axial_discretization.num_volumes
         else:
             self.n_spatial = self.axial_discretization.num_volumes * self.radial_discretization.num_volumes
@@ -83,6 +84,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
             for z, delta_faces_z in enumerate(axial_faces_deltas):
 
             ## Setting Radial and Axial Indexes
+
                 current = z + r * len(axial_faces_deltas)
                 before_z = current - 1
                 after_z = current + 1

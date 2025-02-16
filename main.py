@@ -59,98 +59,110 @@ def pseudo_2D_vs_1D(n_axial, n_radial, time_end, time_steps):
     postprocessor = Postprocessor(reactor_2D, "../results/p2D_vs_1D")
     postprocessor.plot1D_vsPseudo1D_vs_val("test2", results_1D, results_2D, time_steps)
 
-def arcs_1d(n_axial, time_end, time_steps, ignited_T, T_walls):
+
+def arcs_1d(n_axial, time_end, time_steps, T_walls):
     ## 1D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
 
     #setting up reactor and integrator
-    reactor = FixedBedReactor(1, n_axial)
-    reactor.T_wall = ignited_T # Temperature for ignited reactor
+    reactor = FixedBedReactor(1, n_axial, 1)
+    reactor.T_wall = T_walls[0] # Temperature for extinguished reactor
     reactor.setup()
     integrator = Integrator(reactor)
 
-    # get results of ignited reactor
+    # get results of unignited reactor
     integrator.setup(0, time_end, time_steps)
-    result_ignited = integrator.integrate()
+    result_extinguished = integrator.integrate()
     postprocessor = Postprocessor(reactor, "../results/arcs_1d")
-    w_i, T, p, u = result_ignited.get_rawValues()
+    w_i, T, p, u = result_extinguished.get_rawValues(time_steps)
 
     # calculating arcs
     results_ignition = []
-    results_extinction = []
     for T_wall in T_walls:
 
         # calculating ignition arcs
-        print("T_wall = ", T_wall)
+        print("Ignition: T_wall = ", T_wall)
         reactor.T_wall = T_wall
         reactor.setup()
         try:
             integrator.setup(0, time_end, time_steps)
+            integrator.set_specific_InitialValues(w_i, T, p, u)
             result_ignition = integrator.integrate()
             results_ignition.append(result_ignition)
+            w_i, T, p, u = result_ignition.get_rawValues(time_steps)
         except:
             pass
 
-        #extinction arcs
+
+    #extinction arcs
+    T_walls_ext = np.flip(T_walls)
+    results_extinction = []
+    for T_wall in T_walls_ext:
+        print("Extinction: T_wall = ", T_wall)
+        reactor.T_wall = T_wall
+        reactor.setup()
         try:
+            integrator.setup(0, time_end, time_steps)
             integrator.set_specific_InitialValues(w_i, T, p, u)
             result_extinction = integrator.integrate()
             results_extinction.append(result_extinction)
+            w_i, T, p, u = result_extinction.get_rawValues()
         except:
             pass
 
-    postprocessor.plot_ignitionArc1D(results_ignition, results_extinction, T_walls, time_steps)
+    postprocessor.plot_ignitionArc1D(results_ignition, results_extinction, T_walls, time_steps, True)
 
 
-def arcs_2d(n_axial, n_radial, time_end, time_steps, ignited_T, T_walls):
+def arcs_2d(n_axial, n_radial, time_end, time_steps, T_walls):
     ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
 
-    # setting up reactor and integrator
-    reactor = FixedBedReactor(2, n_axial, n_radial)
-    reactor.T_wall = ignited_T # Temperature for ignited reactor
+    #setting up reactor and integrator
+    reactor = FixedBedReactor(1, n_axial, n_radial)
+    reactor.T_wall = T_walls[0] # Temperature for extinguished reactor
     reactor.setup()
     integrator = Integrator(reactor)
-    postprocessor = Postprocessor(reactor, "../results/arcs_2d")
 
-    # get results of ignited reactor
+    # get results of unignited reactor
     integrator.setup(0, time_end, time_steps)
-    result_ignited = integrator.integrate()
-    w_i, T, p, u = result_ignited.get_rawValues(time_steps)
+    result_extinguished = integrator.integrate()
+    postprocessor = Postprocessor(reactor, "../results/arcs_2d")
+    w_i, T, p, u = result_extinguished.get_rawValues(time_steps)
 
     # calculating arcs
     results_ignition = []
-    results_extinction = []
-    T_walls_ign = []
-    T_walls_ext = []
     for T_wall in T_walls:
 
-        # setting wall temperature and defining dae
-        print("T_wall = ", T_wall)
+        # calculating ignition arcs
+        print("Ignition: T_wall = ", T_wall)
         reactor.T_wall = T_wall
         reactor.setup()
-
-        # ignition arcs
         try:
             integrator.setup(0, time_end, time_steps)
+            integrator.set_specific_InitialValues(w_i, T, p, u)
             result_ignition = integrator.integrate()
             results_ignition.append(result_ignition)
-            T_walls_ign.append(T_wall)
+            w_i, T, p, u = result_ignition.get_rawValues(time_steps)
         except:
-            print("ignition arc failed @ T_wall = ", T_wall)
             pass
 
-        #extinction arcs
+
+    #extinction arcs
+    T_walls_ext = np.flip(T_walls)
+    results_extinction = []
+    for T_wall in T_walls_ext:
+        print("Extinction: T_wall = ", T_wall)
+        reactor.T_wall = T_wall
+        reactor.setup()
         try:
             integrator.setup(0, time_end, time_steps)
             integrator.set_specific_InitialValues(w_i, T, p, u)
             result_extinction = integrator.integrate()
             results_extinction.append(result_extinction)
-            T_walls_ext.append(T_wall)
+            w_i, T, p, u = result_extinction.get_rawValues()
         except:
-            print("extinction arc failed @ T_wall = ", T_wall)
             pass
 
-    # plot all T_wall steps at end
-    postprocessor.plot_ignitionArc2D(results_ignition, results_extinction, T_walls_ign, T_walls_ext, time_steps)
+    postprocessor.plot_ignitionArc2D(results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
+
 
 def test_2D_extinction(n_axial, n_radial, time_end, time_steps, T_wall_ignited, T_wall_extinction):
     # setting up reactor and integrator
@@ -177,12 +189,57 @@ def test_2D_extinction(n_axial, n_radial, time_end, time_steps, T_wall_ignited, 
     postprocessor.plot2D_Temperature("name", result_extinction, time_steps)
 
 
+def discretization_study1D(time_end, time_steps, n_axial_ref, n_axials):
+
+    reactor = FixedBedReactor(1, n_axial_ref, 1)
+    reactor.setup()
+    integrator = Integrator(reactor)
+    integrator.setup(0, time_end, time_steps)
+    result_ref = integrator.integrate()
+
+    results = []
+    for n_axial in n_axials:
+        reactor = FixedBedReactor(1, n_axial, 1)
+        reactor.setup()
+        integrator = Integrator(reactor)
+        integrator.setup(0, time_end, time_steps)
+        results.append(integrator.integrate())
+
+    postprocessor = Postprocessor(reactor, "../results/discr_1d")
+    postprocessor.plot_discretizationStudy1D(results, result_ref, time_steps)
+
+def discretization_study_radial(time_end, time_steps, n_radial_ref, n_axial, n_radials):
+
+    reactor = FixedBedReactor(2, n_axial, n_radial_ref)
+    reactor.setup()
+    integrator = Integrator(reactor)
+    integrator.setup(0, time_end, time_steps)
+    result_ref = integrator.integrate()
+
+    results = []
+    for n_radial in n_radials:
+        reactor = FixedBedReactor(2, n_axial, n_radial)
+        reactor.setup()
+        integrator = Integrator(reactor)
+        integrator.setup(0, time_end, time_steps)
+        results.append(integrator.integrate())
+
+    postprocessor = Postprocessor(reactor, "../results/discr_radial")
+    postprocessor.plot_discretizationStudy_radial(results, result_ref, time_steps)
+
 
 ###########################################################################################
 
+
+#discretization_study1D(500, 1000, 1000, [500, 400, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2])
+
+discretization_study_radial(500, 10000, 30, 200, [25, 20, 15, 12, 10, 8, 6, 4, 3, 2])
+
+#TODO equi- vs non-equidistant with sim time
+
 #validation_1D(40, 3000, 200)
 
-#arcs_1d(60, 4000, 500, 550, np.linspace(350, 500, 5))
+#arcs_1d(150, 4000, 1000, np.linspace(300, 550, 25))
 
 #plot_2D_with_TwallVal(150, 12, 3000, 6000)
 
@@ -190,7 +247,7 @@ def test_2D_extinction(n_axial, n_radial, time_end, time_steps, T_wall_ignited, 
 
 #test_2D_extinction(20, 4, 3000, 8000, 550, 500)
 
-arcs_2d(20, 4, 3000, 8000, 550, np.linspace(300, 550, 10))
+#arcs_2d(150, 12, 3000, 30000, np.linspace(300, 550, 50))
 
 ###########################################################################################
 
@@ -201,11 +258,9 @@ arcs_2d(20, 4, 3000, 8000, 550, np.linspace(300, 550, 10))
 # Create ULM diagram             TBD
 # add Diskretisierungsformeln in PDF
 # .
-# Postprocessing (2D)            WORK IN PROGRESS
-#       (TBD: DISCRETIZATION STUDY)
-# .     Extinction / Ignition ARC Plots
+# Postprocessing (2D)            WORK IN PROGRESS -> add export function to results folder
+#       TBD: DISCRETIZATION STUD
 # .     Effectiveness etc. Plot
-# .     RMSE/MAPE for one Value
 
 ###########################################################################################
 

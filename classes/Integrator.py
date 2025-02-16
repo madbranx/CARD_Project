@@ -32,15 +32,15 @@ class Integrator:
             #"scale_abstol": True,
             'reltol': 1e-4,
             "step0": 0.001,
-            "max_step_size": 1,
+            "max_step_size": 0.1,
             "max_num_steps": 100000,
             "newton_scheme": "direct",
             # "newton_scheme": "bcgstab",
             # "max_krylov": 100,
             # "max_multistep_order": 4,
             "print_time": True,
-            "verbose": True,
-            "disable_internal_warnings": False,
+            #"verbose": True,
+            #"disable_internal_warnings": False,
         }
 
         dae = self.reactor.DAE

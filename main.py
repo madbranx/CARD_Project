@@ -208,12 +208,12 @@ def discretization_study1D(time_end, time_steps, n_axial_ref, n_axials):
     postprocessor = Postprocessor(reactor, "../results/discr_1d")
     postprocessor.plot_discretizationStudy1D(results, result_ref, time_steps)
 
-def discretization_study_radial(time_end, time_steps, n_radial_ref, n_axial, n_radials):
+def discretization_study_radial(time_end, timesteps, n_radial_ref, n_axial, n_radials):
 
     reactor = FixedBedReactor(2, n_axial, n_radial_ref)
     reactor.setup()
     integrator = Integrator(reactor)
-    integrator.setup(0, time_end, time_steps)
+    integrator.setup(0, time_end, timesteps)
     result_ref = integrator.integrate()
 
     results = []
@@ -221,15 +221,14 @@ def discretization_study_radial(time_end, time_steps, n_radial_ref, n_axial, n_r
         reactor = FixedBedReactor(2, n_axial, n_radial)
         reactor.setup()
         integrator = Integrator(reactor)
-        integrator.setup(0, time_end, time_steps)
+        integrator.setup(0, time_end, timesteps)
         results.append(integrator.integrate())
 
     postprocessor = Postprocessor(reactor, "../results/discr_radial")
-    postprocessor.plot_discretizationStudy_radial(results, result_ref, time_steps)
+    postprocessor.plot_discretizationStudy_radial(results, result_ref, timesteps)
 
 
 ###########################################################################################
-
 
 #discretization_study1D(500, 1000, 1000, [500, 400, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2])
 
@@ -248,6 +247,8 @@ discretization_study_radial(500, 10000, 30, 200, [25, 20, 15, 12, 10, 8, 6, 4, 3
 #test_2D_extinction(20, 4, 3000, 8000, 550, 500)
 
 #arcs_2d(150, 12, 3000, 30000, np.linspace(300, 550, 50))
+
+#TODO catalyst variations
 
 ###########################################################################################
 

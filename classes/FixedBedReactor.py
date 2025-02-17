@@ -106,26 +106,29 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
             ## 1) MASS CONSERVATION
 
-                # # Dispersion correction
-                # if self.dimension == 2:
-                #     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
-                #
-                #     # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
-                #     if r == 0:
-                #         wTpu_in = None
-                #     else:
-                #         wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
-                #
-                #     if r == self.radial_discretization.num_volumes - 1:
-                #         wTpu_out = None
-                #     else:
-                #         wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
-                #
-                #     dispersion_correction = self.calc_sum_j(self.radial_discretization, r, wTpu, wTpu_in, wTpu_out)
-                # else:
-                #     dispersion_correction = 0
+                # Dispersion correction
+                if self.dimension == 2:
+                    u_center = u[current - r * len(axial_faces_deltas)]
+                    wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
 
-                self.AE_m[current] = u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current]) #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
+                    # Boundary Cases setting w_in/w_out = w_i (w_in/w_wout not needed for calc)
+                    if r == 0:
+                        wTpu_in = None
+                    else:
+                        wTpu_in = [w_i[before_r, :].T, T[before_r], p[before_r], u[before_r]]
+
+                    if r == self.radial_discretization.num_volumes - 1:
+                        wTpu_out = None
+                    else:
+                        wTpu_out = [w_i[after_r, :].T, T[after_r], p[after_r], u[after_r]]
+
+                    dispersion_correction = self.calc_sum_j(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
+                else:
+                    dispersion_correction = 0
+
+                self.AE_m[current] = (u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
+                                      #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
+                                      )
 
             ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
@@ -197,7 +200,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
                         wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
-                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, wTpu, wTpu_in, wTpu_out)
+                        u_center = u[current - r * len(axial_faces_deltas)]
+                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, u_center, wTpu, wTpu_in, wTpu_out)
 
                     else:  # 1D
                         radialMassFlow = 0

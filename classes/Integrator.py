@@ -15,6 +15,8 @@ class Integrator:
         self.radial_discretization = reactor.radial_discretization
 
         self.integrator = None
+        self.options = None
+
         self.x_0 = None
         self.z_0 = None
         self.results = None
@@ -24,43 +26,77 @@ class Integrator:
         self.u_res = None
         self.p_res = None
 
+    def setup(self, t_start, t_stop, t_steps, **kwargs):
+        if kwargs.get('t_equi', False) is True:
+            self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
+        else:
+            if kwargs.get('time_ranges', None) is not None: # when explicit array of time ranges are given
+                ranges_t = kwargs['time_ranges']
+            else: # otherwise determine ranges:
+                if t_stop < 100: # equidistant for <100 s simulation time
+                    ranges_t = [[t_start, t_stop, 1]]
+                elif t_stop < 1000:
+                    ranges_t = [[t_start, 90, 6], [90, t_stop, 3]]
+                else: # non-equidistant with higher resolutions at the beginning of the simulation
+                    ranges_t = [[t_start, 90, 6], [90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
+
+            self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
+
+        self.refresh()
+
+
     def refresh(self):
-        options = {
-            #"calc_ic": True,
-            'abstol': 1e-4,
-            #"abstolv": abstolv,
-            #"scale_abstol": True,
-            'reltol': 1e-4,
-            "step0": 0.001,
-            "max_step_size": 0.1,
-            "max_num_steps": 100000,
-            "newton_scheme": "direct",
-            # "newton_scheme": "bcgstab",
-            # "max_krylov": 100,
-            # "max_multistep_order": 4,
-            "print_time": True,
-            #"verbose": True,
-            #"disable_internal_warnings": False,
-        }
+
+        # setting standard options if none were explicitly given before
+        if self.options is None:
+            self.set_options()
 
         dae = self.reactor.DAE
         timepoints = self.time_discretization.get_faces()
 
-        self.integrator = CasADi.integrator('I', 'idas', dae, timepoints[0], timepoints, options)
+        self.integrator = CasADi.integrator('I', 'idas', dae, timepoints[0], timepoints, self.options)
         self.__setInitialValues()
 
-    def setup(self, t_start, t_stop, t_steps):
-
-        # self.time_discretization = Discretization(t_steps, start=t_start, end=t_stop)
-        if t_start < 90:
-            ranges_t = [[t_start, t_stop, 1]]
+    def set_options(self, **kwargs):
+        [abstol, reltol] = kwargs.get('tols', [1e-8, 1e-8])
+        if kwargs.get('log', False) is True:
+            verbose = True
+            disable_internal_warnings = False
         else:
-            ranges_t = [[t_start, 90, 6],[90, t_stop*0.1, 3], [t_stop*0.1, t_stop/3, 2], [t_stop/3, t_stop, 0.25]]
+            verbose = False
+            disable_internal_warnings = True
 
-        self.time_discretization = Discretization(t_steps, Discretization.RELATIVE_ARRAY, ranges=ranges_t)
+        self.options = {
+            'abstol': abstol,
+            "scale_abstol": kwargs.get('scale_tol', False),
+            'reltol': reltol,
+            "step0": kwargs.get('init_step', 0.01),
+            "max_step_size": kwargs.get('max_step_size', 1),
+            "max_num_steps": kwargs.get('max_num_steps', 10000),
+            "newton_scheme": kwargs.get('newton_scheme', 'direct'),
+            "print_time": kwargs.get('get_runtime', False),
+            "verbose": verbose,
+            "disable_internal_warnings": disable_internal_warnings,
+        }
 
-        self.refresh()
-
+        def refresh(self):
+            options = {
+                # "calc_ic": True,
+                'abstol': 1e-4,
+                # "abstolv": abstolv,
+                # "scale_abstol": True,
+                'reltol': 1e-4,
+                "step0": 0.001,
+                "max_step_size": 0.1,
+                "max_num_steps": 100000,
+                "newton_scheme": "direct",
+                # "newton_scheme": "bcgstab",
+                # "max_krylov": 100,
+                # "max_multistep_order": 4,
+                "print_time": True,
+                # "verbose": True,
+                # "disable_internal_warnings": False,
+            }
 
     def set_specific_InitialValues(self, w_i, T, p, u ):
         n_axial = self.axial_discretization.num_volumes
@@ -112,7 +148,7 @@ class Integrator:
     def integrate(self):
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
-        #self.__printMassDeviation()
+        self.__printMassDeviation()
 
         results = Results(self.axial_discretization, self.radial_discretization, self.time_discretization)
         results.set_reactor(self.reactor)

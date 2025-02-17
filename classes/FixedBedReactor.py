@@ -8,22 +8,35 @@ from classes.ConservationEquations.SpeciesConservation import SpeciesConservatio
 
 
 class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, SpeciesConservation):
-    def __init__(self, dimension, n_axial, n_radial=1):
+    def __init__(self, dimension, n_axial, n_radial=1, **kwargs):
         super().__init__()
         self.dimension = dimension
 
-        # Discretizations
-        if dimension == 1:
-            n_radial = 1
 
-        ranges_z = [[0, self.reactorLength*0.05, 3], [self.reactorLength*0.05, self.reactorLength*0.4, 2], [self.reactorLength*0.4, self.reactorLength, 1]]
-        self.axial_discretization = Discretization(n_axial, Discretization.RELATIVE_ARRAY, ranges= ranges_z)
-        #self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        # Discretization setup
 
-        ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2 * 7/8, 2], [self.reactorDiameter/2 *7/8, self.reactorDiameter/2, 3]]
-        self.radial_discretization = Discretization(n_radial, Discretization.RELATIVE_ARRAY, ranges=ranges_r)
-        #self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter/2)
+        # axial discretization
+        if kwargs.get("z_equi", False) is True:
+            self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
+        else:
+            if kwargs.get('z_ranges', None) is not None:
+                ranges_z = kwargs['z_ranges']
+            else:
+                ranges_z = [[0, self.reactorLength*0.05, 3], [self.reactorLength*0.05, self.reactorLength*0.4, 2], [self.reactorLength*0.4, self.reactorLength, 1]]
+            self.axial_discretization = Discretization(n_axial, Discretization.RELATIVE_ARRAY, ranges= ranges_z)
 
+        # radial discretization
+        if kwargs.get("r_equi", False) is True:
+            self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter / 2)
+        else:
+            if kwargs.get('r_ranges', None) is not None:
+                ranges_r = kwargs['r_ranges']
+            else:
+                ranges_r = [[0, self.reactorDiameter/2 *2/3, 1], [self.reactorDiameter/2 *2/3, self.reactorDiameter/2 * 7/8, 2], [self.reactorDiameter/2 *7/8, self.reactorDiameter/2, 3]]
+            self.radial_discretization = Discretization(n_radial, Discretization.RELATIVE_ARRAY, ranges=ranges_r)
+
+
+        # get spacial size, check for pseudo 1D (1 radial element)
         if self.dimension == 1:
             self.radial_discretization = Discretization(1, start=0, end=self.reactorDiameter / 2)
             self.n_spatial = self.axial_discretization.num_volumes
@@ -129,11 +142,6 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     delta_T_in =  (T[current] - self.T_in)
                 else:
                     delta_T_in =  (T[current] - T[before_z])
-
-                if z == len(axial_faces_deltas)-1:
-                    delta_T_out = 0
-                else:
-                    delta_T_out = (T[after_z]- T[current])
 
 
                 # 3.1.1) Axial Convective Heat Flux

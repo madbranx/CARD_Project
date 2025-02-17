@@ -114,7 +114,7 @@ class Postprocessor:
 
 
 
-    def plot2D_Temperature(self, name, result, timestep):
+    def plot2D_wTpu_X(self, name, result, timestep):
         self.setSizes()
         fig, axs = plt.subplots(4, 1, figsize=(7*1.5, 14), constrained_layout=True)
 
@@ -581,4 +581,32 @@ class Postprocessor:
         plt.xlabel("number of radial volumes/ -")
         plt.legend(loc="upper right")
         plt.title("nRMSE of each variable (4x w_i, T, p, u) of each axial row\n simulating 500s with tol = 1e-4, reference n_axial = " + str(len(ref_values[0])), fontsize = 15)
+        plt.show()
+
+    def plot2D_T_half(self, name, result, timestep):
+        self.setSizes()
+        fig, axs = plt.subplots(1, 1, figsize=(20, 5))
+
+        T = result.get_2D_values(timestep)[1]
+
+        z_pos = result.get_z_pos() / self.reactor.reactorLength
+        r_pos = 2 * result.get_r_pos() / self.reactor.reactorDiameter
+
+        tol_cmap = TOLcmaps()
+        cmp = tol_cmap.get('sunset')
+
+        z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
+
+        T_min, T_max = self.get_min_max(T)
+
+        axs.pcolormesh(z_mesh, r_mesh, T, cmap=cmp, vmin=T_min, vmax=T_max,shading='gouraud')
+
+        axs.set_axis_off()  # Hides everything: axes, ticks, and labels
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Removes padding
+
+        plt.savefig("results/T_half_plot.svg", format="svg", bbox_inches="tight")
+        plt.savefig("results/T_half_plot.pdf", format="pdf", bbox_inches="tight")
+        plt.savefig("results/T_half_plot.eps", format="eps", bbox_inches="tight")
+        plt.savefig("results/T_half_plot.png", format="png", dpi=600, bbox_inches="tight")
+
         plt.show()

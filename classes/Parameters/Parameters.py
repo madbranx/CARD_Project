@@ -20,7 +20,7 @@ class Parameters:
         self.cat_diameter = 0.002  # m
         self.cat_tortuosity = 2  # -
         self.cat_porosity = 0.6  # -
-        self.cat_emissionCoefficient = 0.9  # TODO Quelle, temporärer Wert der an sich stimmt
+        self.cat_emissionCoefficient = 0.9  # -
 
         self.reactor_thermalConductivity = 20   # W/(m K)    # Bremer
         self.reactor_wallThickness = 0.002       # m   # Bremer

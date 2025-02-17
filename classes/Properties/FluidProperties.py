@@ -91,6 +91,7 @@ class FluidProperties(Parameters):
 
     def Pe_0 (self, T, p, u, w_i):
         # Peclet number with velocity corrected for empty space velocity
+        # Thermal Conductivity
         eps = self.eps
         cp_fl = self.massFraction_weighted_average(w_i, Component.HEAT_CAPACITY, T)
         lambda_fl = self.calc_fluidThermalConductivity(T, w_i)
@@ -101,6 +102,17 @@ class FluidProperties(Parameters):
 
         Pe_0 = u_0 * rho_fl * cp_fl * d_p / lambda_fl
         return Pe_0
+
+    def Pe_0_diff(self, u, diffCoff):
+        # Peclet number with velocity corrected for empty space velocity
+        # Diffusion
+        eps = self.eps
+        d_p = self.cat_diameter
+
+        u_0 = u * eps
+
+        Pe_0_diff = u_0 * d_p / diffCoff
+        return Pe_0_diff
 
     def Pr(self, w_i, T):
         eta_fl = self.massFraction_weighted_average(w_i, Component.DYNAMIC_VISCOSITY, T)

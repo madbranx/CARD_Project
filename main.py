@@ -56,6 +56,16 @@ studies = Studies()
 
 
 """ 4) Ignition and Extinction Arcs - DONE """
+studies.arcs(
+    "arcs_1D",
+    1,
+    3000,
+    100,
+    np.linspace(300, 550, 25),
+    120,
+    log=False
+)
+
 # studies.arcs(
 #     "arcs_2D",
 #     2,
@@ -67,8 +77,17 @@ studies = Studies()
 #     log=True
 # )
 
+# studies.combinedArcs(
+#     "arcs_2D_1D",
+#     100,
+#     100,
+#     np.linspace(300, 550, 1),
+#     20,
+#     4,
+#     log=False)
 
-# """ 5) Catalyst Parameter Variations - DONE """
+
+""" 5) Catalyst Parameter Variations - DONE """
 # studies.cat_variation_diameter("cat_variation_diameter",
 #                       20,
 #                       4,
@@ -78,15 +97,14 @@ studies = Studies()
 #                       log = False
 # )
 
-studies.cat_variation_pore("cat_variation_pore",
-                      30,
-                      5,
-                      500,
-                      2000,
-                      np.linspace(1e-9, 50e-9, 20),  # d_pores
-                      log = False
-)
-
+# studies.cat_variation_pore("cat_variation_pore",
+#                       30,
+#                       5,
+#                       500,
+#                       2000,
+#                       np.linspace(1e-9, 50e-9, 20),  # d_pores
+#                       log = False
+# )
 
 
 """ 6) Ignition Behavior """

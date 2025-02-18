@@ -8,7 +8,18 @@ class Studies:
     def __init__(self):
         pass
 
-    def validation_1D(self, n_axial, time_end, time_steps, t_equi=False, z_equi=False, log=False):
+    '''####################################### Validation #######################################'''
+
+    def validation(self, foldername, n_axial, n_radial, time_end, timesteps_1D, timesteps_2D, log=False):
+
+        result_1D = self.__validation_1D(n_axial, time_end, timesteps_1D, log=log)
+        result_2D = self.__validation_2D(n_axial, n_radial, time_end, timesteps_2D, log=log)
+
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_1D_and_2D_vs_ValidationData(foldername, result_1D, result_2D, timesteps_1D, timesteps_2D)
+
+
+    def __validation_1D(self, n_axial, time_end, time_steps, t_equi=False, z_equi=False, log=False):
         ## 1D CASE WITH VALIDATION PLOT
         options_int = {
             "tols": [1e-10, 1e-10],
@@ -24,27 +35,132 @@ class Studies:
         integrator.setup(0, time_end, time_steps, t_equi=t_equi)
         results = integrator.integrate()
 
-        postprocessor = Postprocessor(reactor, "../results/1D_val")
-        postprocessor.plot_1D_vs_ValidationData("test", results, time_steps)
+        return results
 
-    # TODO: update methods below with new syntax!
 
-    def plot_2D_with_TwallVal(self, n_axial, n_radial, time_end, time_steps):
-        ## 2D CASE WITH RESULT PLOTS FOR T, P, U AND CONVERSION X_CO2
-        ## WITH VALIDATION OF TEMPERATURE at outermost and innermost cell
+    def __validation_2D(self, n_axial, n_radial, time_end, time_steps, t_equi=False, z_equi=False, r_equi=False, log=False):
+        ## 2D CASE WITH VALIDATION PLOT
+        options_int = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": True,
+            "log": log,
+        }
 
-        reactor = FixedBedReactor(2, n_axial, n_radial)
+        reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=z_equi, r_equi=r_equi)
         reactor.setup()
+
         integrator = Integrator(reactor)
-        integrator.setup(0, time_end, time_steps)
+        integrator.set_options(**options_int)
+        integrator.setup(0, time_end, time_steps, t_equi=t_equi)
         results = integrator.integrate()
 
-        postprocessor = Postprocessor(reactor, "../results/2D_withTwallVal")
-        plot_times = [1, 5, 10, 50, 100]  # in %
-        for plot_time in plot_times:
-            postprocessor.plot2D_wTpu_X("test2", results, int(plot_time / 100 * time_steps))
+        return results
 
-        postprocessor.plot_Twall_vs_validation("test2", results, time_steps)
+    '''######################################## Base Case #######################################'''
+
+    def base_case_2D(self, foldername, n_axial, n_radial, time_end, time_steps, t_equi=False, z_equi=False, r_equi=False, log=False):
+        options_int = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": True,
+            "log": log,
+        }
+
+        reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=z_equi, r_equi=r_equi)
+        reactor.setup()
+
+        integrator = Integrator(reactor)
+        integrator.set_options(**options_int)
+        integrator.setup(0, time_end, time_steps, t_equi=t_equi)
+        results = integrator.integrate()
+
+        postprocessor = Postprocessor("results")
+        postprocessor.plot2D_wTpu_X(foldername, results, time_steps, 2) # 2 = CO2
+
+    '''##################################### Discretization #####################################'''
+
+    def discretization_study(self, foldername, time_end, time_steps_axial, n_axial_ref, n_axials, time_steps_radial, n_axial_radial, n_radial_ref, n_radials, log=False):
+        # Setting Simulation Options
+        options_axial = {
+            "tols": [1e-8, 1e-8],
+            "get_runtime": False,
+            "log": log,
+        }
+
+        options_radial = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": False,
+            "log": log,
+        }
+
+        def run_sim(reactor, options, timesteps):
+            reactor.setup()
+            integrator = Integrator(reactor)
+            integrator.set_options(**options)
+            integrator.setup(0, time_end, timesteps)
+            return integrator.integrate()
+
+        def print_progress(dim, n_ax, n_rad):
+            print("simulating " + str(dim) + "D with # ax|rad = " + str(n_ax) + "|" + str(n_rad))
+
+        ## 1) Axial Simulations
+        # Simulating axial reference
+        reactor = FixedBedReactor(1, n_axial_ref, 1)
+        print_progress(1, n_axial_ref, 1)
+        result_ax_ref = run_sim(reactor, options_axial, time_steps_axial)
+
+        # Simulating axial ed & ned
+        results_ax_ed = []
+        results_ax_ned = []
+        for n_axial in n_axials:
+            print_progress(1, n_axial, 1)
+            # ed
+            reactor = FixedBedReactor(1, n_axial, 1, z_equi=True)
+            results_ax_ed.append(run_sim(reactor, options_axial, time_steps_axial))
+            # ned
+            reactor = FixedBedReactor(1, n_axial, 1)
+            results_ax_ned.append(run_sim(reactor,options_axial,time_steps_axial))
+
+        ## 1) Radial Simulations
+        # Simulating raidal reference
+        reactor = FixedBedReactor(2, n_axial_radial, n_radial_ref)
+        print_progress(2, n_axial_radial, n_radial_ref)
+        result_rad_ref = run_sim(reactor, options_radial, time_steps_radial)
+
+        # Simulating radial ed & ned
+        results_rad_ed = []
+        results_rad_ned = []
+        for n_radial in n_radials:
+            print_progress(2, n_axial_radial, n_radial)
+            # ed
+            reactor = FixedBedReactor(2, n_axial_radial, n_radial, z_equi=True, r_equi=True)
+            results_rad_ed.append(run_sim(reactor, options_radial, time_steps_radial))
+            # ned
+            reactor = FixedBedReactor(2, n_axial_radial, n_radial)
+            results_rad_ned.append(run_sim(reactor, options_radial, time_steps_radial))
+
+        ## Postprocessing
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_disdiscretizationStudy(foldername, result_ax_ref, results_ax_ed, results_ax_ned, result_rad_ref, results_rad_ed, results_rad_ned, time_steps_axial, time_steps_radial)
+
+
+
+
+
+
+# TODO: update methods below with new syntax!
+
+
+
+
+
+        #
+        # plot_times = [1, 5, 10, 50, 100]  # in %
+        # for plot_time in plot_times:
+        #     postprocessor.plot2D_wTpu_X("test2", results, int(plot_time / 100 * time_steps))
+        #
+
+
+
 
     def pseudo_2D_vs_1D(self, n_axial, n_radial, time_end, time_steps):
         # 2D with 1 axial element
@@ -189,40 +305,3 @@ class Studies:
 
         postprocessor.plot2D_wTpu_X("name", result_extinction, time_steps)
 
-    def discretization_study1D(self, time_end, time_steps, n_axial_ref, n_axials):
-
-        reactor = FixedBedReactor(1, n_axial_ref, 1)
-        reactor.setup()
-        integrator = Integrator(reactor)
-        integrator.setup(0, time_end, time_steps)
-        result_ref = integrator.integrate()
-
-        results = []
-        for n_axial in n_axials:
-            reactor = FixedBedReactor(1, n_axial, 1)
-            reactor.setup()
-            integrator = Integrator(reactor)
-            integrator.setup(0, time_end, time_steps)
-            results.append(integrator.integrate())
-
-        postprocessor = Postprocessor(reactor, "../results/discr_1d")
-        postprocessor.plot_discretizationStudy1D(results, result_ref, time_steps)
-
-    def discretization_study_radial(self, time_end, timesteps, n_radial_ref, n_axial, n_radials):
-
-        reactor = FixedBedReactor(2, n_axial, n_radial_ref)
-        reactor.setup()
-        integrator = Integrator(reactor)
-        integrator.setup(0, time_end, timesteps)
-        result_ref = integrator.integrate()
-
-        results = []
-        for n_radial in n_radials:
-            reactor = FixedBedReactor(2, n_axial, n_radial)
-            reactor.setup()
-            integrator = Integrator(reactor)
-            integrator.setup(0, time_end, timesteps)
-            results.append(integrator.integrate())
-
-        postprocessor = Postprocessor(reactor, "../results/discr_radial")
-        postprocessor.plot_discretizationStudy_radial(results, result_ref, timesteps)

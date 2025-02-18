@@ -492,7 +492,72 @@ class Postprocessor:
 
     '''################################ PLOT METHODS  - xxxxxxxxxxxxxxxxx ################################'''
 
+    def plot_ignitionArc(self, foldername, results_ignition, results_extinction, T_wall_ign, T_wall_ext, timestep):
+        self.__format_plot()
+        dim = results_ignition[0].reactor.dimension
 
+        fig, axs = plt.subplots(1, 1, figsize=(5.5, 5), constrained_layout=True)
+        colors = self.__get_colors()
+
+        # Plot Bremer Data
+        T_bremer_ignition = np.array([311, 323, 342, 359, 377, 401, 424, 442, 454, 460, 465, 490, 512, 537, 561])
+        X_bremer_ignition = np.array([0.00333, 0.00355, 0.00388, 0.00418, 0.00776, 0.00980, 0.0298, 0.0871, 0.201,
+                             0.392, 0.930, 0.965, 0.980, 0.985, 0.979])
+
+        T_bremer_extinction = np.array([308, 322, 336, 348, 359, 365, 371, 377, 388, 407, 425, 449, 471, 491, 513, 531, 549])
+        X_bremer_extinction = np.array([0.00329, 0.00353, 0.00214, 0.00399, 0.00417, 0.686, 0.826, 0.845, 0.860,
+                     0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984])
+
+        axs.plot(T_bremer_ignition, X_bremer_ignition, color="grey", linestyle="-", linewidth=2.5)
+        axs.plot(T_bremer_extinction, X_bremer_extinction, color="grey", linestyle="-", linewidth=2.5)
+
+
+        # Plot Simulation Data
+        X_CO2_ign = []
+        for result in results_ignition:
+            if dim == 1:
+                x_CO2_ign = result.getConversion_1D(timestep, 2)
+            else:
+                x_CO2_ign = result.getConversion_2D(timestep, 2)
+            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+
+        X_CO2_ext = []
+        for result in results_extinction:
+            if dim == 1:
+                x_CO2_ext = result.getConversion_1D(timestep, 2)
+            else:
+                x_CO2_ext = result.getConversion_2D(timestep, 2)
+            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
+
+
+        axs.plot(T_wall_ext, X_CO2_ext, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
+        axs.plot(T_wall_ign, X_CO2_ign, color=colors[1], linestyle="--", linewidth = 2.5,  marker='v',
+                 markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
+
+        # Axis
+        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
+        axs.set_ylabel(r'$X_{CO_2}/ -$')
+
+        axs.set_xlim(275, 625)
+        axs.set_xticks([300, 450, 600])
+
+        axs.set_yticks([0, 0.5, 1])
+        axs.xaxis.set_major_locator(MaxNLocator(nbins=3))  # Approx. ticks on y-axis
+
+        #set legend for axs
+        axs.legend(fontsize="16", loc="lower right")
+
+        # # set title
+        # axs.set_title("ignition and extinction arcs\n\n")
+
+        # set legend for fig
+        h1, = plt.plot([], [], linestyle = "-", markersize=10, color="grey", label="Bremer et. al.", linewidth=2.5)
+        h2, = plt.plot([], [], marker='v', markersize=10, color="black", linestyle="-", label="simulation", linewidth=2.5)
+        fig.legend(handles=[h1, h2], loc="upper center", bbox_to_anchor=(0.58, 1.1), ncol=2, fontsize="16")
+
+        self.__export(foldername, "arcs_2D", plt)
+        plt.show()
 
 
 
@@ -583,51 +648,8 @@ class Postprocessor:
 
         plt.show()
 
-    def plot_ignitionArc2D(self, results_ignition, results_extinction, T_wall_ign, T_wall_ext, timestep):
-        self.__format_plot()
-
-        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
-        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
 
 
-        # Plot Bremer Data
-        T_bremer_ignition = np.array([311, 323, 342, 359, 377, 401, 424, 442, 454, 460, 465, 490, 512, 537, 561])
-        X_bremer_ignition = np.array([0.00333, 0.00355, 0.00388, 0.00418, 0.00776, 0.00980, 0.0298, 0.0871, 0.201,
-                             0.392, 0.930, 0.965, 0.980, 0.985, 0.979])
-
-        T_bremer_extinction = np.array([308, 322, 336, 348, 359, 365, 371, 377, 388, 407, 425, 449, 471, 491, 513, 531, 549])
-        X_bremer_extinction = np.array([0.00329, 0.00353, 0.00214, 0.00399, 0.00417, 0.686, 0.826, 0.845, 0.860,
-                     0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984])
-
-        axs.plot(T_bremer_ignition, X_bremer_ignition, color="black", linestyle="-")
-        axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
-
-
-        # Plot Simulation Data
-        X_CO2_ign = []
-        for result in results_ignition:
-            x_CO2_ign = result.getConversion_2D(timestep, 2)
-            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
-
-        X_CO2_ext = []
-        for result in results_extinction:
-            x_CO2_ext = result.getConversion_2D(timestep, 2)
-            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
-
-
-        axs.plot(T_wall_ign, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v',
-                 markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(T_wall_ext, X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
-
-        # Axis
-        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
-        axs.set_ylabel(r'$Conversion CO2 / -$')
-
-        #axs.set_xlim(300, 700)
-
-        axs.legend()
-        plt.show()
 
 
     def plot1D_vsPseudo1D_vs_val(self, name, result1D, resultP1D, timestep):
@@ -711,65 +733,14 @@ class Postprocessor:
         #
 
 
-    def plot_ignitionArc1D(self, results_ignition, results_extinction, T_walls, time_steps, rev=False):
-        self.__format_plot()
-
-        fig, axs = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True, sharex=True)
-        colors = plt.cm.Dark2(np.linspace(0, 1, 8))
-
-
-        # Plot Bremer Data
-        T_bremer_ignition = np.array([311, 323, 342, 359, 377, 401, 424, 442, 454, 460, 465, 490, 512, 537, 561, 596])
-        X_bremer_ignition = np.array([0.00333, 0.00355, 0.00388, 0.00418, 0.00776, 0.00980, 0.0298, 0.0871, 0.201,
-                             0.392, 0.930, 0.965, 0.980, 0.985, 0.979, 0.970])
-
-        T_bremer_extinction = np.array([308, 322, 336, 348, 359, 365, 371, 377, 388, 407, 425, 449, 471, 491, 513, 531, 549, 573, 595])
-        X_bremer_extinction = np.array([0.00329, 0.00353, 0.00214, 0.00399, 0.00417, 0.686, 0.826, 0.845, 0.860,
-                     0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984, 0.978, 0.971])
-
-        axs.plot(T_bremer_ignition, X_bremer_ignition, color="black", linestyle="-")
-
-        if rev:
-            axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
-
-        axs.plot(T_bremer_extinction, X_bremer_extinction, color="black", linestyle="-", linewidth=2)
-
-
-        # Plot Simulation Data
-        X_CO2_ign = []
-        for result in results_ignition:
-            x_CO2_ign = result.getConversion_1D(time_steps, 2)
-            X_CO2_ign.append(x_CO2_ign[-1])
-
-        X_CO2_ext = []
-        for result in results_extinction:
-            x_CO2_ext = result.getConversion_1D(time_steps, 2)
-            X_CO2_ext.append(x_CO2_ext[-1])
-
-        axs.plot(T_walls, X_CO2_ign, color=colors[0], linestyle="--", linewidth = 2,  marker='v', markersize=6, markerfacecolor="black",markeredgecolor='black', label = "ignition")
-        axs.plot(np.flip(T_walls), X_CO2_ext, color=colors[1], linestyle="--", linewidth=2, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label = "extinction")
-
-        # Axis
-        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
-        axs.set_ylabel(r'$Conversion CO2 / -$')
-
-        #axs.set_xlim(300, 700)
-
-        axs.legend()
-        plt.show()
-
-
-
-
     def plot2D_T_half(self, name, result, timestep):
         self.__format_plot()
         fig, axs = plt.subplots(1, 1, figsize=(20, 5))
 
         T = result.get_2D_values(timestep)[1]
 
-        z_pos = result.get_z_pos() / results.reactor.reactorLength
-        r_pos = 2 * result.get_r_pos() / results.reactor.reactorDiameter
+        z_pos = result.get_z_pos() / result.reactor.reactorLength
+        r_pos = 2 * result.get_r_pos() / result.reactor.reactorDiameter
 
         tol_cmap = TOLcmaps()
         cmp = tol_cmap.get('sunset')

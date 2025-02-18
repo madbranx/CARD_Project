@@ -324,7 +324,7 @@ class Postprocessor:
         # Plotting
         self.__format_plot()
 
-        fig, axs = plt.subplots(1, 2, figsize=(11, 5), constrained_layout=True)
+        fig, axs = plt.subplots(1, 2, figsize=(10.5, 5), constrained_layout=True)
         colors = self.__get_colors()
 
         n_axials = []
@@ -333,16 +333,16 @@ class Postprocessor:
             n_axial = len(result.reactor.axial_discretization.get_centroids())
             n_axials.append(n_axial)
             axs[0].plot(n_axial, ax_ed_mean[i], marker='v', markersize=10, color=colors[0])
-            axs[0].plot(n_axial, ax_ed_max[i], marker='*', markersize=10, color=colors[0])
+            axs[0].plot(n_axial, ax_ed_max[i], marker='x', markersize=10, color=colors[0])
 
         # Plot axial non-equidistant
         for i, result in enumerate(results_axial_ned):
             n_axial = len(result.reactor.axial_discretization.get_centroids())
             axs[0].plot(n_axial, ax_ned_mean[i], marker='v', markersize=10, color=colors[1])
-            axs[0].plot(n_axial, ax_ned_max[i], marker='*', markersize=10, color=colors[1])
+            axs[0].plot(n_axial, ax_ned_max[i], marker='x', markersize=10, color=colors[1])
 
         max_n_rounded = math.ceil(np.max(n_axials) / 10) * 10
-        axs[0].set_xlim(-1, max_n_rounded+1)
+        axs[0].set_xlim(-max_n_rounded*0.05, max_n_rounded*1.05)
         axs[0].set_xticks(np.linspace(0, max_n_rounded, 5))
         axs[0].set_ylabel("normalized RMSE / -")
         axs[0].set_xlabel("number of axial volumes/ -")
@@ -355,16 +355,16 @@ class Postprocessor:
             n_radial = len(result.reactor.radial_discretization.get_centroids())
             n_radials.append(n_radial)
             axs[1].plot(n_radial, rad_ed_mean[i], marker='v', markersize=10, color=colors[0])
-            axs[1].plot(n_radial, rad_ed_max[i], marker='*', markersize=10, color=colors[0])
+            axs[1].plot(n_radial, rad_ed_max[i], marker='x', markersize=10, color=colors[0])
 
         # Plot radial non-equidistant
         for i, result in enumerate(results_radial_ned):
             n_radial = len(result.reactor.radial_discretization.get_centroids())
             axs[1].plot(n_radial, rad_ned_mean[i], marker='v', markersize=10, color=colors[1])
-            axs[1].plot(n_radial, rad_ned_max[i], marker='*', markersize=10, color=colors[1])
+            axs[1].plot(n_radial, rad_ned_max[i], marker='x', markersize=10, color=colors[1])
 
         max_n_rounded = math.ceil(np.max(n_radials) / 10) * 10
-        axs[1].set_xlim(0, max_n_rounded+1)
+        axs[1].set_xlim(-max_n_rounded*0.05, max_n_rounded*1.05)
         axs[1].set_xticks(np.linspace(0, max_n_rounded, 5))
         axs[1].set_xlabel("number of radial volumes/ -")
         n_ref = len(result_radial_ref.reactor.radial_discretization.get_centroids())

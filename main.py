@@ -86,16 +86,6 @@ studies = Studies()
 #     4,
 #     log=False)
 
-studies.arcs1D_times(
-    "arcs_1D_times",
-    3000,
-    [10, 50, 100, 300, 750, 3000],
-    200,
-    np.linspace(300, 550, 10),
-    100,
-    log=False
-)
-
 
 """ 5) Catalyst Parameter Variations - DONE """
 # studies.cat_variation_diameter("cat_variation_diameter",

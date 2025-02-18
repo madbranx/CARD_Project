@@ -567,7 +567,7 @@ class Postprocessor:
         fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
         colors = self.__get_colors()
 
-        d_cat_ref = result_ref.reactor.cat_diameter*1e-3
+        d_cat_ref = result_ref.reactor.cat_diameter*1e3
         print(d_cat_ref)
         d_cat_ref = 2
 
@@ -614,10 +614,10 @@ class Postprocessor:
     def plotCatVariation_pore(self, foldername, exportname, result_ref, results, parameters, timestep):
         self.__format_plot()
 
-        fig, axs = plt.subplots(1, 1, figsize=(6.5, 5), constrained_layout=True)
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
         colors = self.__get_colors()
 
-        d_cat_ref = result_ref.reactor.diameter_pore*1e-9
+        d_cat_ref = 10
 
         X_CO2, eff_factor, delta_p = self.__getPlotData_Cat_variation(results, timestep)
 
@@ -628,7 +628,7 @@ class Postprocessor:
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}~\mathrm{mean}$")
 
         axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$ ~\mathrm{out}")
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2} ~\mathrm{outlet}$")
 
         ax2 = axs.twinx()
         ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
@@ -638,8 +638,8 @@ class Postprocessor:
         axs.set_ylabel(r'$X_{CO_2}, ~\eta_{\mathrm{eff}} ~/~ -$')
         ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
 
-        axs.set_xlim(0, 101)
-        axs.set_xticks([0, 25, 75, 100])
+        axs.set_xlim(0, 51)
+        axs.set_xticks([0, 25, 50])
         axs.set_ylim(0, 1)
         axs.set_yticks([0, 0.5, 1])
         ax2.set_ylim(0, 1.5)
@@ -650,7 +650,7 @@ class Postprocessor:
         # set legend for axs
         lines_axs, labels_axs = axs.get_legend_handles_labels()
         lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
-        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="lower center", ncol = 3)
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="lower right", ncol = 1)
 
         #  set title
         axs.set_title("pore diameter variation")

@@ -490,7 +490,7 @@ class Postprocessor:
 
         return np.column_stack((common_orts, interp1(common_orts)))
 
-    '''################################ PLOT METHODS  - xxxxxxxxxxxxxxxxx ################################'''
+    '''######################################## PLOT METHODS  - ARCS ########################################'''
 
     def plot_ignitionArc(self, foldername, results_ignition, results_extinction, T_wall_ign, T_wall_ext, timestep):
         self.__format_plot()
@@ -559,12 +559,67 @@ class Postprocessor:
         self.__export(foldername, "arcs_2D", plt)
         plt.show()
 
+    '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''
 
+    def plotCatVariation(self, foldername, exportname, title_name, xLabel_name, results, parameters, timestep):
+        self.__format_plot()
 
+        fig, axs = plt.subplots(1, 1, figsize=(6.5, 5), constrained_layout=True)
+        colors = self.__get_colors()
 
+        # Extract Plotting Data
+        X_CO2_ign = []
+        eff_factor = []
+        delta_p = []
+        for result in results:
+            # calc Conversion
+            x_CO2_ign = result.getConversion_2D(timestep, 2)
+            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
 
+            # get Variables
+            w_i, T, p, u = result.get_2D_values(timestep) # Format [comp,z,r], [z,r]
 
+            # calc eff factor
+            eff_factor.append(result.reactor.effFactor(w_i, T, p))
 
+            # calc delta p
+            p_in = result.average_trapezoidal(p[0, :])
+            p_out = result.average_trapezoidal(p[-1, :])
+            delta_p.append(p_in - p_out)
+
+        axs.plot(parameters, eff_factor, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}$")
+
+        axs.plot(parameters, X_CO2_ign, color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$")
+
+        ax2 = axs.twinx()
+        ax2.plot(parameters, delta_p, color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p$")
+
+        # Axis
+
+        axs.set_xlabel(xLabel_name)
+        axs.set_ylabel(r'$X_{CO_2}, \eta_{\mathrm{eff}} ~/~ -$')
+        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
+        axs.yaxis.set_major_locator(MaxNLocator(nbins=3))
+
+        axs.set_yticks([0, 0.5, 1])
+        axs.xaxis.set_major_locator(MaxNLocator(nbins=3))  # Approx. ticks on y-axis
+        min_x_rounded = math.floor(np.min(parameters) / 1) * 1
+        max_x_rounded = math.ceil(np.max(parameters) / 10) * 10
+        axs[1].set_xlim(min_x_rounded * (1-0.05), max_x_rounded * 1.05)
+
+        # set legend for axs
+        axs.legend(fontsize="16", loc="best")
+
+        #  set title
+        axs.set_title(title_name)
+
+        self.__export(foldername, exportname, plt)
+        plt.show()
+
+    '''############################## PLOT METHODS  - IGNITION BEHAVIOR ################################'''
 
 
 

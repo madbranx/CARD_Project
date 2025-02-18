@@ -187,4 +187,4 @@ class Integrator:
             for z in range(n_spatial):
                 MassFluxDev[z, t] = abs(mdot_0 - (self.u_res[z, t] * self.reactor.rho_fl(self.w_i_res[z, t, :].T, self.T_res[z, t],
                                                                                     self.p_res[z, t]).__float__())) / mdot_0 * 100
-        print("Maximal mass flux deviation: ", np.max(MassFluxDev), "\n")
+        #print("Maximal mass flux deviation: ", np.max(MassFluxDev), "\n")

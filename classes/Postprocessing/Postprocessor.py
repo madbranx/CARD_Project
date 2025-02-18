@@ -3,7 +3,7 @@ import pandas as pd
 import casadi as CasADi
 import math
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, MultipleLocator
 from scipy.interpolate import interp1d, griddata
 from pathlib import Path
 from classes.Postprocessing.TOLcmaps import TOLcmaps
@@ -561,19 +561,105 @@ class Postprocessor:
 
     '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''
 
-    def plotCatVariation(self, foldername, exportname, title_name, xLabel_name, result_ref, results, parameters, timestep):
+    def plotCatVariation_diameter(self, foldername, exportname, result_ref, results, parameters, timestep):
+        self.__format_plot()
+
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
+        colors = self.__get_colors()
+
+        d_cat_ref = result_ref.reactor.cat_diameter*1e-3
+        print(d_cat_ref)
+        d_cat_ref = 2
+
+        X_CO2, eff_factor, delta_p = self.__getPlotData_Cat_variation(results, timestep)
+        print(X_CO2, eff_factor, delta_p)
+
+        axs.axvline(d_cat_ref, color="grey", linestyle="--", linewidth=2.5)
+        axs.text(x=d_cat_ref, y=0.1, s="base   case", color="grey", fontsize=14, ha="center")
+
+        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}~\mathrm{mean}$")
+
+        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}~\mathrm{outlet}$")
+
+        ax2 = axs.twinx()
+        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
+
+        # Axis
+        axs.set_ylabel(r'$X_{CO_2}, ~\eta_{\mathrm{eff}} ~/~ -$')
+        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
+
+        axs.set_xlim(1.3, 4.1)
+        axs.set_xticks([1.4, 2.7, 4])
+        axs.set_ylim(0, 1)
+        axs.set_yticks([0, 0.5, 1])
+        ax2.set_ylim(0, 1.5)
+        ax2.set_yticks([0, 0.75, 1.5])
+        axs.set_xlabel(r"$d_{\mathrm{cat}}~/~mm$")
+
+
+        # set legend for axs
+        lines_axs, labels_axs = axs.get_legend_handles_labels()
+        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="center right", ncol = 1)
+
+        #  set title
+        axs.set_title("catalyst diameter variation")
+
+        self.__export(foldername, exportname, plt)
+        plt.show()
+
+    def plotCatVariation_pore(self, foldername, exportname, result_ref, results, parameters, timestep):
         self.__format_plot()
 
         fig, axs = plt.subplots(1, 1, figsize=(6.5, 5), constrained_layout=True)
         colors = self.__get_colors()
 
-        # getting ref pressure drop
-        # calc delta p
-        w_i, T, p, u = result_ref.get_2D_values(timestep)
-        p_in = result_ref.average_trapezoidal(p[0, :])
-        p_out = result_ref.average_trapezoidal(p[-1, :])
-        delta_p_ref = (p_in - p_out)
+        d_cat_ref = result_ref.reactor.diameter_pore*1e-9
 
+        X_CO2, eff_factor, delta_p = self.__getPlotData_Cat_variation(results, timestep)
+
+        axs.axvline(d_cat_ref, color="grey", linestyle="--", linewidth=2.5)
+        axs.text(x=d_cat_ref, y=0.1, s="base case", color="grey", fontsize=14, ha="center")
+
+        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}~\mathrm{mean}$")
+
+        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$ ~\mathrm{out}")
+
+        ax2 = axs.twinx()
+        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
+
+        # Axis
+        axs.set_ylabel(r'$X_{CO_2}, ~\eta_{\mathrm{eff}} ~/~ -$')
+        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
+
+        axs.set_xlim(0, 101)
+        axs.set_xticks([0, 25, 75, 100])
+        axs.set_ylim(0, 1)
+        axs.set_yticks([0, 0.5, 1])
+        ax2.set_ylim(0, 1.5)
+        ax2.set_yticks([0, 0.75, 1.5])
+        axs.set_xlabel(r"$d_{\mathrm{pore}}~/~nm$")
+
+
+        # set legend for axs
+        lines_axs, labels_axs = axs.get_legend_handles_labels()
+        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="lower center", ncol = 3)
+
+        #  set title
+        axs.set_title("pore diameter variation")
+
+        self.__export(foldername, exportname, plt)
+        plt.show()
+
+
+    def __getPlotData_Cat_variation(self, results, timestep):
         # Extract Plotting Data
         X_CO2 = []
         eff_factor = []
@@ -584,7 +670,7 @@ class Postprocessor:
             X_CO2.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
 
             # get Variables
-            w_i, T, p, u = result.get_2D_values(timestep) # Format [comp,z,r], [z,r]
+            w_i, T, p, u = result.get_2D_values(timestep)  # Format [comp,z,r], [z,r]
 
             # calc eff factor
             n_r = result.reactor.radial_discretization.get_centroids()
@@ -594,7 +680,7 @@ class Postprocessor:
             for z in range(len(n_z)):
                 effs_r = []
                 for r in range(len(n_r)):
-                    eff = np.array(result.reactor.effFactor(w_i[:, z, r], T[z,r], p[z,r]), dtype=float)
+                    eff = np.array(result.reactor.effFactor(w_i[:, z, r], T[z, r], p[z, r]), dtype=float)
                     effs_r.append(eff)
                 effs_z.append(effs_r)
             eff_factor.append(np.mean(effs_z))
@@ -603,36 +689,9 @@ class Postprocessor:
             p_in = result.average_trapezoidal(p[0, :])
             p_out = result.average_trapezoidal(p[-1, :])
             delta_p.append((p_in - p_out))
-            #delta_p.append((p_in - p_out)/delta_p_ref)
+            # delta_p.append((p_in - p_out)/delta_p_ref)
 
-        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}$")
-
-        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$")
-
-        ax2 = axs.twinx()
-        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
-
-        # Axis
-        axs.set_ylabel(r'$X_{CO_2}, \eta_{\mathrm{eff}} ~/~ -$')
-        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
-
-        ax2.set_ylim(0, 1)
-        axs.set_yticks([0, 0.5, 1])
-        axs.set_ylim(0, 1)
-
-        # set legend for axs
-        lines_axs, labels_axs = axs.get_legend_handles_labels()
-        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
-        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="best")
-
-        #  set title
-        axs.set_title(title_name)
-
-        self.__export(foldername, exportname, plt)
-        plt.show()
+        return X_CO2, eff_factor, delta_p
 
     '''############################## PLOT METHODS  - IGNITION BEHAVIOR ################################'''
 

@@ -104,7 +104,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 before_r = current - len(axial_faces_deltas)
                 after_r = current + len(axial_faces_deltas)
 
-            ## 1) MASS CONSERVATION
+                ## 1) MASS CONSERVATION
 
                 # Dispersion correction
                 if self.dimension == 2:

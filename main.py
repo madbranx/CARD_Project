@@ -11,25 +11,24 @@
 """
 ###########################################################################################
 
-from classes.Studies import Studies
 import numpy as np
+from classes.Studies import Studies
 
 studies = Studies()
 
 
 """ 1) Discretization  - DONE"""
-studies.discretization_study(
-    "discretization",
-    60,
-    500,
-    1000,
-    [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
-    3000,
-    250,
-    30,
-    [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
-    True)
-
+# studies.discretization_study(
+#     "discretization",
+#     60,
+#     500,
+#     1000,
+#     [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
+#     3000,
+#     250,
+#     30,
+#     [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
+#     True)
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
@@ -54,8 +53,16 @@ studies.discretization_study(
 
 
 """ 4) Ignition and Extinction Arcs """
-#studies.arcs_1d(150, 4000, 1000, np.linspace(300, 550, 25))
-#studies.arcs_2d(150, 12, 3000, 30000, np.linspace(300, 550, 50))
+studies.arcs(
+    "arcs_2D",
+    2,
+    3000,
+    10000,
+    np.linspace(300, 550, 25),
+    80,
+    6,
+    log=True
+)
 
 
 """ 5) Catalyst Parameter Variations """

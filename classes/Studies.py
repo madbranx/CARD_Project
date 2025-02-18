@@ -56,7 +56,7 @@ class Studies:
 
         return results
 
-    '''######################################## Base Case #######################################'''
+    '''######################################## Base Case ########################################'''
 
     def base_case_2D(self, foldername, n_axial, n_radial, time_end, time_steps, t_equi=False, z_equi=False, r_equi=False, log=False):
         options_int = {
@@ -76,7 +76,7 @@ class Studies:
         postprocessor = Postprocessor("results")
         postprocessor.plot2D_wTpu_X(foldername, results, time_steps, 2) # 2 = CO2
 
-    '''##################################### Discretization #####################################'''
+    '''##################################### Discretization ######################################'''
 
     def discretization_study(self, foldername, time_end, time_steps_axial, n_axial_ref, n_axials, time_steps_radial, n_axial_radial_ref, n_radial_ref, n_radials, log=False):
         # Setting Simulation Options
@@ -147,122 +147,84 @@ class Studies:
 
     '''################################# Ignition/Extinction Arcs ################################'''
 
-    def arcs_1d(self, n_axial, time_end, time_steps, T_walls):
-        ## 1D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
+    def arcs(self, foldername, dim, time_end, time_steps, T_walls,n_axial, n_radial=1, log=False):
+        ## 2D EXTINCTION AND IGNITION ARCS PLOTS
 
-        # setting up reactor and integrator
-        reactor = FixedBedReactor(1, n_axial, 1)
-        reactor.T_wall = T_walls[0]  # Temperature for extinguished reactor
-        reactor.setup()
-        integrator = Integrator(reactor)
+        # Setting Simulation Options
+        if dim == 1:
+            options = {
+                "tols": [1e-8, 1e-8],
+                "get_runtime": False,
+                "log": log,
+            }
+        else:
+            options = {
+                "tols": [1e-4, 1e-4],
+                "get_runtime": False,
+                "log": log,
+                'max_step_size': 0.1,
+                "max_num_steps": 20000,
+            }
 
-        # get results of unignited reactor
-        integrator.setup(0, time_end, time_steps)
-        result_extinguished = integrator.integrate()
-        postprocessor = Postprocessor(reactor, "../results/arcs_1d")
-        w_i, T, p, u = result_extinguished.get_rawValues(time_steps)
+        def run_sim(reactor, w_i=None, T=None, p=None, u=None):
+            reactor.setup()
+            integrator = Integrator(reactor)
+            integrator.set_options(**options)
+            integrator.setup(0, time_end, time_steps)
+            if w_i is not None:
+                integrator.set_specific_InitialValues(w_i, T, p, u)
+            return integrator.integrate()
+
+        # Setting up Reactor
+        reactor = FixedBedReactor(dim, n_axial, n_radial, z_equi=True)
+        w_i, T, p, u = None, None, None, None
+
+        # # Simulating extinguished reactor -> not needed currently
+        # reactor.T_wall = T_walls[0]
+        # result_extinguished = run_sim(reactor)
+        # w_i, T, p, u = result_extinguished.get_rawValues(time_steps)
 
         # calculating arcs
         results_ignition = []
         for T_wall in T_walls:
 
-            # calculating ignition arcs
+            # setting T_wall
             print("Ignition: T_wall = ", T_wall)
             reactor.T_wall = T_wall
             reactor.setup()
-            try:
-                integrator.setup(0, time_end, time_steps)
-                integrator.set_specific_InitialValues(w_i, T, p, u)
-                result_ignition = integrator.integrate()
-                results_ignition.append(result_ignition)
-                w_i, T, p, u = result_ignition.get_rawValues(time_steps)
+            try: # running simulation and setting new starting values
+                results_ignition.append(run_sim(reactor, w_i, T, p, u))
+                w_i, T, p, u  = results_ignition[-1].get_rawValues(time_steps)
             except:
+                print("ignition failed")
                 pass
 
         # extinction arcs
         T_walls_ext = np.flip(T_walls)
         results_extinction = []
         for T_wall in T_walls_ext:
+
+            # setting T_wall
             print("Extinction: T_wall = ", T_wall)
             reactor.T_wall = T_wall
             reactor.setup()
-            try:
-                integrator.setup(0, time_end, time_steps)
-                integrator.set_specific_InitialValues(w_i, T, p, u)
-                result_extinction = integrator.integrate()
-                results_extinction.append(result_extinction)
-                w_i, T, p, u = result_extinction.get_rawValues()
+            try: # running simulation and setting new starting values
+                results_extinction.append(run_sim(reactor, w_i, T, p, u))
+                w_i, T, p, u = results_extinction[-1].get_rawValues(time_steps)
             except:
+                print("extinction failed")
                 pass
 
-        postprocessor.plot_ignitionArc1D(results_ignition, results_extinction, T_walls, time_steps, True)
+        ## Postprocessing
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_ignitionArc(foldername, results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
 
-    def arcs_2d(self, n_axial, n_radial, time_end, time_steps, T_walls):
-        ## 2D CASE WITH EXTINCTION AND IGNITION ARCS PLOTS
-
-        # setting up reactor and integrator
-        reactor = FixedBedReactor(1, n_axial, n_radial)
-        reactor.T_wall = T_walls[0]  # Temperature for extinguished reactor
-        reactor.setup()
-        integrator = Integrator(reactor)
-
-        # get results of unignited reactor
-        integrator.setup(0, time_end, time_steps)
-        result_extinguished = integrator.integrate()
-        postprocessor = Postprocessor(reactor, "../results/arcs_2d")
-        w_i, T, p, u = result_extinguished.get_rawValues(time_steps)
-
-        # calculating arcs
-        results_ignition = []
-        for T_wall in T_walls:
-
-            # calculating ignition arcs
-            print("Ignition: T_wall = ", T_wall)
-            reactor.T_wall = T_wall
-            reactor.setup()
-            try:
-                integrator.setup(0, time_end, time_steps)
-                integrator.set_specific_InitialValues(w_i, T, p, u)
-                result_ignition = integrator.integrate()
-                results_ignition.append(result_ignition)
-                w_i, T, p, u = result_ignition.get_rawValues(time_steps)
-            except:
-                pass
-
-        # extinction arcs
-        T_walls_ext = np.flip(T_walls)
-        results_extinction = []
-        for T_wall in T_walls_ext:
-            print("Extinction: T_wall = ", T_wall)
-            reactor.T_wall = T_wall
-            reactor.setup()
-            try:
-                integrator.setup(0, time_end, time_steps)
-                integrator.set_specific_InitialValues(w_i, T, p, u)
-                result_extinction = integrator.integrate()
-                results_extinction.append(result_extinction)
-                w_i, T, p, u = result_extinction.get_rawValues()
-            except:
-                pass
-
-        postprocessor.plot_ignitionArc2D(results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
-
-
+    '''#################################### Catalyst Variation ###################################'''
 
 
 
 
 # TODO: update methods below with new syntax!
-
-
-
-
-
-        #
-        # plot_times = [1, 5, 10, 50, 100]  # in %
-        # for plot_time in plot_times:
-        #     postprocessor.plot2D_wTpu_X("test2", results, int(plot_time / 100 * time_steps))
-        #
 
 
 

@@ -6,8 +6,8 @@
     Project Timespan 12/2024 - 02/2025
 
     Authors: Till Kasselmann, Maximilian Brand (Group 1)
-    maximilian.brand@student.kit.edu
     till.kasselmann@student.kit.edu
+    maximilian.brand@student.kit.edu
 """
 ###########################################################################################
 
@@ -16,31 +16,66 @@ import numpy as np
 
 studies = Studies()
 
-###########################################################################################
 
-#n_axials = [500, 400, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2]
-#studies.discretization_study1D(500, 1000, 1000, n_axials)
+""" 1) Discretization  - DONE"""
+studies.discretization_study(
+    "discretization",
+    300,
+    1000,
+    1000,
+    [400, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
+    10000,
+    200,
+    10,
+    [ 6, 4, 3, 2], # 25, 20, 15, 12, 10, 8,
+    False)
 
-#n_radials = [25, 20, 15, 12, 10, 8, 6, 4, 3, 2]
-#studies.discretization_study_radial(500, 10000, 30, 200, n_radials)
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
-#studies.validation_1D(300, 3000, 500)
 
+""" 2) Validation - DONE """
+# studies.validation(
+#     "validation",
+#     150,
+#     12,
+#     3000,
+#     300,
+#     15000)
+
+
+""" 3) Base Case - DONE """
+# studies.base_case_2D(
+#     "base_case_2D",
+#     200,
+#     20,
+#     1500,
+#     12000)
+
+
+""" 4) Ignition and Extinction Arcs """
 #studies.arcs_1d(150, 4000, 1000, np.linspace(300, 550, 25))
+#studies.arcs_2d(150, 12, 3000, 30000, np.linspace(300, 550, 50))
+
+
+""" 5) Catalyst Parameter Variations """
+#TODO catalyst variations
+
+
+""" 6) Ignition Behavior """
+#TODO moving Hotspot
+
+
+
+
+
+###########################################################################################
 
 #studies.plot_2D_with_TwallVal(150, 12, 3000, 6000)
 
 #studies.pseudo_2D_vs_1D(20, 5, 3000, 300)
 
 #studies.test_2D_extinction(20, 4, 3000, 8000, 550, 500)
-
-#studies.arcs_2d(150, 12, 3000, 30000, np.linspace(300, 550, 50))
-
-#TODO catalyst variations
-
-#TODO moving Hotspot
 
 ###########################################################################################
 

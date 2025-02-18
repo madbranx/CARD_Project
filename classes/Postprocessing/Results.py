@@ -33,6 +33,10 @@ class Results:
         r_pos = self.radialDiscretization.get_centroids()
         return r_pos
 
+    def get_z_faces(self):
+        z_faces = self.axialDiscretization.get_faces()
+        return z_faces
+
     def get_r_faces(self):
         r_faces = self.radialDiscretization.get_faces()
         return r_faces

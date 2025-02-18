@@ -199,9 +199,12 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
-                        wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
-                        u_center = u[current - r * len(axial_faces_deltas)]
-                        radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, u_center, wTpu, wTpu_in, wTpu_out)
+                        if z == len(axial_faces_deltas)-1:
+                                radialMassFlow = 0
+                        else:
+                            wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
+                            u_center = u[current - r * len(axial_faces_deltas)]
+                            radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, u_center, wTpu, wTpu_in, wTpu_out)
 
                     else:  # 1D
                         radialMassFlow = 0

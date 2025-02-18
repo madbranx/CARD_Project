@@ -28,7 +28,7 @@ class Parameters:
 
         self.diameter_pore=10e-9
 
-        self.eps = self.__calculate_void_fraction() # = 0.409 for 0.002 cat diameter
+        self.eps = self.calculate_void_fraction() # = 0.409 for 0.002 cat diameter
         #self.eps = 0.4 # given by task
 
         self.T_in = 300  # K
@@ -138,7 +138,7 @@ class Parameters:
 
         self.cat = cat
 
-    def __calculate_void_fraction(self):
+    def calculate_void_fraction(self):
         ratio = self.cat_diameter / self.reactorDiameter
 
         if ratio <= 0.5:

@@ -242,6 +242,11 @@ class Studies:
 
         # Setting up Reactor
         reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
+
+        # getting reference sim result for pressure drop
+        result_ref = run_sim(reactor)
+
+
         # calculating d_cat variation
         results_d_cat = []
         for d_cat in d_cats:
@@ -249,6 +254,8 @@ class Studies:
             # setting d_cat
             print("cat diameter = ", d_cat)
             reactor.cat_diameter = d_cat
+            reactor.eps = reactor.calculate_void_fraction()
+            print("eps = ", reactor.eps)
             reactor.setup()
             try: # running simulation and setting new starting values
                 results_d_cat.append(run_sim(reactor))
@@ -256,7 +263,7 @@ class Studies:
                 print("simulation failed")
                 pass
 
-        postprocessor.plotCatVariation(foldername, "cat_diameter", "catalyst diameter variation", r"$d_{\mathrm{cat}}~/~mm$", results_d_cat, d_cats*1e3, time_steps)
+        postprocessor.plotCatVariation(foldername, "cat_diameter", "catalyst diameter variation", r"$d_{\mathrm{cat}}~/~mm$", result_ref, results_d_cat, d_cats*1e3, time_steps)
 
         # Setting up Reactor
         reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
@@ -275,7 +282,7 @@ class Studies:
                 pass
 
         postprocessor.plotCatVariation(foldername, "pore_diameter", "pore diameter variation",
-                                       r"$d_{\mathrm{pore}}~/~nm$", results_d_pores, d_pores * 1e9, time_steps)
+                                       r"$d_{\mathrm{pore}}~/~nm$", result_ref, results_d_pores, d_pores * 1e9, time_steps)
 
     '''#################################### xxxxxxxxxxxxxxxxxx ###################################'''
 

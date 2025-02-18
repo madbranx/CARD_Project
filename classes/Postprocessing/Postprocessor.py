@@ -561,57 +561,72 @@ class Postprocessor:
 
     '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''
 
-    def plotCatVariation(self, foldername, exportname, title_name, xLabel_name, results, parameters, timestep):
+    def plotCatVariation(self, foldername, exportname, title_name, xLabel_name, result_ref, results, parameters, timestep):
         self.__format_plot()
 
         fig, axs = plt.subplots(1, 1, figsize=(6.5, 5), constrained_layout=True)
         colors = self.__get_colors()
 
+        # getting ref pressure drop
+        # calc delta p
+        w_i, T, p, u = result_ref.get_2D_values(timestep)
+        p_in = result_ref.average_trapezoidal(p[0, :])
+        p_out = result_ref.average_trapezoidal(p[-1, :])
+        delta_p_ref = (p_in - p_out)
+
         # Extract Plotting Data
-        X_CO2_ign = []
+        X_CO2 = []
         eff_factor = []
         delta_p = []
         for result in results:
             # calc Conversion
             x_CO2_ign = result.getConversion_2D(timestep, 2)
-            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+            X_CO2.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
 
             # get Variables
             w_i, T, p, u = result.get_2D_values(timestep) # Format [comp,z,r], [z,r]
 
             # calc eff factor
-            eff_factor.append(result.reactor.effFactor(w_i, T, p))
+            n_r = result.reactor.radial_discretization.get_centroids()
+            n_z = result.reactor.axial_discretization.get_centroids()
+
+            effs_z = []
+            for z in range(len(n_z)):
+                effs_r = []
+                for r in range(len(n_r)):
+                    eff = np.array(result.reactor.effFactor(w_i[:, z, r], T[z,r], p[z,r]), dtype=float)
+                    effs_r.append(eff)
+                effs_z.append(effs_r)
+            eff_factor.append(np.mean(effs_z))
 
             # calc delta p
             p_in = result.average_trapezoidal(p[0, :])
             p_out = result.average_trapezoidal(p[-1, :])
-            delta_p.append(p_in - p_out)
+            delta_p.append((p_in - p_out))
+            #delta_p.append((p_in - p_out)/delta_p_ref)
 
-        axs.plot(parameters, eff_factor, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}$")
 
-        axs.plot(parameters, X_CO2_ign, color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
                  markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$")
 
         ax2 = axs.twinx()
-        ax2.plot(parameters, delta_p, color=colors[2], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p$")
+        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
 
         # Axis
-
-        axs.set_xlabel(xLabel_name)
         axs.set_ylabel(r'$X_{CO_2}, \eta_{\mathrm{eff}} ~/~ -$')
         ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
-        axs.yaxis.set_major_locator(MaxNLocator(nbins=3))
 
+        ax2.set_ylim(0, 1)
         axs.set_yticks([0, 0.5, 1])
-        axs.xaxis.set_major_locator(MaxNLocator(nbins=3))  # Approx. ticks on y-axis
-        min_x_rounded = math.floor(np.min(parameters) / 1) * 1
-        max_x_rounded = math.ceil(np.max(parameters) / 10) * 10
-        axs[1].set_xlim(min_x_rounded * (1-0.05), max_x_rounded * 1.05)
+        axs.set_ylim(0, 1)
 
         # set legend for axs
-        axs.legend(fontsize="16", loc="best")
+        lines_axs, labels_axs = axs.get_legend_handles_labels()
+        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="best")
 
         #  set title
         axs.set_title(title_name)

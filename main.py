@@ -28,7 +28,8 @@ studies = Studies()
 #     250,
 #     30,
 #     [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
-#     True)
+#     True
+# )
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
@@ -40,7 +41,8 @@ studies = Studies()
 #     12,
 #     3000,
 #     300,
-#     15000)
+#     15000
+# )
 
 
 """ 3) Base Case - DONE """
@@ -49,10 +51,11 @@ studies = Studies()
 #     200,
 #     20,
 #     1500,
-#     12000)
+#     12000
+# )
 
 
-""" 4) Ignition and Extinction Arcs """
+""" 4) Ignition and Extinction Arcs - DONE """
 studies.arcs(
     "arcs_2D",
     2,
@@ -66,7 +69,15 @@ studies.arcs(
 
 
 """ 5) Catalyst Parameter Variations """
-#TODO catalyst variations
+studies.cat_variation("cat_variation",
+                      150,
+                      12,
+                      3000,
+                      10000,
+                      np.linspace(0.0002, 0.02, 20), # d_cat +- 1 magnitude
+                      np.linspace(1e-9, 100e-9, 25), # d_pores +- 1 magnitude
+                      log = False
+)
 
 
 """ 6) Ignition Behavior """

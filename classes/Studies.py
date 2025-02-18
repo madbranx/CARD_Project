@@ -152,6 +152,7 @@ class Studies:
 
         # Setting Simulation Options
         if dim == 1:
+            n_radial = 1
             options = {
                 "tols": [1e-8, 1e-8],
                 "get_runtime": False,
@@ -221,10 +222,95 @@ class Studies:
 
     '''#################################### Catalyst Variation ###################################'''
 
+    def cat_variation(self, foldername, n_axial, n_radial, time_end, time_steps, d_cats, d_pores, log=False):
+        options = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": False,
+            "log": log,
+            'max_step_size': 0.1,
+            "max_num_steps": 20000,
+        }
+
+        postprocessor = Postprocessor("results")
+
+        def run_sim(reactor):
+            reactor.setup()
+            integrator = Integrator(reactor)
+            integrator.set_options(**options)
+            integrator.setup(0, time_end, time_steps)
+            return integrator.integrate()
+
+        # Setting up Reactor
+        reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
+        # calculating d_cat variation
+        results_d_cat = []
+        for d_cat in d_cats:
+
+            # setting d_cat
+            print("cat diameter = ", d_cat)
+            reactor.cat_diameter = d_cat
+            reactor.setup()
+            try: # running simulation and setting new starting values
+                results_d_cat.append(run_sim(reactor))
+            except:
+                print("simulation failed")
+                pass
+
+        postprocessor.plotCatVariation(foldername, "cat_diameter", "catalyst diameter variation", r"$d_{\mathrm{cat}}~/~mm$", results_d_cat, d_cats*1e3, time_steps)
+
+        # Setting up Reactor
+        reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
+        # calculating d_cat variation
+        results_d_pores = []
+        for d_pore in d_pores:
+
+            # setting d_pore
+            print("pore diameter = ", d_pore)
+            reactor.diameter_pore = d_pore
+            reactor.setup()
+            try: # running simulation and setting new starting values
+                results_d_pores.append(run_sim(reactor))
+            except:
+                print("simulation failed")
+                pass
+
+        postprocessor.plotCatVariation(foldername, "pore_diameter", "pore diameter variation",
+                                       r"$d_{\mathrm{pore}}~/~nm$", results_d_pores, d_pores * 1e9, time_steps)
+
+    '''#################################### xxxxxxxxxxxxxxxxxx ###################################'''
+
+    # TODO: update methods below with new syntax!
 
 
 
-# TODO: update methods below with new syntax!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

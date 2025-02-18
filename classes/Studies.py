@@ -232,6 +232,14 @@ class Studies:
         postprocessor = Postprocessor("results")
         postprocessor.plot_ignitionArc_1_2D( foldername, results_ignition_1d, results_ignition_2d, results_extinction_1d, results_extinction_2d, T_walls_1d, T_walls_ext_1d, T_walls_2d, T_walls_ext_2d, time_steps)
 
+    def arcs1D_times(self, foldername, time_end, times_eval, time_steps, T_walls, n_axial, log=False):
+
+        results_ignition_1d, results_extinction_1d, T_walls_1d, T_walls_ext_1d = self.arcs(foldername, 1, time_end, time_steps, T_walls,n_axial, log=log, plotting=False)
+
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_1D_arcs_time(foldername, results_ignition_1d, results_extinction_1d, T_walls_1d, T_walls_ext_1d, time_steps, times_eval, time_end)
+
+
         '''#################################### Catalyst Variation ###################################'''
 
     def cat_variation_diameter(self, foldername, n_axial, n_radial, time_end, time_steps, d_cats, log=False):

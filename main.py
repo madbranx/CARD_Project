@@ -68,7 +68,7 @@ studies = Studies()
 # )
 
 
-# """ 5) Catalyst Parameter Variations """
+# """ 5) Catalyst Parameter Variations - DONE """
 # studies.cat_variation_diameter("cat_variation_diameter",
 #                       20,
 #                       4,
@@ -78,14 +78,14 @@ studies = Studies()
 #                       log = False
 # )
 
-# studies.cat_variation_pore("cat_variation_pore",
-#                       30,
-#                       5,
-#                       300,
-#                       10000,
-#                       np.linspace(1e-9, 100e-9, 3),  # d_pores
-#                       log = False
-# )
+studies.cat_variation_pore("cat_variation_pore",
+                      30,
+                      5,
+                      500,
+                      2000,
+                      np.linspace(1e-9, 50e-9, 20),  # d_pores
+                      log = False
+)
 
 
 

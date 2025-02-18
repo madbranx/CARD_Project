@@ -50,7 +50,7 @@ class SpeciesConservation(Kinetics):
 
         # Calculate radial mass flow
         radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces
-        return radial_mass_flow * 0.1
+        return radial_mass_flow * 0.1   #TODO factor
 
     def calc_j_dispersion(self, diff_centroids, diff_faces_l, diff_faces_r, wTpu_left, wTpu_right, comp, u_center, r_centroid_l, r_centroid_r):
         # get variables

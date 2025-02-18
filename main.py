@@ -68,16 +68,25 @@ studies = Studies()
 # )
 
 
-""" 5) Catalyst Parameter Variations """
-studies.cat_variation("cat_variation",
-                      20,
-                      3,
-                      300,
-                      1000,
-                      np.linspace(0.0015, 0.004, 3), # d_cat
-                      np.linspace(5e-9, 15e-9, 3), # d_pores
-                      log = False
-)
+# """ 5) Catalyst Parameter Variations """
+# studies.cat_variation_diameter("cat_variation_diameter",
+#                       20,
+#                       4,
+#                       500,
+#                       2000,
+#                       np.linspace(0.0014, 0.004, 20), # d_cat
+#                       log = False
+# )
+
+# studies.cat_variation_pore("cat_variation_pore",
+#                       30,
+#                       5,
+#                       300,
+#                       10000,
+#                       np.linspace(1e-9, 100e-9, 3),  # d_pores
+#                       log = False
+# )
+
 
 
 """ 6) Ignition Behavior """

@@ -20,15 +20,15 @@ studies = Studies()
 """ 1) Discretization  - DONE"""
 studies.discretization_study(
     "discretization",
-    300,
+    60,
+    500,
     1000,
-    1000,
-    [400, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
-    10000,
-    200,
-    10,
-    [ 6, 4, 3, 2], # 25, 20, 15, 12, 10, 8,
-    False)
+    [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
+    3000,
+    250,
+    30,
+    [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
+    True)
 
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D

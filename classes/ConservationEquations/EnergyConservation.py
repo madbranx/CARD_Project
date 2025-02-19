@@ -123,12 +123,12 @@ class EnergyConservation(Kinetics):
 
         K2 = 0.44 + 4 * CasADi.exp(-Reynold/70)
 
-        f =  CasADi.if_else((reactor_radius - r_centroid) <= K2 * cat_diameter,         # Condition
-                                ((reactor_radius - r_centroid) / K2 * cat_diameter) ** 2,     # if True
-                                1                                                             # if False
-                            )
+        f = CasADi.if_else((reactor_radius - r_centroid) <= K2 * cat_diameter,  # Condition
+                           ((reactor_radius - r_centroid) / (K2 * cat_diameter)) ** 2,  # if True
+                           1  # if False
+                           )
 
-        rad_eff_thermal_conductivity = thermalConductivity_bed + 1/8 * Peclet * u/u_center * f * thermalConductivity_fluid
+        rad_eff_thermal_conductivity = thermalConductivity_bed + 1/8 * Peclet * u_center/u * f * thermalConductivity_fluid
         return rad_eff_thermal_conductivity
 
 

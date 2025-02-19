@@ -125,7 +125,6 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     dispersion_correction = self.calc_sum_j(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
                 else:
                     dispersion_correction = 0
-
                 self.AE_m[current] = (u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
                                       #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
                                       )
@@ -133,8 +132,10 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
             ## 2) PRESSURE DROP
                 if z==0:  # Inlet Boundary Condition
                     delta_p =  p[current] - self.p_in
+                    #delta_p = 0
                 else:
                     delta_p =  p[current] - p[before_z]
+                    #delta_p = 0
 
                 self.AE_p[current] = delta_p / delta_faces_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
 
@@ -199,9 +200,6 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
                     # 4.2) Radial Species Conversation
                     if self.dimension == 2:
-                        if z == len(axial_faces_deltas)-1:
-                                radialMassFlow = 0
-                        else:
                             wTpu_in, wTpu, wTpu_out = self.get_wTpus(w_i, T, p, u, before_r, r, after_r, current)
                             u_center = u[current - r * len(axial_faces_deltas)]
                             radialMassFlow = self.radialMassFlow(self.radial_discretization, r, comp, u_center, wTpu, wTpu_in, wTpu_out)
@@ -215,7 +213,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     # 4.3) Setting Species Conservation ODE
                     self.ODE_wi[current, comp] = ((
                                                   - axialMassFlow
-                                                  #- radialMassFlow #TODO
+                                                  #- radialMassFlow     # Radial Mass Flow turned off due to numerical instability
                                                   - changeByReaction
                                                   ) / (self.eps * self.rho_fl(w_i[current, :].T, T[current], p[current])))
 

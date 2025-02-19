@@ -50,7 +50,7 @@ class SpeciesConservation(Kinetics):
 
         # Calculate radial mass flow
         radial_mass_flow = 1 / r_centroid * (j_r_in * r_face_in - j_r_out * r_face_out) / diff_faces
-        return radial_mass_flow * 0.1   #TODO factor
+        return radial_mass_flow
 
     def calc_j_dispersion(self, diff_centroids, diff_faces_l, diff_faces_r, wTpu_left, wTpu_right, comp, u_center, r_centroid_l, r_centroid_r):
         # get variables
@@ -60,7 +60,7 @@ class SpeciesConservation(Kinetics):
         # Calculate j_out
         rho_gas_l = self.rho_fl(w_i_l, T_l, p_l)
         rho_gas_r = self.rho_fl(w_i_r, T_r, p_r)
-        # calculating cell width weighted Disp Coeff of left & right cell # TODO OK?
+        # calculating cell width weighted Disp Coeff of left & right cell
         eff_DispCoff_l = self.calc_eff_disp_coff(comp, wTpu_left, u_center, r_centroid_l)
         eff_DispCoff_r = self.calc_eff_disp_coff(comp, wTpu_right, u_center, r_centroid_r)
         eff_DispCoff = (eff_DispCoff_l*diff_faces_l + eff_DispCoff_r*diff_faces_r)/(diff_faces_l+diff_faces_r)
@@ -83,7 +83,7 @@ class SpeciesConservation(Kinetics):
         K2 = 0.44
 
         f = CasADi.if_else((reactor_radius - r_centroid) <= K2 * cat_diameter,  # Condition
-                           ((reactor_radius - r_centroid) / K2 * cat_diameter) ** 2,  # if True
+                           ((reactor_radius - r_centroid) / (K2 * cat_diameter)) ** 2,  # if True
                            1  # if False
                            )
 
@@ -116,7 +116,7 @@ class SpeciesConservation(Kinetics):
                 diff_faces_r = radial_faces_diff[r + 1]
                 j_r_out = self.calc_j_dispersion(diff_centroids_out, diff_faces_l, diff_faces_r, wTpu, wTpu_out, comp, u_center, r_centroid, radial_centroids[r+1])
 
-            sum_j += j_r_out-j_r_in
+            sum_j += (j_r_out - j_r_in)
         return sum_j
 
     ## CHANGE BY REACTION

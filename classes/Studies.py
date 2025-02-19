@@ -223,6 +223,22 @@ class Studies:
             postprocessor = Postprocessor("results")
             postprocessor.plot_ignitionArc(foldername, results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
 
+    def combinedArcs(self, foldername, time_end, time_steps, T_walls, n_axial, n_radial, log=False):
+        results_ignition_1d, results_extinction_1d, T_walls_1d, T_walls_ext_1d = self.arcs(foldername, 1, time_end,
+                                                                                           time_steps, T_walls,
+                                                                                           n_axial * 2, log=log,
+                                                                                           plotting=False)
+        results_ignition_2d, results_extinction_2d, T_walls_2d, T_walls_ext_2d = self.arcs(foldername, 2, time_end,
+                                                                                           time_steps, T_walls,
+                                                                                           n_axial, n_radial,
+                                                                                           log=log, plotting=False)
+
+        ## Postprocessing
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_ignitionArc_1_2D(foldername, results_ignition_1d, results_ignition_2d,
+                                            results_extinction_1d, results_extinction_2d, T_walls_1d,
+                                            T_walls_ext_1d, T_walls_2d, T_walls_ext_2d, time_steps)
+
         '''#################################### Catalyst Variation ###################################'''
 
     def cat_variation_diameter(self, foldername, n_axial, n_radial, time_end, time_steps, d_cats, log=False):

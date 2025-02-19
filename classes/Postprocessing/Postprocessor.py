@@ -93,6 +93,7 @@ class Postprocessor:
         w_i, T, p, u = result_2D.get_2D_values(timestep_2D)
         w_i_2D = [w_i[comp, :, 0] for comp in range(len(result_2D.reactor.components))]
         T_2D, p_2D, u_2D = T[:, 0], p[:, 0]*1e-5, u[:, 0]
+        T_wall_2D = T[:, -1]
 
         w_i, T, p, u = result_1D.get_values(timestep_1D)
 
@@ -110,7 +111,7 @@ class Postprocessor:
 
         # Plot Validation Data
         w_i_val = self.__getValidationData("debugging/Validation_Data.txt", "w")
-        for i, label in enumerate(["CH4", "H2O", "CO2", "H2"]):
+        for i, label in enumerate([r"$CH_4$", r"$H_2O$", r"$CO_2$", r"$H_2$"]):
             axs1.plot(w_i_val[i][0], w_i_val[i][1], color=colors[i], linestyle="-", linewidth = linewidth, label=label)
 
         axs1.set_ylabel(r'$w_\mathrm{{i}} / -$')
@@ -125,32 +126,32 @@ class Postprocessor:
         T_val = self.__getValidationData("debugging/Validation_Data.txt", "T")
         u_val = self.__getValidationData("debugging/Validation_Data.txt", "u")
         p_val = self.__getValidationData("debugging/Validation_Data.txt", "p")
+        T_wall_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "T_wall")
 
-        # Get normalization values 1D
-        T_max = np.max([np.max(T_val[1]), np.max(T)])
-        u_max = np.max([np.max(u_val[1]), np.max(u)])
-        p_max = np.max([np.max(p_val[1]), np.max(p)])
+        # Get normalization values 1D and 2D
+        T_max = np.max([np.max(T_val[1]), np.max(T_2D), np.max(T)])
+        u_max = np.max([np.max(u_val[1]), np.max(u_2D), np.max(u)])
+        p_max = np.max([np.max(p_val[1]), np.max(p_2D), np.max(p)])
+        T_wall_max = np.max([np.max(T_wall_val[1]), np.max(T_wall_2D)])
+
 
         # Plot Simulation Data 1D
         axs2.plot(z_pos_1D, T / T_max, color=colors[0], linestyle=":", linewidth = linewidth)
         axs2.plot(z_pos_1D, u / u_max, color=colors[1], linestyle=":", linewidth = linewidth)
         axs2.plot(z_pos_1D, p / p_max, color=colors[2], linestyle=":", linewidth = linewidth)
 
-        # Get normalization values 2D
-        T_max_2D = np.max([np.max(T_val[1]), np.max(T_2D)])
-        u_max_2D = np.max([np.max(u_val[1]), np.max(u_2D)])
-        p_max_2D = np.max([np.max(p_val[1]), np.max(p_2D)])
-
         # Plot Simulation Data 2D
-        axs2.plot(z_pos_2D, T / T_max_2D, color=colors[0], linestyle="--", linewidth = linewidth)
-        axs2.plot(z_pos_2D, u / u_max_2D, color=colors[1], linestyle="--", linewidth = linewidth)
-        axs2.plot(z_pos_2D, p / p_max_2D, color=colors[2], linestyle="--", linewidth = linewidth)
+        axs2.plot(z_pos_2D, T_2D / T_max, color=colors[0], linestyle="--", linewidth = linewidth)
+        axs2.plot(z_pos_2D, u_2D / u_max, color=colors[1], linestyle="--", linewidth = linewidth)
+        axs2.plot(z_pos_2D, p_2D / p_max, color=colors[2], linestyle="--", linewidth = linewidth)
+        axs2.plot(z_pos_2D, T_wall_2D / T_wall_max, color=colors[3], linestyle="--", linewidth=linewidth)
 
 
         # Plot Validation Data
-        axs2.plot(T_val[0], T_val[1] / T_max, color=colors[0], linestyle="-", linewidth = linewidth, label=r"$Temperature$")
-        axs2.plot(u_val[0], u_val[1] / u_max, color=colors[1], linestyle="-", linewidth = linewidth, label=r"$Velocity$")
-        axs2.plot(p_val[0], p_val[1] / p_max, color=colors[2], linestyle="-", linewidth = linewidth, label=r"$Pressure$")
+        axs2.plot(T_val[0], T_val[1] / T_max, color=colors[0], linestyle="-", linewidth = linewidth, label=r"$T_{center}$")
+        axs2.plot(u_val[0], u_val[1] / u_max, color=colors[1], linestyle="-", linewidth = linewidth, label=r"$u_{center}$")
+        axs2.plot(p_val[0], p_val[1] / p_max, color=colors[2], linestyle="-", linewidth = linewidth, label=r"$p_{center}$")
+        axs2.plot(T_wall_val[0], T_wall_val[1] / T_max, color=colors[3], linestyle="-", linewidth=linewidth, label=r"$T_{wall}$")
 
         axs2.set_ylabel(r'normalized value / -')
         axs2.set_xlabel(r'$z/L_{\mathrm{reactor}}$')
@@ -158,7 +159,7 @@ class Postprocessor:
         axs2.set_xticks([0, 0.5, 1])
         axs2.set_ylim([0, 1])
         axs2.set_xlim([0, 1])
-        axs2.legend(loc="lower right")
+        axs2.legend(loc="lower right", ncol = 2)
 
         # Third legend (for explanation of line styles)
         line_styles = [plt.Line2D([0], [0], color="black", linestyle="dotted", lw=linewidth),
@@ -167,7 +168,7 @@ class Postprocessor:
         labels = ["1D Simulation", "2D Simulation", "Validation values"]
 
         fig.legend(handles=line_styles, labels=labels, loc="upper center",
-                   bbox_to_anchor=(0.5, 1.1), ncol=3)
+                   bbox_to_anchor=(0.5, 1.12), ncol=3)
 
         #plt.tight_layout()
 

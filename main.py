@@ -18,18 +18,19 @@ studies = Studies()
 
 
 """ 1) Discretization  - DONE"""
-studies.discretization_study(
-    "discretization",
-    60,
-    500,
-    1000,
-    [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
-    3000,
-    250,
-    30,
-    [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
-    False
-)
+# studies.discretization_study(
+#     "discretization",
+#     60,
+#     500,
+#     1000,
+#     [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
+#     3000,
+#     250,
+#     30,
+#     [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
+#     False
+# )
+
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
@@ -107,8 +108,18 @@ studies.discretization_study(
 # )
 
 
-""" 6) Ignition Behavior """
-#TODO moving Hotspot
+""" 6) Ignition Behavior - DONE """
+# studies.ignition_behavior(
+#     "ignition behaviour",
+#     120,
+#     12,
+#     3000,
+#     1000,
+#     [25, 150, 200, 250, 325, 450, 750, 3000],
+#     0.90,
+#     0.70,
+#     log=False
+# )
 
 
 

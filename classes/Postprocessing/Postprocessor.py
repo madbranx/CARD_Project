@@ -773,6 +773,87 @@ class Postprocessor:
 
     '''############################## PLOT METHODS  - IGNITION BEHAVIOR ################################'''
 
+    def plot_ignition_behavior(self, foldername, result, timesteps, time_end,  t_evals, treshold_T, treshold_X):
+
+        fig, axs = plt.subplots(2, 1, figsize=(8, 3.25), constrained_layout=True)
+        self.__format_plot()
+        colors = self.__get_colors()
+
+        # Add titles as texts
+        title_T = str(treshold_T*100) + r" % of $T_{max}(t)$"
+        axs[0].text(0.5, 1.05, title_T, ha='center', va='bottom', fontsize=12, transform=axs[0].transAxes)
+        title_X = r"$X_{CO_2}$ = " + str(treshold_X)
+        title_X = str(treshold_T*100) + r" % of $X_{CO_2, max}(t)$"
+        axs[1].text(0.5, 1.05, title_X, ha='center', va='bottom', fontsize=12, transform=axs[1].transAxes)
+
+        z_pos = result.get_z_pos() / result.reactor.reactorLength
+        r_pos = 2 * result.get_r_pos() / result.reactor.reactorDiameter
+        z_mesh, r_mesh = np.meshgrid(z_pos, r_pos, indexing='ij')
+
+        combined_r_pos = np.concatenate([r_mesh, -r_mesh], axis=0)
+        combined_z_pos = np.concatenate([z_mesh, z_mesh], axis=0)
+
+        z_pos_fine = np.linspace(combined_z_pos.min(), combined_z_pos.max(), 1000)
+        r_pos_fine = np.linspace(combined_r_pos.min(), combined_r_pos.max(), 500)
+        z_mesh_fine, r_mesh_fine = np.meshgrid(z_pos_fine, r_pos_fine)
+
+        # Nested Function for Plotting
+        def plot_countourline(ax, data, level, t_eval_, contour_color='black', countour_alpha=1):
+            combined_data = np.concatenate([data, data], axis=0)
+
+            # Interpolate the data on the finer grid
+            points = np.column_stack((combined_z_pos.flatten(), combined_r_pos.flatten()))
+            values = combined_data.flatten()
+            data_interp = griddata(points, values, (z_mesh_fine, r_mesh_fine), method='cubic')
+
+            if t_eval == t_evals[-1]:
+                contour_color = "black"
+
+            ax.contour(z_mesh_fine, r_mesh_fine, data_interp, levels=[level], colors=contour_color,
+                       alpha=countour_alpha, linewidths=1.5)
+
+            if ax == axs[0]:
+                label = 't = ' + str(round(t_eval_,0))
+                ax.plot([], [], color=contour_color, alpha=countour_alpha, label = label, linewidth=1.5)
+
+
+        # Iterate trough evaluation steps
+        for i, t_eval in enumerate(t_evals):
+            timestep_eval = int(timesteps * t_eval/time_end)
+            #alpha = 0.3 + 0.7*timestep_eval/timesteps
+            alpha = 0.15 + 0.85*i/(len(t_evals)-1)
+
+
+            T = result.get_2D_values(timestep_eval)[1]
+            level_T = treshold_T*np.max(T)
+            #level_T = np.quantile(T, treshold_T)
+            #level_T = np.unique(([np.min(T)], np.percentile(T, [treshold_T*100]), [np.max(T)]))
+            plot_countourline(axs[0], T, level_T, t_eval, contour_color=colors[1], countour_alpha=alpha)
+
+            x_i = result.getConversion_2D(timestep_eval, 2)
+            level_X = treshold_X * np.max(x_i)
+            #level_X = treshold_X
+            #level_X = np.quantile(x_i, treshold_X)
+            plot_countourline(axs[1], x_i, level_X, None, contour_color=colors[0], countour_alpha=alpha)
+
+        # Modify Y-axis
+        for ax in axs:
+            ax.set_yticks([-1, 0, 1])
+            ax.set_yticklabels(['R', "0", 'R'])  # Replace -1 and 1 with "R"
+            ax.set_xticks([])
+        axs[1].set_xticks([0, 0.5, 1])  # Set x-ticks to 0, 0.5, 1
+        axs[1].set_xticklabels([0, 0.5, 1])
+        axs[1].tick_params(axis='x', pad=10)
+
+        axs[0].legend(loc='center right', ncol=2, fontsize=10)
+
+        # Set x-axis label on the last subplot
+        axs[-1].set_xlabel(r"relative reactor length")
+
+        fig.text(-0.035, 0.5, "radial position", va='center', rotation=90, fontsize=12)
+
+        self.__export(foldername, "Ignition behaviour", plt)
+        plt.show()
 
 
 

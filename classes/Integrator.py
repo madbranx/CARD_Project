@@ -129,7 +129,7 @@ class Integrator:
     def integrate(self):
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
-        self.__printMassDeviation()
+        #self.__printMassDeviation()
 
         results = Results(self.axial_discretization, self.radial_discretization, self.time_discretization)
         results.set_reactor(self.reactor)

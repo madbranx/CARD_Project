@@ -31,8 +31,7 @@ studies = Studies()
 #     False
 # )
 
-
-#TODO equi- vs non-equidistant sim time comparison 1D/2D
+# studies.mearsure_time_discretization(60, 8, 500, 3000)
 
 
 # """ 2) Validation - DONE """

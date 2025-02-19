@@ -6,7 +6,7 @@ class Parameters:
     def __init__(self):
 
         # Use of constant values @500 K
-        self.temperature_dependent_matProps = True
+        self.temperature_dependent_matProps = False
 
         self.R =  8.314  # J/(kgK)
         self.pi = np.pi
@@ -160,5 +160,4 @@ class Parameters:
         print("Dynamic Viscosity", comp.get_property(Component.DYNAMIC_VISCOSITY, temperature), " Pa s")
 
         print("Molecular Weight", comp.get_property(Component.MOLECULAR_WEIGHT, temperature), " kg/mol")
-        print("Collision Area", comp.get_property(Component.COLLISION_AREA, temperature), " m^2")
         print("Diffusion Volume", comp.get_property(Component.DIFFUSION_VOLUME, temperature), "\n")

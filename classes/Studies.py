@@ -2,6 +2,7 @@ from classes.Postprocessing.Postprocessor import Postprocessor
 from classes.FixedBedReactor import FixedBedReactor
 from classes.Integrator import Integrator
 import numpy as np
+import time
 
 
 class Studies:
@@ -144,6 +145,49 @@ class Studies:
         ## Postprocessing
         postprocessor = Postprocessor("results")
         postprocessor.plot_disdiscretizationStudy(foldername, result_ax_ref, results_ax_ed, results_ax_ned, result_rad_ref, results_rad_ed, results_rad_ned, time_steps_axial, time_steps_radial)
+
+    def mearsure_time_discretization(self, n_axial, n_radial, t_steps, t_end):
+        import os
+        os.environ['CASADI_LOG_LEVEL'] = 'ERROR'
+
+        print("#ax = ", n_axial)
+        print("#rad = ", n_radial)
+        print("#t-steps = ", t_steps)
+        print("sim time = ", t_end, "\n\n")
+
+        options = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": False,
+            'max_step_size': 1,
+            "max_num_steps": 20000,
+        }
+
+        def time_sim(z_eqi, r_equi, t_equi):
+            reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=z_eqi, r_equi=r_equi)
+            reactor.setup()
+            integrator = Integrator(reactor)
+            integrator.set_options(**options)
+            integrator.setup(0, t_end, t_steps, t_equi=t_equi)
+
+            start_time = time.time()  # Start timer
+
+            integrator.integrate()
+
+            end_time = time.time()  # End timer
+
+            z, r, t = "x", "x", "x"
+            if z_eqi: z = "o"
+            if r_equi: r = "o"
+            if t_equi: t = "o"
+            print(z + "|" + r + "|" + t + f"    {end_time - start_time:.1f} seconds")
+
+        print("x = non equi-distand, o = equi-distant\nz|r|t    time      o = non equi-distand, x = equi-distant\n")
+        time_sim(True, True, True)
+        time_sim(True, False, True)
+        time_sim(False, True, True)
+        time_sim(False, False, True)
+        time_sim(True, True, False)
+        time_sim(False, False, False)
 
     '''################################# Ignition/Extinction Arcs ################################'''
 

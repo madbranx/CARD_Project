@@ -18,18 +18,18 @@ studies = Studies()
 
 
 """ 1) Discretization  - DONE"""
-# studies.discretization_study(
-#     "discretization",
-#     60,
-#     500,
-#     1000,
-#     [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
-#     3000,
-#     250,
-#     30,
-#     [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
-#     True
-# )
+studies.discretization_study(
+    "discretization",
+    60,
+    500,
+    1000,
+    [500, 300, 200, 150, 125, 100, 80, 60, 50, 40, 30, 20, 15, 10, 5, 3, 2],
+    3000,
+    250,
+    30,
+    [25, 20, 15, 12, 10, 8, 6, 5, 4, 3, 2],
+    False
+)
 
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
@@ -56,28 +56,55 @@ studies = Studies()
 
 
 """ 4) Ignition and Extinction Arcs - DONE """
-studies.arcs(
-    "arcs_2D",
-    2,
-    3000,
-    10000,
-    np.linspace(300, 550, 25),
-    80,
-    6,
-    log=True
-)
+# studies.arcs(
+#     "arcs_1D",
+#     1,
+#     450,
+#     100,
+#     np.linspace(300, 550, 15),
+#     100,
+#     log=False
+# )
+
+# studies.arcs(
+#     "arcs_2D",
+#     2,
+#     3000,
+#     10000,
+#     np.linspace(300, 550, 25),
+#     80,
+#     6,
+#     log=True
+# )
+
+# studies.combinedArcs(
+#     "arcs_2D_1D",
+#     100,
+#     100,
+#     np.linspace(450, 550, 1),
+#     20,
+#     4,
+#     log=False)
 
 
-""" 5) Catalyst Parameter Variations """
-studies.cat_variation("cat_variation",
-                      150,
-                      12,
-                      3000,
-                      10000,
-                      np.linspace(0.0002, 0.02, 20), # d_cat +- 1 magnitude
-                      np.linspace(1e-9, 100e-9, 25), # d_pores +- 1 magnitude
-                      log = False
-)
+""" 5) Catalyst Parameter Variations - DONE """
+# studies.cat_variation_diameter("cat_variation_diameter",
+#                       20,
+#                       4,
+#                       500,
+#                       2000,
+#                       np.linspace(0.0014, 0.004, 20), # d_cat
+#                       log = False
+# )
+
+# studies.cat_variation_pore("cat_variation_pore",
+#                       30,
+#                       5,
+#                       500,
+#                       2000,
+#                       np.linspace(1e-9, 50e-9, 20),  # d_pores
+#                       log = False
+# )
 
 
 """ 6) Ignition Behavior """

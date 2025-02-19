@@ -147,7 +147,7 @@ class Studies:
 
     '''################################# Ignition/Extinction Arcs ################################'''
 
-    def arcs(self, foldername, dim, time_end, time_steps, T_walls,n_axial, n_radial=1, log=False):
+    def arcs(self, foldername, dim, time_end, time_steps, T_walls,n_axial, n_radial=1, log=False, plotting = True):
         ## 2D EXTINCTION AND IGNITION ARCS PLOTS
 
         # Setting Simulation Options
@@ -216,13 +216,32 @@ class Studies:
                 print("extinction failed")
                 pass
 
+        if plotting == False:
+            return results_ignition, results_extinction, T_walls, T_walls_ext
+        else:
+            ## Postprocessing
+            postprocessor = Postprocessor("results")
+            postprocessor.plot_ignitionArc(foldername, results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
+
+    def combinedArcs(self, foldername, time_end, time_steps, T_walls, n_axial, n_radial, log=False):
+        results_ignition_1d, results_extinction_1d, T_walls_1d, T_walls_ext_1d = self.arcs(foldername, 1, time_end,
+                                                                                           time_steps, T_walls,
+                                                                                           n_axial * 2, log=log,
+                                                                                           plotting=False)
+        results_ignition_2d, results_extinction_2d, T_walls_2d, T_walls_ext_2d = self.arcs(foldername, 2, time_end,
+                                                                                           time_steps, T_walls,
+                                                                                           n_axial, n_radial,
+                                                                                           log=log, plotting=False)
+
         ## Postprocessing
         postprocessor = Postprocessor("results")
-        postprocessor.plot_ignitionArc(foldername, results_ignition, results_extinction, T_walls, T_walls_ext, time_steps)
+        postprocessor.plot_ignitionArc_1_2D(foldername, results_ignition_1d, results_ignition_2d,
+                                            results_extinction_1d, results_extinction_2d, T_walls_1d,
+                                            T_walls_ext_1d, T_walls_2d, T_walls_ext_2d, time_steps)
 
-    '''#################################### Catalyst Variation ###################################'''
+        '''#################################### Catalyst Variation ###################################'''
 
-    def cat_variation(self, foldername, n_axial, n_radial, time_end, time_steps, d_cats, d_pores, log=False):
+    def cat_variation_diameter(self, foldername, n_axial, n_radial, time_end, time_steps, d_cats, log=False):
         options = {
             "tols": [1e-4, 1e-4],
             "get_runtime": False,
@@ -242,13 +261,19 @@ class Studies:
 
         # Setting up Reactor
         reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
+
+        # getting reference sim result for pressure drop
+        result_ref = run_sim(reactor)
+
+
         # calculating d_cat variation
         results_d_cat = []
         for d_cat in d_cats:
-
             # setting d_cat
             print("cat diameter = ", d_cat)
             reactor.cat_diameter = d_cat
+            reactor.eps = reactor.calculate_void_fraction()
+            print("eps = ", reactor.eps)
             reactor.setup()
             try: # running simulation and setting new starting values
                 results_d_cat.append(run_sim(reactor))
@@ -256,14 +281,35 @@ class Studies:
                 print("simulation failed")
                 pass
 
-        postprocessor.plotCatVariation(foldername, "cat_diameter", "catalyst diameter variation", r"$d_{\mathrm{cat}}~/~mm$", results_d_cat, d_cats*1e3, time_steps)
+        postprocessor.plotCatVariation_diameter(foldername, "cat_diameter", result_ref, results_d_cat, d_cats * 1e3, time_steps)
+
+    def cat_variation_pore(self, foldername, n_axial, n_radial, time_end, time_steps, d_pores, log=False):
+        options = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": False,
+            "log": log,
+            'max_step_size': 0.1,
+            "max_num_steps": 20000,
+        }
+
+        postprocessor = Postprocessor("results")
+
+        def run_sim(reactor):
+            reactor.setup()
+            integrator = Integrator(reactor)
+            integrator.set_options(**options)
+            integrator.setup(0, time_end, time_steps)
+            return integrator.integrate()
 
         # Setting up Reactor
         reactor = FixedBedReactor(2, n_axial, n_radial, z_equi=True)
-        # calculating d_cat variation
+
+        # getting reference sim result for pressure drop
+        result_ref = run_sim(reactor)
+
+        # calculating d_pores variation
         results_d_pores = []
         for d_pore in d_pores:
-
             # setting d_pore
             print("pore diameter = ", d_pore)
             reactor.diameter_pore = d_pore
@@ -274,8 +320,7 @@ class Studies:
                 print("simulation failed")
                 pass
 
-        postprocessor.plotCatVariation(foldername, "pore_diameter", "pore diameter variation",
-                                       r"$d_{\mathrm{pore}}~/~nm$", results_d_pores, d_pores * 1e9, time_steps)
+        postprocessor.plotCatVariation_pore(foldername, "pore_diameter", result_ref, results_d_pores, d_pores * 1e9, time_steps)
 
     '''#################################### xxxxxxxxxxxxxxxxxx ###################################'''
 

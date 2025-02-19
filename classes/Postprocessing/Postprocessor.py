@@ -3,7 +3,7 @@ import pandas as pd
 import casadi as CasADi
 import math
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, MultipleLocator
 from scipy.interpolate import interp1d, griddata
 from pathlib import Path
 from classes.Postprocessing.TOLcmaps import TOLcmaps
@@ -496,7 +496,7 @@ class Postprocessor:
         self.__format_plot()
         dim = results_ignition[0].reactor.dimension
 
-        fig, axs = plt.subplots(1, 1, figsize=(5.5, 5), constrained_layout=True)
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
         colors = self.__get_colors()
 
         # Plot Bremer Data
@@ -517,17 +517,19 @@ class Postprocessor:
         for result in results_ignition:
             if dim == 1:
                 x_CO2_ign = result.getConversion_1D(timestep, 2)
+                X_CO2_ign.append((x_CO2_ign[-1]))
             else:
-                x_CO2_ign = result.getConversion_2D(timestep, 2)
-            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+                x_CO2_ign = result.getConversion_2D(timestep, 2)[-1, :]
+                X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign))
 
         X_CO2_ext = []
         for result in results_extinction:
             if dim == 1:
                 x_CO2_ext = result.getConversion_1D(timestep, 2)
+                X_CO2_ext.append((x_CO2_ext[-1]))
             else:
-                x_CO2_ext = result.getConversion_2D(timestep, 2)
-            X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext[-1, :]))
+                x_CO2_ext = result.getConversion_2D(timestep, 2)[-1, :]
+                X_CO2_ext.append(result.average_trapezoidal(x_CO2_ext))
 
 
         axs.plot(T_wall_ext, X_CO2_ext, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
@@ -559,65 +561,215 @@ class Postprocessor:
         self.__export(foldername, "arcs_2D", plt)
         plt.show()
 
-    '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''
-
-    def plotCatVariation(self, foldername, exportname, title_name, xLabel_name, results, parameters, timestep):
+    def plot_ignitionArc_1_2D(self, foldername, results_ignition_1D, results_ignition_2D, results_extinction_1D, results_extinction_2D, T_wall_ign_1D, T_wall_ext_1D, T_wall_ign_2D, T_wall_ext_2D, timestep):
         self.__format_plot()
 
-        fig, axs = plt.subplots(1, 1, figsize=(6.5, 5), constrained_layout=True)
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
         colors = self.__get_colors()
 
+        # Plot Bremer Data
+        T_bremer_ignition = np.array([311, 323, 342, 359, 377, 401, 424, 442, 454, 460, 465, 490, 512, 537, 561])
+        X_bremer_ignition = np.array([0.00333, 0.00355, 0.00388, 0.00418, 0.00776, 0.00980, 0.0298, 0.0871, 0.201,
+                                      0.392, 0.930, 0.965, 0.980, 0.985, 0.979])
+
+        T_bremer_extinction = np.array(
+            [308, 322, 336, 348, 359, 365, 371, 377, 388, 407, 425, 449, 471, 491, 513, 531, 549])
+        X_bremer_extinction = np.array([0.00329, 0.00353, 0.00214, 0.00399, 0.00417, 0.686, 0.826, 0.845, 0.860,
+                                        0.882, 0.902, 0.931, 0.958, 0.971, 0.985, 0.985, 0.984])
+
+        axs.plot(T_bremer_ignition, X_bremer_ignition, color="grey", linestyle="-", linewidth=2.5)
+        axs.plot(T_bremer_extinction, X_bremer_extinction, color="grey", linestyle="-", linewidth=2.5)
+
+        # Plot Simulation Data
+        X_CO2_ign_1D = []
+        for result in results_ignition_1D:
+                x_CO2_ign_1D = result.getConversion_1D(timestep, 2)
+                X_CO2_ign_1D.append((x_CO2_ign_1D[-1]))
+
+        X_CO2_ign_2D = []
+        for result in results_ignition_2D:
+            x_CO2_ign_2D = result.getConversion_2D(timestep, 2)
+            X_CO2_ign_2D.append(result.average_trapezoidal(x_CO2_ign_2D[-1, :]))
+
+        X_CO2_ext_1D = []
+        for result in results_extinction_1D:
+                x_CO2_ext_1D = result.getConversion_1D(timestep, 2)
+                X_CO2_ext_1D.append((x_CO2_ext_1D[-1]))
+
+        X_CO2_ext_2D = []
+        for result in results_extinction_2D:
+            x_CO2_ext_2D = result.getConversion_2D(timestep, 2)
+            X_CO2_ext_2D.append(result.average_trapezoidal(x_CO2_ext_2D[-1, :]))
+
+        axs.plot(T_wall_ext_2D, X_CO2_ext_2D, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label="extinction 2D")
+        axs.plot(T_wall_ign_2D, X_CO2_ign_2D, color=colors[1], linestyle="--", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label="ignition 2D")
+
+        # axs.plot(T_wall_ext_1D, X_CO2_ext_1D, color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+        #          markersize=6, markerfacecolor="black", markeredgecolor='black', label="extinction 1D")
+        axs.plot(T_wall_ign_1D, X_CO2_ign_1D, color=colors[3], linestyle="--", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label="ignition 1D")
+
+
+        # Axis
+        axs.set_xlabel(r'$T_{\mathregular{wall}} / K$')
+        axs.set_ylabel(r'$X_{CO_2}/ -$')
+
+        axs.set_xlim(275, 625)
+        axs.set_xticks([300, 450, 600])
+
+        axs.set_yticks([0, 0.5, 1])
+        axs.xaxis.set_major_locator(MaxNLocator(nbins=3))  # Approx. ticks on y-axis
+
+        # set legend for axs
+        axs.legend(fontsize="16", loc="lower right")
+
+        # # set title
+        # axs.set_title("ignition and extinction arcs\n\n")
+
+        # set legend for fig
+        h1, = plt.plot([], [], linestyle="-", markersize=10, color="grey", label="Bremer et. al.", linewidth=2.5)
+        h2, = plt.plot([], [], marker='v', markersize=10, color="black", linestyle="-", label="simulation",
+                       linewidth=2.5)
+        fig.legend(handles=[h1, h2], loc="upper center", bbox_to_anchor=(0.58, 1.1), ncol=2, fontsize="16")
+
+        self.__export(foldername, "arcs_1D", plt)
+        plt.show()
+
+    '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''
+
+    def plotCatVariation_diameter(self, foldername, exportname, result_ref, results, parameters, timestep):
+        self.__format_plot()
+
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
+        colors = self.__get_colors()
+
+        d_cat_ref = result_ref.reactor.cat_diameter*1e3
+        print(d_cat_ref)
+        d_cat_ref = 2
+
+        X_CO2, eff_factor, delta_p = self.__getPlotData_Cat_variation(results, timestep)
+        print(X_CO2, eff_factor, delta_p)
+
+        axs.axvline(d_cat_ref, color="grey", linestyle="--", linewidth=2.5)
+        axs.text(x=d_cat_ref, y=0.1, s="base   case", color="grey", fontsize=14, ha="center")
+
+        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}~\mathrm{mean}$")
+
+        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}~\mathrm{outlet}$")
+
+        ax2 = axs.twinx()
+        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
+
+        # Axis
+        axs.set_ylabel(r'$X_{CO_2}, ~\eta_{\mathrm{eff}} ~/~ -$')
+        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
+
+        axs.set_xlim(1.3, 4.1)
+        axs.set_xticks([1.4, 2.7, 4])
+        axs.set_ylim(0, 1)
+        axs.set_yticks([0, 0.5, 1])
+        ax2.set_ylim(0, 1.5)
+        ax2.set_yticks([0, 0.75, 1.5])
+        axs.set_xlabel(r"$d_{\mathrm{cat}}~/~mm$")
+
+
+        # set legend for axs
+        lines_axs, labels_axs = axs.get_legend_handles_labels()
+        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="center right", ncol = 1)
+
+        #  set title
+        axs.set_title("catalyst diameter variation")
+
+        self.__export(foldername, exportname, plt)
+        plt.show()
+
+    def plotCatVariation_pore(self, foldername, exportname, result_ref, results, parameters, timestep):
+        self.__format_plot()
+
+        fig, axs = plt.subplots(1, 1, figsize=(7, 5), constrained_layout=True)
+        colors = self.__get_colors()
+
+        d_cat_ref = 10
+
+        X_CO2, eff_factor, delta_p = self.__getPlotData_Cat_variation(results, timestep)
+
+        axs.axvline(d_cat_ref, color="grey", linestyle="--", linewidth=2.5)
+        axs.text(x=d_cat_ref, y=0.1, s="base case", color="grey", fontsize=14, ha="center")
+
+        axs.plot(parameters, np.array(eff_factor), color=colors[0], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}~\mathrm{mean}$")
+
+        axs.plot(parameters, np.array(X_CO2), color=colors[1], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2} ~\mathrm{outlet}$")
+
+        ax2 = axs.twinx()
+        ax2.plot(parameters, np.array(np.array(delta_p)*1e-5), color=colors[2], linestyle="-", linewidth=2.5, marker='v',
+                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p_{\mathrm{in-out}}$")
+
+        # Axis
+        axs.set_ylabel(r'$X_{CO_2}, ~\eta_{\mathrm{eff}} ~/~ -$')
+        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
+
+        axs.set_xlim(0, 51)
+        axs.set_xticks([0, 25, 50])
+        axs.set_ylim(0, 1)
+        axs.set_yticks([0, 0.5, 1])
+        ax2.set_ylim(0, 1.5)
+        ax2.set_yticks([0, 0.75, 1.5])
+        axs.set_xlabel(r"$d_{\mathrm{pore}}~/~nm$")
+
+
+        # set legend for axs
+        lines_axs, labels_axs = axs.get_legend_handles_labels()
+        lines_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+        axs.legend(lines_axs + lines_ax2, labels_axs + labels_ax2, fontsize="16", loc="lower right", ncol = 1)
+
+        #  set title
+        axs.set_title("pore diameter variation")
+
+        self.__export(foldername, exportname, plt)
+        plt.show()
+
+
+    def __getPlotData_Cat_variation(self, results, timestep):
         # Extract Plotting Data
-        X_CO2_ign = []
+        X_CO2 = []
         eff_factor = []
         delta_p = []
         for result in results:
             # calc Conversion
             x_CO2_ign = result.getConversion_2D(timestep, 2)
-            X_CO2_ign.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
+            X_CO2.append(result.average_trapezoidal(x_CO2_ign[-1, :]))
 
             # get Variables
-            w_i, T, p, u = result.get_2D_values(timestep) # Format [comp,z,r], [z,r]
+            w_i, T, p, u = result.get_2D_values(timestep)  # Format [comp,z,r], [z,r]
 
             # calc eff factor
-            eff_factor.append(result.reactor.effFactor(w_i, T, p))
+            n_r = result.reactor.radial_discretization.get_centroids()
+            n_z = result.reactor.axial_discretization.get_centroids()
+
+            effs_z = []
+            for z in range(len(n_z)):
+                effs_r = []
+                for r in range(len(n_r)):
+                    eff = np.array(result.reactor.effFactor(w_i[:, z, r], T[z, r], p[z, r]), dtype=float)
+                    effs_r.append(eff)
+                effs_z.append(effs_r)
+            eff_factor.append(np.mean(effs_z))
 
             # calc delta p
             p_in = result.average_trapezoidal(p[0, :])
             p_out = result.average_trapezoidal(p[-1, :])
-            delta_p.append(p_in - p_out)
+            delta_p.append((p_in - p_out))
+            # delta_p.append((p_in - p_out)/delta_p_ref)
 
-        axs.plot(parameters, eff_factor, color=colors[0], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\eta_{\mathrm{eff}}$")
-
-        axs.plot(parameters, X_CO2_ign, color=colors[1], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$X_{CO_2}$")
-
-        ax2 = axs.twinx()
-        ax2.plot(parameters, delta_p, color=colors[2], linestyle="-", linewidth=2.5, marker='v',
-                 markersize=6, markerfacecolor="black", markeredgecolor='black', label=r"$\Delta p$")
-
-        # Axis
-
-        axs.set_xlabel(xLabel_name)
-        axs.set_ylabel(r'$X_{CO_2}, \eta_{\mathrm{eff}} ~/~ -$')
-        ax2.set_ylabel(r'$\Delta p_{\mathrm{in-out}} ~/~ bar$')
-        axs.yaxis.set_major_locator(MaxNLocator(nbins=3))
-
-        axs.set_yticks([0, 0.5, 1])
-        axs.xaxis.set_major_locator(MaxNLocator(nbins=3))  # Approx. ticks on y-axis
-        min_x_rounded = math.floor(np.min(parameters) / 1) * 1
-        max_x_rounded = math.ceil(np.max(parameters) / 10) * 10
-        axs[1].set_xlim(min_x_rounded * (1-0.05), max_x_rounded * 1.05)
-
-        # set legend for axs
-        axs.legend(fontsize="16", loc="best")
-
-        #  set title
-        axs.set_title(title_name)
-
-        self.__export(foldername, exportname, plt)
-        plt.show()
+        return X_CO2, eff_factor, delta_p
 
     '''############################## PLOT METHODS  - IGNITION BEHAVIOR ################################'''
 

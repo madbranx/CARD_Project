@@ -79,25 +79,6 @@ class Integrator:
             "disable_internal_warnings": disable_internal_warnings,
         }
 
-        def refresh(self):
-            options = {
-                # "calc_ic": True,
-                'abstol': 1e-4,
-                # "abstolv": abstolv,
-                # "scale_abstol": True,
-                'reltol': 1e-4,
-                "step0": 0.001,
-                "max_step_size": 0.1,
-                "max_num_steps": 100000,
-                "newton_scheme": "direct",
-                # "newton_scheme": "bcgstab",
-                # "max_krylov": 100,
-                # "max_multistep_order": 4,
-                "print_time": True,
-                # "verbose": True,
-                # "disable_internal_warnings": False,
-            }
-
     def set_specific_InitialValues(self, w_i, T, p, u ):
         n_axial = self.axial_discretization.num_volumes
         n_radial = self.radial_discretization.num_volumes

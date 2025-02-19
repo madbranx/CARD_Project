@@ -10,7 +10,7 @@
     maximilian.brand@student.kit.edu
 """
 ###########################################################################################
-
+import numpy as np
 from classes.Postprocessing.Studies import Studies
 
 studies = Studies()
@@ -30,7 +30,7 @@ studies = Studies()
 #     False
 # )
 
-# studies.mearsure_time_discretization(60, 8, 500, 3000)
+# studies.messure_time_discretization(120, 12, 10000, 3000)
 
 
 # """ 2) Validation - DONE """
@@ -47,10 +47,10 @@ studies = Studies()
 """ 3) Base Case - DONE """
 # studies.base_case_2D(
 #     "base_case_2D",
-#     200,
-#     20,
-#     1500,
-#     12000
+#     120,
+#     12,
+#     3000,
+#     10000
 # )
 
 
@@ -58,10 +58,10 @@ studies = Studies()
 # studies.arcs(
 #     "arcs_1D",
 #     1,
-#     450,
-#     100,
-#     np.linspace(300, 550, 15),
-#     100,
+#     3000,
+#     300,
+#     np.linspace(300, 550, 25),
+#     150,
 #     log=False
 # )
 
@@ -71,36 +71,37 @@ studies = Studies()
 #     3000,
 #     10000,
 #     np.linspace(300, 550, 25),
-#     80,
-#     6,
+#     120,
+#     12,
 #     log=True
 # )
 
 # studies.combinedArcs(
 #     "arcs_2D_1D",
-#     100,
-#     100,
-#     np.linspace(450, 550, 1),
-#     20,
-#     4,
-#     log=False)
+#     3000,
+#     10000,
+#     np.linspace(300, 550, 25),
+#     120,
+#     12,
+#     log=False
+# )
 
 
 """ 5) Catalyst Parameter Variations - DONE """
 # studies.cat_variation_diameter("cat_variation_diameter",
-#                       20,
-#                       4,
+#                       120,
+#                       12,
 #                       500,
-#                       2000,
+#                       10000,
 #                       np.linspace(0.0014, 0.004, 20), # d_cat
 #                       log = False
 # )
 
 # studies.cat_variation_pore("cat_variation_pore",
-#                       30,
-#                       5,
+#                       120,
+#                       12,
 #                       500,
-#                       2000,
+#                       10000,
 #                       np.linspace(1e-9, 50e-9, 20),  # d_pores
 #                       log = False
 # )
@@ -121,18 +122,3 @@ studies = Studies()
 
 
 ###########################################################################################
-
-## TESTING FUNCTIONS
-
-# import casadi as CasADi
-# T = 50s0
-# p = 5e5
-# u = 1ss
-#
-# w1 = CasADi.SX([0.25, 0.25, 0.25, 0.25])
-# w2 = CasADi.SX([0, 0, 0.800001, 0.199999])
-#
-# wTpu1 = [w1, T, p, u]
-# wTpu2 = [w2, T, p, u]
-#
-# print("j dispersion = ", reactor.calc_j_dispersion(0.1, 0.1, 0.1, wTpu1, wTpu2, 2))

@@ -322,39 +322,36 @@ class Studies:
 
         postprocessor.plotCatVariation_pore(foldername, "pore_diameter", result_ref, results_d_pores, d_pores * 1e9, time_steps)
 
-    '''#################################### xxxxxxxxxxxxxxxxxx ###################################'''
+    '''#################################### Ignition/Extinction behavior ###################################'''
+
+    def ignition_behavior(self, foldername, n_axial, n_radial, time_end, timesteps, t_evals, threshold_T, threshold_X, log):
+        options = {
+            "tols": [1e-4, 1e-4],
+            "get_runtime": False,
+            "log": log,
+            'max_step_size': 0.1,
+            "max_num_steps": 10000,
+        }
+        reactor = FixedBedReactor(2, n_axial, n_radial)
+        reactor.setup()
+        integrator = Integrator(reactor)
+        integrator.set_options(**options)
+        integrator.setup(0, time_end, timesteps)
+        result =  integrator.integrate()
+
+        postprocessor = Postprocessor("results")
+        postprocessor.plot_ignition_behavior(foldername, result, timesteps, time_end, t_evals, threshold_T,threshold_X)
+
+
+
+    '''#################################### xxxxxxxxxxxxxxxxxxxxxxxxxx ###################################'''
+
+
+
+
+
 
     # TODO: update methods below with new syntax!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

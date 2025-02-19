@@ -10,7 +10,7 @@ Project Timespan: 12/2024 - 02/2025
 
 Example calls for studies are provided in main.py.\
 For an overview over the Programm structure refer to UML class diagramm.pdf.\
-The equation system and discretization is collected in reactor equations overview.pdf.
+The equation system and discretization is collected in reactor equations overview.pdf, the equations are references by number in the code.
 
 In the current state the radial dispersion leads to numerical problems when solving and is therefore currently commented out in FixedbedReactor.py
 

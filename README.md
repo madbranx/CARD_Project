@@ -13,6 +13,6 @@ Example calls for studies are provided in the main.py file.
 
 For a overview over the Programm structure refer to UML.pdf
 
-The equation system and diskretization is collected in Equations_Overview-pdf
+The equation system and discretization is collected in CARD_Reactor_Equations_Overview
 
 In the current state the radial dispersion leads to numerical problems when solving and is therefore currently commented out in FixedbedReactor.py

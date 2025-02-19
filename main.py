@@ -35,14 +35,14 @@ studies = Studies()
 #TODO equi- vs non-equidistant sim time comparison 1D/2D
 
 
-""" 2) Validation - DONE """
+# """ 2) Validation - DONE """
 # studies.validation(
 #     "validation",
-#     150,
+#     120,
 #     12,
 #     3000,
 #     300,
-#     15000
+#     3000
 # )
 
 

@@ -15,6 +15,7 @@ from classes.Postprocessing.Studies import Studies
 
 studies = Studies()
 
+###########################################################################################
 
 """ 1) Discretization  - DONE"""
 # studies.discretization_study(
@@ -30,7 +31,7 @@ studies = Studies()
 #     False
 # )
 
-# studies.messure_time_discretization(120, 12, 10000, 3000)
+# studies.measure_time_discretization(120, 12, 10000, 3000)
 
 
 # """ 2) Validation - DONE """

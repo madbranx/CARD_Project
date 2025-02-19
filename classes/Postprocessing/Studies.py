@@ -146,7 +146,7 @@ class Studies:
         postprocessor = Postprocessor("results")
         postprocessor.plot_disdiscretizationStudy(foldername, result_ax_ref, results_ax_ed, results_ax_ned, result_rad_ref, results_rad_ed, results_rad_ned, time_steps_axial, time_steps_radial)
 
-    def messure_time_discretization(self, n_axial, n_radial, t_steps, t_end):
+    def mearsure_time_discretization(self, n_axial, n_radial, t_steps, t_end):
         import os
         os.environ['CASADI_LOG_LEVEL'] = 'ERROR'
 

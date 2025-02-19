@@ -14,7 +14,7 @@ The equation system and discretization is collected in reactor equations overvie
 
 In the current state the radial dispersion leads to numerical problems when solving and is therefore currently commented out in FixedbedReactor.py
 
-The following packaged are needed to run the code:\
+The following packages are needed to run the code:\
 casadi 3.6.7 \
 matplotlib 3.10.0\
 numpy 2.2.2\

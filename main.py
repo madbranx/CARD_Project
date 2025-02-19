@@ -11,8 +11,7 @@
 """
 ###########################################################################################
 
-import numpy as np
-from classes.Studies import Studies
+from classes.Postprocessing.Studies import Studies
 
 studies = Studies()
 

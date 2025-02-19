@@ -373,7 +373,7 @@ class Postprocessor:
         axs[1].set_title("reference: " + str(n_ref_ax) + " axial, "+ str(n_ref) + " radial volumes")
 
         # set legend
-        plt.plot([], [], marker='*', markersize=10, color="black", linestyle="None", label="maximum")
+        plt.plot([], [], marker='x', markersize=10, color="black", linestyle="None", label="maximum")
         plt.plot([], [], marker='v', markersize=10, color="black", linestyle="None",label="mean")
         plt.plot([], [], linestyle="None",label="equidistant")
         plt.plot([], [], linestyle="None",label="non-equidistant")

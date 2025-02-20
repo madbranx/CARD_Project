@@ -635,7 +635,7 @@ class Postprocessor:
                        linewidth=2.5)
         fig.legend(handles=[h1, h2], loc="upper center", bbox_to_anchor=(0.58, 1.1), ncol=2, fontsize="16")
 
-        self.__export(foldername, "arcs_1D", plt)
+        self.__export(foldername, "arcs_2D1D", plt)
         plt.show()
 
     '''############################## PLOT METHODS  - CATALYST VARIATION ####################################'''

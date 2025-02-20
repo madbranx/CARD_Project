@@ -3,7 +3,7 @@ from classes.Properties.Kinetics import Kinetics
 import casadi as CasADi
 
 """
-The PressureDrop class calculates the pressure drop with the ergun equation.
+The PressureDrop class calculates the pressure drop with the Ergun equation.
 """
 
 class PressureDrop(Kinetics):

@@ -3,7 +3,7 @@ import casadi as CasADi
 from classes.Parameters.Component import Component
 from classes.Properties.FluidProperties import FluidProperties
 """
-The class Kinetics conatins the methodes to calculate the rate of the chemical reaction. The rate expression is calculated with
+The class Kinetics contains the methods to calculate the rate of the chemical reaction. The rate expression is calculated with
 a LHHW model. Since only the methanisation reaction is simulated, no further rate expressions are required.
 """
 

@@ -4,8 +4,8 @@ import numpy as np
 
 """
 The Parameters class contains the physical values of parameters. The sources of the values can be found in
-the reactor equations overview.pdf document in chapter 8 - Substance Properties. The constant parameters are accessed
-by importing the Parameters class with the self.xxx syntax. The component properties are accessed via the Component class.
+the reactor equations overview.pdf document in chapter 8 - Substance Properties.
+ The constant parameters are directly accessed, the component properties are accessed via the Component class.
 """
 
 class Parameters:

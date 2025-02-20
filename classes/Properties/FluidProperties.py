@@ -4,9 +4,9 @@ from classes.Parameters.Component import Component
 import casadi as CasADi
 
 """
-The FluidProperties class is used to define methodes for calculation of parameters of the fluid phase.
-This includes dimensionsionless quantitys (Re, Pr, Pe), the thermal conductivity with viscosity mixing rule and general
-properties as desnity and mass fraction weighted averages.
+The FluidProperties class is used to define methods for calculation of parameters of the fluid phase.
+This includes dimensionless quantities (Re, Pr, Pe), the thermal conductivity with viscosity mixing rule and general
+properties as density and mass fraction weighted averages.
 """
 
 

@@ -5,10 +5,10 @@ import numpy as np
 import time
 
 """
-In the Studies class, all the realized studies of the reactor are defined in methodes. 
-If a studie is to be carried out, respective methode has to be called with the required paramerets in the main.py file.
+In the Studies class, all the realized studies of the reactor are defined in methods. 
+If a studie is to be carried out, respective methode has to be called with the required parameters in the main.py file.
 It will automatically set up the FixedBedReactor and Integrator class and call them with the settings of the studie.
-When the studie is finished and the results aquired, the respective postprocessor methode is called and the results evaluated.
+When the studie is finished and the results acquired, the respective postprocessor methode is called and the results evaluated.
 """
 
 class Studies:

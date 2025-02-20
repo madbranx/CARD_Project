@@ -3,7 +3,7 @@ import numpy as np
 """
 The Results class is used to convert the results of the CasADi integrator into desired values. 
 This includes the conversion of CasADi symbolic matrices into numpy matrices for plotting as well as 
-methodes to calculate the integral values at the reactor outlet considering a round cross section.
+methods to calculate the integral values at the reactor outlet considering a round cross section.
 """
 
 class Results:

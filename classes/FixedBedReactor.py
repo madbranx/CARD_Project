@@ -7,11 +7,11 @@ from classes.ConservationEquations.PressureDrop import PressureDrop
 from classes.ConservationEquations.SpeciesConservation import SpeciesConservation
 
 """
-To simulate the tansient fixed bed reactor, the FixedBedReactor class combines the conservation ode's with the pressure drop and 
+To simulate the transient fixed bed reactor, the FixedBedReactor class combines the conservation ode's with the pressure drop and 
 mass conservation algebraic equations into a system of equations. The system of equations is numerically solved using CasADi.
 
 In the FixedBedReactor class, the CasADi structure is set up and filled with the specific equations by initializing the discretization
-and looping through the spatial discretization with the methodes of the physical methodes beeing called.
+and looping through the spatial discretization with the methods of the physical methods being called.
 """
 
 
@@ -190,12 +190,17 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 else: # 1D radial thermal conduction with U_radial = const.
                     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
                     T_inner_wall = self.calc_innerWallTemperature(wTpu)
-                    heat_transfer_coff_wall = self.calc_heatTransferCoefficient_wall(wTpu)
-                    radial_thermal_conductivity = self.calc_effective_radial_thermal_conductivity(wTpu, wTpu[3], 0)
-                    overall_heat_transfer_coff = (1/heat_transfer_coff_wall + self.reactorDiameter/(2*radial_thermal_conductivity))**(-1)   # Overall heat transfer coefficient with correlations
-                    overall_heat_transfer_coff = self.lambda_radial                                                                         # Validation of 1D model with lambda_radial = const
-                    radial_heatConduction = 4 * overall_heat_transfer_coff / self.reactorDiameter * (T[current] - T_inner_wall)
 
+                    # Overall heat transfer coefficient with correlations
+                    # heat_transfer_coff_wall = self.calc_heatTransferCoefficient_wall(wTpu)
+                    # radial_thermal_conductivity = self.calc_effective_radial_thermal_conductivity(wTpu, wTpu[3], 0)
+                    # overall_heat_transfer_coff = (1/heat_transfer_coff_wall + self.reactorDiameter/(2*radial_thermal_conductivity))**(-1)
+
+                    # Validation of 1D model with lambda_radial = const
+                    overall_heat_transfer_coff = self.lambda_radial
+
+
+                    radial_heatConduction = 4 * overall_heat_transfer_coff / self.reactorDiameter * (T[current] - T_inner_wall)
 
 
                 # 3.3) Reaction Heat

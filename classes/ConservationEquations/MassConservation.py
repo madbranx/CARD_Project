@@ -3,7 +3,7 @@ import casadi as CasADi
 
 """
 The MassConservation class calculates the fluid density at the inlet and the current volume.
-The factor of the fluid densitys is required for the AE of the mass conservation found in the FixedBedReactor class.
+The factor of the fluid densities is required for the AE of the mass conservation found in the FixedBedReactor class.
 """
 
 class MassConservation(Kinetics):

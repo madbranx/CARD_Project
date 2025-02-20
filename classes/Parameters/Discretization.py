@@ -6,6 +6,7 @@ The initialization has to be spatial seperated. Both radial and axial discretiza
 When initializing, the number of required volumes and the discretization methode have to be given.
 The discretization works by creating the faces of the volumes and determining the centroids and differences based on the
 faces spacing and coordinate.
+It is also used for the time discretization.
 """
 
 class Discretization:

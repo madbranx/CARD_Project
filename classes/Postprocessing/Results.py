@@ -1,5 +1,11 @@
 import numpy as np
 
+"""
+The Results class is used to convert the results of the CasADi integrator into desired values. 
+This includes the conversion of CasADi symbolic matrices into numpy matrices for plotting as well as 
+methodes to calculate the integral values at the reactor outlet considering a round cross section.
+"""
+
 class Results:
     def __init__(self, axialDiscretization, radialDiscretization, timeDiscretization):
         self.axialDiscretization = axialDiscretization
@@ -42,7 +48,6 @@ class Results:
         return r_faces
 
     def get_2D_values(self, t_step):
-        # TODO number of components hardcoded
         n_axial_volumes = self.axialDiscretization.num_volumes
         n_radial_volumes = self.radialDiscretization.num_volumes
 

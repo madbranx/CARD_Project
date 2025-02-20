@@ -1,5 +1,12 @@
 import casadi as CasADi
 
+"""
+The Component.py file consists of two classes: MaterialProperty and Component.
+The MaterialProperty class is used to get calculate a material property based on a dependency (in the current state only temperature).
+The dependency type can be selected as constant, linear or polynomial. 
+The Component class is used to set up the actual physical properties of the components and return the values with dependency.
+"""
+
 class MaterialProperty:
     CONSTANT = 1
     LINEAR = 2
@@ -43,6 +50,7 @@ class Component:
         return self.name
 
     def add_property(self, property_type, value=None, dependency_type=MaterialProperty.CONSTANT):
+        # Methode to add material properties to a component
         if property_type == Component.DENSITY:
             self.density = MaterialProperty(value, dependency_type)
 
@@ -66,6 +74,7 @@ class Component:
 
 
     def get_property(self, property_type, temperature=None):
+        # Methode to get material property of a component
         if property_type == Component.DENSITY:
             return self.density.get_value(temperature)
         elif property_type == Component.HEAT_CAPACITY:

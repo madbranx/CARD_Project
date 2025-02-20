@@ -2,44 +2,51 @@ from classes.Parameters.Component import Component, MaterialProperty
 
 import numpy as np
 
+"""
+The Parameters class contains the physical values of parameters. The sources of the values can be found in
+the reactor equations overview.pdf document in chapter 8 - Substance Properties. The constant parameters are accessed
+by importing the Parameters class with the self.xxx syntax. The component properties are accessed via the Component class.
+"""
+
 class Parameters:
     def __init__(self):
 
         # Use of constant values @500 K
         self.temperature_dependent_matProps = True
 
-        self.R =  8.314  # J/(kgK)
-        self.pi = np.pi
-        self.boltzmann = 1.380649e-23    # J/K
-        self.radiation_blackBody = 5.67e-8 # W/(m^2 K^4)
+        self.R =  8.314                         # J/(kgK)
+        self.pi = np.pi                         # -
+        self.boltzmann = 1.380649e-23           # J/K
+        self.radiation_blackBody = 5.67e-8      # W/(m^2 K^4)
 
         # add Parameters
-        self.reactorLength = 2.5  # m
-        self.reactorDiameter = 0.02  # m
+        self.reactorLength = 2.5                # m
+        self.reactorDiameter = 0.02             # m
 
-        self.cat_diameter = 0.002  # m
-        self.cat_tortuosity = 2  # -
-        self.cat_porosity = 0.6  # -
-        self.cat_emissionCoefficient = 0.9  # -
+        self.cat_diameter = 0.002               # m
+        self.cat_tortuosity = 2                 # -
+        self.cat_porosity = 0.6                 # -
+        self.cat_emissionCoefficient = 0.9      # -
 
-        self.reactor_thermalConductivity = 20   # W/(m K)    # Bremer
-        self.reactor_wallThickness = 0.002       # m   # Bremer
+        self.reactor_thermalConductivity = 20   # W/(m K)
+        self.reactor_wallThickness = 0.002      # m
 
 
-        self.diameter_pore=10e-9
+        self.diameter_pore=10e-9                # m
 
-        self.eps = self.calculate_void_fraction() # = 0.409 for 0.002 cat diameter
+        self.eps = self.calculate_void_fraction()   # = 0.409 for 0.002 cat diameter
         #self.eps = 0.4 # given by task
 
-        self.T_in = 300  # K
-        self.u_in= 1  # m/s
+        self.T_in = 300                         # K
+        self.u_in= 1                            # m/s
         # molar inlet ratio H2:CO2 = 4:1
-        self.w_i_in = [0, 0, 0.8452, 0.1548] # kg/kg CH4, H20, CO2, H2
-        self.p_in = 5e5 # Pa
+        self.w_i_in = [0, 0, 0.8452, 0.1548]    # kg/kg CH4, H20, CO2, H2
+        self.p_in = 5e5                         # Pa
 
         # Parameters given by task for 1D calculation
-        self.T_wall = 550  # K
-        self.lambda_radial = 200  # W/(m^2K)
+        self.T_wall = 550                       # K
+        # Constant value for validation
+        self.lambda_radial = 200                # W/(m^2K)
 
         # Components (incl. cat)
         self.components = None
@@ -57,7 +64,7 @@ class Parameters:
         # Diffusion Volume              -
 
     # CH4
-        CH4 = Component("CH4") # SOURCE: NIST-Database with polynomial fit at 5 bar
+        CH4 = Component("CH4") # SOURCE: NIST-Database with polynomial fit at 5 bar, constant values at 500 K
         CH4.add_property(Component.DENSITY, 0.348)
 
         if self.temperature_dependent_matProps is True:

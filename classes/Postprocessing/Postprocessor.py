@@ -8,6 +8,11 @@ from scipy.interpolate import interp1d, griddata
 from pathlib import Path
 from classes.Postprocessing.TOLcmaps import TOLcmaps
 
+"""
+The Postprocessor class contains the plotting functions. In the Studies class, the respective postprocessor methode is initialized
+and called to produce the desired plot.
+"""
+
 
 class Postprocessor:
     def __init__(self, exportLocation, use_latex = False):

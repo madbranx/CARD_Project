@@ -6,6 +6,14 @@ from classes.ConservationEquations.MassConservation import MassConservation
 from classes.ConservationEquations.PressureDrop import PressureDrop
 from classes.ConservationEquations.SpeciesConservation import SpeciesConservation
 
+"""
+To simulate the tansient fixed bed reactor, the FixedBedReactor class combines the conservation ode's with the pressure drop and 
+mass conservation algebraic equations into a system of equations. The system of equations is numerically solved using CasADi.
+
+In the FixedBedReactor class, the CasADi structure is set up and filled with the specific equations by initializing the discretization
+and looping through the spatial discretization with the methodes of the physical methodes beeing called.
+"""
+
 
 class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, SpeciesConservation):
     def __init__(self, dimension, n_axial, n_radial=1, **kwargs):
@@ -15,7 +23,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
         # Discretization setup
 
-        # axial discretization
+        # Axial discretization
         if kwargs.get("z_equi", False) is True:
             self.axial_discretization = Discretization(n_axial, start=0, end=self.reactorLength)
         else:
@@ -25,7 +33,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 ranges_z = [[0, self.reactorLength*0.05, 3], [self.reactorLength*0.05, self.reactorLength*0.4, 2], [self.reactorLength*0.4, self.reactorLength, 1]]
             self.axial_discretization = Discretization(n_axial, Discretization.RELATIVE_ARRAY, ranges= ranges_z)
 
-        # radial discretization
+        # Radial discretization
         if kwargs.get("r_equi", False) is True:
             self.radial_discretization = Discretization(n_radial, start=0, end=self.reactorDiameter / 2)
         else:
@@ -36,7 +44,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
             self.radial_discretization = Discretization(n_radial, Discretization.RELATIVE_ARRAY, ranges=ranges_r)
 
 
-        # get spacial size, check for pseudo 1D (1 radial element)
+        # Get spacial size, check for pseudo 1D (1 radial element)
         if self.dimension == 1:
             self.radial_discretization = Discretization(1, start=0, end=self.reactorDiameter / 2)
             self.n_spatial = self.axial_discretization.num_volumes
@@ -83,6 +91,7 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
         self.AE_p = CasADi.SX.sym("ae_pressure_drop", self.n_spatial)
 
     def __fillCasADiStructure(self):
+        # Methode to fill the CasADi structure by looping through the spatial discretization
 
         w_i = self.w_i
         T = self.T
@@ -125,6 +134,8 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     dispersion_correction = self.calc_sum_j(self.radial_discretization, r, u_center, wTpu, wTpu_in, wTpu_out)
                 else:
                     dispersion_correction = 0
+                # Fill CasADi AE structure with mass conservation equation (eq. (59))
+                # Dispersion correction commented out because of numerical problems with radial species dispersion
                 self.AE_m[current] = (u[current] - self.u_in * self.massConservation(T[current], w_i[current, :].T, p[current])
                                       #- (dispersion_correction/self.rho_fl(w_i[current, :].T, T[current], p[current]))
                                       )
@@ -136,8 +147,9 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 else:
                     delta_p =  p[current] - p[before_z]
                     #delta_p = 0
-
+                # Fill CasADi AE structure with pressure drop equation (eq. (60))
                 self.AE_p[current] = delta_p / delta_faces_z + self.pressureDrop(T[current], w_i[current, :].T, u[current], p[current])
+
 
             ## 3) ENERGY CONSERVATION
 
@@ -149,9 +161,11 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
 
 
                 # 3.1.1) Axial Convective Heat Flux
+                # In eq. (31)
                 axial_convectiveHeatFlux = self.convectiveHeatFlux(T[current], w_i[current, :].T, u[current], p[current]) * delta_T_in / delta_faces_z
 
                 # 3.1.2) Axial Heat Conduction
+                # Eq. (33)
                 lambda_eff_axial = self.effAxialThermalConductivity(T[current], w_i[current, :].T, u[current], p[current])
                 if z == 0:  # Inlet Boundary Condition
                     delta_T_in = (self.T_in - T[current])
@@ -176,7 +190,13 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                 else: # 1D radial thermal conduction with U_radial = const.
                     wTpu = [w_i[current, :].T, T[current], p[current], u[current]]
                     T_inner_wall = self.calc_innerWallTemperature(wTpu)
-                    radial_heatConduction = 4 * self.lambda_radial / self.reactorDiameter * (T[current] - T_inner_wall)
+                    heat_transfer_coff_wall = self.calc_heatTransferCoefficient_wall(wTpu)
+                    radial_thermal_conductivity = self.calc_effective_radial_thermal_conductivity(wTpu, wTpu[3], 0)
+                    overall_heat_transfer_coff = (1/heat_transfer_coff_wall + self.reactorDiameter/(2*radial_thermal_conductivity))**(-1)   # Overall heat transfer coefficient with correlations
+                    overall_heat_transfer_coff = self.lambda_radial                                                                         # Validation of 1D model with lambda_radial = const
+                    radial_heatConduction = 4 * overall_heat_transfer_coff / self.reactorDiameter * (T[current] - T_inner_wall)
+
+
 
                 # 3.3) Reaction Heat
                 reactionHeat = self.reactionHeat(T[current], w_i[current, :].T, p[current])

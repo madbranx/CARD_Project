@@ -34,7 +34,7 @@ studies = Studies()
 # studies.measure_time_discretization(120, 12, 10000, 3000)
 
 
-# """ 2) Validation - DONE """
+""" 2) Validation - DONE """
 # studies.validation(
 #     "validation",
 #     120,
@@ -123,3 +123,25 @@ studies = Studies()
 
 
 ###########################################################################################
+
+
+from classes.FixedBedReactor import FixedBedReactor
+import casadi as CasADi
+
+reactor = FixedBedReactor(1, 100, 1)
+reactor.setup()
+
+w = np.array([0.5, 0.5, 0., 0.])
+T = 500
+p = 5e5
+u = 1.5
+u_center = 1.5
+wTpu = [w, T, p, u]
+reactorDiameter = 0.02
+
+rad_therm_cond = reactor.calc_effective_radial_thermal_conductivity(wTpu, u_center, 0.0)
+print("Radial lambda: ", rad_therm_cond)
+alpha_wall = reactor.calc_heatTransferCoefficient_wall(wTpu)
+print("Alpha wall: ", alpha_wall)
+overall = (1/alpha_wall + reactorDiameter/(2*rad_therm_cond) )**(-1)
+print("Overall: ", overall)

@@ -1,6 +1,15 @@
 import numpy as np
 
+"""
+The Discretization class sets up the discretization of the finite volume methode. It allows three different discretization methods.
+The initialization has to be spatial seperated. Both radial and axial discretization has to be separately initialized.
+When initializing, the number of required volumes and the discretization methode have to be given.
+The discretization works by creating the faces of the volumes and determining the centroids and differences based on the
+faces spacing and coordinate.
+"""
+
 class Discretization:
+    # Different discretization methods
     EQUIDISTANT = 1
     ARRAY = 2
     RELATIVE_ARRAY = 3
@@ -18,6 +27,7 @@ class Discretization:
         self.__create()
 
     def __create(self):
+        # Methode to create the discretization. Different methods by case distinction
         if self.kind == self.EQUIDISTANT:
             self.faces = self.__equidistant()
         elif self.kind == self.ARRAY:
@@ -27,15 +37,22 @@ class Discretization:
         else:
             self.faces = self.__equidistant()
 
+        # Determine centroids and differences based on faces
         self.centroids = (self.faces[:-1] + self.faces[1:]) / 2
         self.differences_faces = np.diff(self.faces)
         self.differences_centroids = np.diff(self.centroids)
 
     def __equidistant(self):
+        # Methode to create an equidistant discretization with evenly spaced faces
         return np.linspace(self.start, self.end, self.num_volumes+1)
 
     def __array(self):
+        """
+        Methode to create an array based discretization. The initialisation of the class requires the ranges parameter
+        with the snytax [[start1, end1, factor1], [start2, end2, factor2],...].
+        The factor determines the amount of volumes in the selected range based on the overall number of volumes
         ranges = self.kwargs.get('ranges', [])  # Expect [(start, end, step), ...]
+        """
 
         total_factor = sum(factor for _, _, factor in ranges)
 
@@ -56,6 +73,12 @@ class Discretization:
         return np.array(faces)
 
     def __relative_array(self):
+        """
+        Methode to create an array based discretization with relativized factor. The initialisation of the class requires the ranges parameter
+        with the snytax [[start1, end1, factor1], [start2, end2, factor2],...].
+        The factor determines the amount of volumes in the selected range based on the overall number of volumes weighted
+        by the length of the ranges.
+        """
         ranges = self.kwargs.get('ranges', [])  # Expect [(start, end, step), ...]
 
         total_length = self.end - self.start
@@ -65,6 +88,7 @@ class Discretization:
         remaining_volumes = self.num_volumes
 
         for i, (start, end, factor) in enumerate(ranges):
+            # Allocate volumes based on the relativized factor to the length of the range
             segment_length = end - start
             segment_weight = (factor * segment_length) / total_length
             n_volumes_range = max(1, int(round((segment_weight / total_weight) * self.num_volumes)))
@@ -79,7 +103,7 @@ class Discretization:
         faces.append(ranges[-1][1])
         return np.array(faces)
 
-
+    # Methodes to get the faces, centroids and differences of those as array
     def get_faces(self):
         return self.faces
 

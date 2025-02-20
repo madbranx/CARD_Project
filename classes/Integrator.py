@@ -5,6 +5,9 @@ import casadi as CasADi
 import numpy as np
 import copy
 
+"""
+The Integrator class contains the setup of the solver as well as the solver settings and result extraction.
+"""
 
 class Integrator:
     def __init__(self, reactor):
@@ -46,8 +49,8 @@ class Integrator:
 
 
     def refresh(self):
-
-        # setting standard options if none were explicitly given before
+        # Methode to change solver options.
+        # Standard options are used if none were explicitly given before
         if self.options is None:
             self.set_options()
 
@@ -58,6 +61,7 @@ class Integrator:
         self.__setInitialValues()
 
     def set_options(self, **kwargs):
+        # Methode with standart solver options. Use refresh methode to change settings from standart.
         [abstol, reltol] = kwargs.get('tols', [1e-8, 1e-8])
         if kwargs.get('log', False) is True:
             verbose = True
@@ -80,6 +84,7 @@ class Integrator:
         }
 
     def set_specific_InitialValues(self, w_i, T, p, u ):
+        # Methode to set specific initial conditions
         n_axial = self.axial_discretization.num_volumes
         n_radial = self.radial_discretization.num_volumes
         n_components = self.reactor.n_components
@@ -99,6 +104,7 @@ class Integrator:
         self.z_0 = z_0
 
     def __setInitialValues(self):
+        # Methode to set general initial conditions defined in the parameters class
         w_i_in = self.reactor.w_i_in
         T_in = self.reactor.T_in
         u_in = self.reactor.u_in
@@ -127,6 +133,7 @@ class Integrator:
         self.z_0 = z_0
 
     def integrate(self):
+        # Methode to start the integration with the set starting conditions and options
         self.results =  self.integrator(x0=self.x_0, z0=self.z_0)
         self.__extractResults()
         #self.__printMassDeviation()
@@ -137,6 +144,7 @@ class Integrator:
         return results
 
     def __extractResults(self):
+        # Methode to convert results of integration into usable variables for the defined timesteps
         n_spatial = self.axial_discretization.num_volumes * self.radial_discretization.num_volumes
         n_components = self.reactor.n_components
         t_steps = self.time_discretization.num_volumes+1

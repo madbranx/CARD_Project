@@ -192,12 +192,12 @@ class FixedBedReactor(EnergyConservation, MassConservation, PressureDrop, Specie
                     T_inner_wall = self.calc_innerWallTemperature(wTpu)
 
                     # Overall heat transfer coefficient with correlations
-                    # heat_transfer_coff_wall = self.calc_heatTransferCoefficient_wall(wTpu)
-                    # radial_thermal_conductivity = self.calc_effective_radial_thermal_conductivity(wTpu, wTpu[3], 0)
-                    # overall_heat_transfer_coff = (1/heat_transfer_coff_wall + self.reactorDiameter/(2*radial_thermal_conductivity))**(-1)
+                    heat_transfer_coff_wall = self.calc_heatTransferCoefficient_wall(wTpu)
+                    radial_thermal_conductivity = self.calc_effective_radial_thermal_conductivity(wTpu, wTpu[3], 0)
+                    overall_heat_transfer_coff = (1/heat_transfer_coff_wall + self.reactorDiameter/(2*radial_thermal_conductivity))**(-1)
 
                     # Validation of 1D model with lambda_radial = const
-                    overall_heat_transfer_coff = self.lambda_radial
+                    #overall_heat_transfer_coff = self.lambda_radial
 
 
                     radial_heatConduction = 4 * overall_heat_transfer_coff / self.reactorDiameter * (T[current] - T_inner_wall)

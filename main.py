@@ -34,7 +34,8 @@ studies = Studies()
 # studies.measure_time_discretization(120, 12, 10000, 3000)
 
 
-""" 2) Validation - DONE """
+""" 2) Validation - DONE 
+For validation the radial heat transfer coefficient must be set to provided constant value in FixedBedReactor.py (line 194)"""
 # studies.validation(
 #     "validation",
 #     120,

@@ -781,16 +781,18 @@ class Postprocessor:
 
     def plot_ignition_behavior(self, foldername, result, timesteps, time_end,  t_evals, treshold_T, treshold_X):
 
-        fig, axs = plt.subplots(2, 1, figsize=(8, 3.25), constrained_layout=True)
+        fig, axs = plt.subplots(2, 1, figsize=(8.8, 3.25), constrained_layout=True)
         self.__format_plot()
+        plt.rc('xtick', labelsize=20)
+        plt.rc('ytick', labelsize=20)
         colors = self.__get_colors()
 
         # Add titles as texts
         title_T = str(treshold_T*100) + r" % of $T_{max}(t)$"
-        axs[0].text(0.5, 1.05, title_T, ha='center', va='bottom', fontsize=12, transform=axs[0].transAxes)
+        axs[0].text(0.5, 1.05, title_T, ha='center', va='bottom', fontsize=14, transform=axs[0].transAxes)
         title_X = r"$X_{CO_2}$ = " + str(treshold_X)
         title_X = str(treshold_T*100) + r" % of $X_{CO_2, max}(t)$"
-        axs[1].text(0.5, 1.05, title_X, ha='center', va='bottom', fontsize=12, transform=axs[1].transAxes)
+        axs[1].text(0.5, 1.05, title_X, ha='center', va='bottom', fontsize=14, transform=axs[1].transAxes)
 
         z_pos = result.get_z_pos() / result.reactor.reactorLength
         r_pos = 2 * result.get_r_pos() / result.reactor.reactorDiameter
@@ -848,15 +850,17 @@ class Postprocessor:
             ax.set_yticklabels(['R', "0", 'R'])  # Replace -1 and 1 with "R"
             ax.set_xticks([])
         axs[1].set_xticks([0, 0.5, 1])  # Set x-ticks to 0, 0.5, 1
-        axs[1].set_xticklabels([0, 0.5, 1])
+        axs[1].set_xticklabels(["0", "0.5", "1"])
         axs[1].tick_params(axis='x', pad=10)
 
         axs[0].legend(loc='center right', ncol=2, fontsize=10)
 
         # Set x-axis label on the last subplot
-        axs[-1].set_xlabel(r"relative reactor length")
+        #axs[-1].set_xlabel("relative reactor length", fontsize=14)
 
-        fig.text(-0.035, 0.5, "radial position", va='center', rotation=90, fontsize=12)
+        fig.text(0.375, -0.033, "relative reactor length", va='center', fontsize=18)
+
+        fig.text(-0.035, 0.5, "radial position", va='center', rotation=90, fontsize=18)
 
         self.__export(foldername, "Ignition behaviour", plt)
         plt.show()

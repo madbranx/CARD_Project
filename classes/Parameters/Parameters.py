@@ -6,7 +6,7 @@ class Parameters:
     def __init__(self):
 
         # Use of constant values @500 K
-        self.temperature_dependent_matProps = False
+        self.temperature_dependent_matProps = True
 
         self.R =  8.314  # J/(kgK)
         self.pi = np.pi

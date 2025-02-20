@@ -110,7 +110,7 @@ class Postprocessor:
             axs1.plot(z_pos_2D, w_i_2D[i], color=colors[i], linestyle="--", linewidth = linewidth)
 
         # Plot Validation Data
-        w_i_val = self.__getValidationData("debugging/Validation_Data.txt", "w")
+        w_i_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "w")
         for i, label in enumerate([r"$CH_4$", r"$H_2O$", r"$CO_2$", r"$H_2$"]):
             axs1.plot(w_i_val[i][0], w_i_val[i][1], color=colors[i], linestyle="-", linewidth = linewidth, label=label)
 
@@ -123,9 +123,9 @@ class Postprocessor:
         axs1.legend(loc="upper right", ncol=2)
 
         ## 2) T, p, u plot
-        T_val = self.__getValidationData("debugging/Validation_Data.txt", "T")
-        u_val = self.__getValidationData("debugging/Validation_Data.txt", "u")
-        p_val = self.__getValidationData("debugging/Validation_Data.txt", "p")
+        T_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "T")
+        u_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "u")
+        p_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "p")
         T_wall_val = self.__getValidationData("debugging/Val_data_with_Twall.txt", "T_wall")
 
         # Get normalization values 1D and 2D
